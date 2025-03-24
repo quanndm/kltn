@@ -4,4 +4,4 @@ SimpleITK
 requests
 libtorrent
 scikit-learn
-numpy<2
+numpy==1.26.4
