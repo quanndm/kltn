@@ -54,6 +54,3 @@ def unzip_dataset_LiTS():
 def prepare_dataset_LiTS():
     download_dataset_LiTS()
     unzip_dataset_LiTS()
-
-if __name__ == '__main__':
-    prepare_dataset_LiTS()
