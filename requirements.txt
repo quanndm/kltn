@@ -3,3 +3,4 @@ torchvision
 SimpleITK
 requests
 libtorrent
+scikit-learn
