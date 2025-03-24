@@ -45,6 +45,7 @@ def download_dataset_LiTS():
 def unzip_dataset_LiTS():
     dir_name = '/content/LITS17'
     extension = ".zip"
+    print(f"\nUnzipping files in {dir_name}")
     for item in os.listdir(dir_name): # loop through items in dir
         if item.endswith(extension): # check for ".zip" extension
             file_name = f"{dir_name}/{item}" # get full path of files
@@ -53,6 +54,7 @@ def unzip_dataset_LiTS():
             zip_ref.close() # close file
             os.remove(file_name) # delete zipped file
 
+    print("Unzipping complete")
 def prepare_dataset_LiTS():
     download_dataset_LiTS()
     unzip_dataset_LiTS()
