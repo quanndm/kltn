@@ -70,7 +70,7 @@ class Lits(Dataset):
             image = irm_min_max_preprocess(image)
 
         if training:
-            z_indexes, y_indexes, x_indexes = np.non_zeros(np.sum(image, axis=0) != 0)
+            z_indexes, y_indexes, x_indexes = np.nonzero(np.sum(image, axis=0) != 0)
             zmin, ymin, xmin = [max(0, int(np.min(arr) - 1)) for arr in (z_indexes, y_indexes, x_indexes)]
             zmax, ymax, xmax = [int(np.max(arr) + 1) for arr in (z_indexes, y_indexes, x_indexes)]
 
@@ -80,7 +80,7 @@ class Lits(Dataset):
             image, seg = pad_or_crop_image(image, seg, target_size=(128, 128, 128))
 
         else:
-            z_indexes, y_indexes, x_indexes = np.non_zeros(np.sum(image, axis=0) != 0)
+            z_indexes, y_indexes, x_indexes = np.nonzero(np.sum(image, axis=0) != 0)
             zmin, ymin, xmin = [max(0, int(np.min(arr) - 1)) for arr in (z_indexes, y_indexes, x_indexes)]
             zmax, ymax, xmax = [int(np.max(arr) + 1) for arr in (z_indexes, y_indexes, x_indexes)]
 
