@@ -69,6 +69,9 @@ class Lits(Dataset):
         else:
             image = irm_min_max_preprocess(image)
 
+        image = np.expand_dims(image, axis=0)
+        seg = np.expand_dims(seg, axis=0)
+
         if training:
             z_indexes, y_indexes, x_indexes = np.nonzero(np.sum(image, axis=0) != 0)
             zmin, ymin, xmin = [max(0, int(np.min(arr) - 1)) for arr in (z_indexes, y_indexes, x_indexes)]
