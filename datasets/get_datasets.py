@@ -20,7 +20,7 @@ def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zs
         })
 
     kfold = KFold(5, shuffle=True, random_state=seed)  
-    splits = list(kfold.split(patient_data))
+    splits = list(kfold.split(patients))
 
     train_idx, test_idx = splits[fold_number] 
 
