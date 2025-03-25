@@ -36,14 +36,14 @@ class Lits(Dataset):
         image, seg = image.astype("float16"), seg.astype("bool")
         image, seg = torch.from_numpy(image), torch.from_numpy(seg)
 
-       return dict(
+        return dict(
             idx=idx,
             patient_id=_patient["id"],
             image=image,
             label=seg,
             supervised=True,
             crop_indexes = (bounds["z"], bounds["y"], bounds["x"])
-       )
+        )
 
     @staticmethod
     def load_nii(path):
