@@ -42,7 +42,7 @@ class Lits(Dataset):
             image=image,
             label=seg,
             supervised=True,
-            # crop_indexes = (bounds["z"], bounds["y"], bounds["x"])
+            crop_indexes = (bounds["z"], bounds["y"], bounds["x"])
         )
 
     @staticmethod
@@ -69,34 +69,33 @@ class Lits(Dataset):
         else:
             image = irm_min_max_preprocess(image)
 
-        # if training:
-        #     z_indexes, y_indexes, x_indexes = np.nonzero(np.sum(image, axis=0) != 0)
-        #     zmin, ymin, xmin = [max(0, int(np.min(arr) - 1)) for arr in (z_indexes, y_indexes, x_indexes)]
-        #     zmax, ymax, xmax = [int(np.max(arr) + 1) for arr in (z_indexes, y_indexes, x_indexes)]
+        if training:
+            z_indexes, y_indexes, x_indexes = np.nonzero(np.sum(image, axis=0) != 0)
+            zmin, ymin, xmin = [max(0, int(np.min(arr) - 1)) for arr in (z_indexes, y_indexes, x_indexes)]
+            zmax, ymax, xmax = [int(np.max(arr) + 1) for arr in (z_indexes, y_indexes, x_indexes)]
 
-        #     image = image[:, zmin:zmax, ymin:ymax, xmin:xmax]
-        #     seg = seg[:, zmin:zmax, ymin:ymax, xmin:xmax]
+            image = image[:, zmin:zmax, ymin:ymax, xmin:xmax]
+            seg = seg[:, zmin:zmax, ymin:ymax, xmin:xmax]
 
-        #     image, seg = pad_or_crop_image(image, seg, target_size=(128, 128, 128))
+            image, seg = pad_or_crop_image(image, seg, target_size=(128, 128, 128))
 
-        # else:
-        #     z_indexes, y_indexes, x_indexes = np.nonzero(np.sum(image, axis=0) != 0)
-        #     zmin, ymin, xmin = [max(0, int(np.min(arr) - 1)) for arr in (z_indexes, y_indexes, x_indexes)]
-        #     zmax, ymax, xmax = [int(np.max(arr) + 1) for arr in (z_indexes, y_indexes, x_indexes)]
+        else:
+            z_indexes, y_indexes, x_indexes = np.nonzero(np.sum(image, axis=0) != 0)
+            zmin, ymin, xmin = [max(0, int(np.min(arr) - 1)) for arr in (z_indexes, y_indexes, x_indexes)]
+            zmax, ymax, xmax = [int(np.max(arr) + 1) for arr in (z_indexes, y_indexes, x_indexes)]
 
-        #     image = image[:, zmin:zmax, ymin:ymax, xmin:xmax]
-        #     seg = seg[:, zmin:zmax, ymin:ymax, xmin:xmax]
+            image = image[:, zmin:zmax, ymin:ymax, xmin:xmax]
+            seg = seg[:, zmin:zmax, ymin:ymax, xmin:xmax]
 
-        #     image = resize_image(image, target_size=(128, 128, 128))
-        #     seg = resize_image(seg, target_size=(128, 128, 128))
+            image = resize_image(image, target_size=(128, 128, 128))
+            seg = resize_image(seg, target_size=(128, 128, 128))
 
-        # bounds = {
-        #     "x": (xmin, xmax),
-        #     "y": (ymin, ymax),
-        #     "z": (zmin, zmax)
-        # }
-        # return image, seg, bounds
-        return image, seg, None
+        bounds = {
+            "x": (xmin, xmax),
+            "y": (ymin, ymax),
+            "z": (zmin, zmax)
+        }
+        return image, seg, bounds
 
     @staticmethod
     def augmentation(image, seg, transformations):
