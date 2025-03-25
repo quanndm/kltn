@@ -2,7 +2,7 @@ from sklearn.model_selection import KFold
 import pathlib
 from .lits import Lits
 
-def get_datasets_lits(source_folder, fold_number = 5, normalizations = "zscores"):
+def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores"):
     base_folder  = pathlib.Path(source_folder).resolve()
 
     # Get the list of volume the files in the folder
