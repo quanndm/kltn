@@ -1,6 +1,8 @@
 import random
 import numpy as np
 from scipy.ndimage import zoom
+import torch
+import torch.nn.functional as F
 
 def get_crop_slice(target_size, dim):
     if dim > target_size:
@@ -62,11 +64,3 @@ def irm_min_max_preprocess(image, low_perc=1, high_perc=99):
     image = normalize(image)
     return image
 
-
-def resize_image(image, new_size= (128, 128, 128)):
-    image = image[0]  
-
-    resize_factors = [t / s for t, s in zip(new_size, image.shape)]
-    resized_image = zoom(image, resize_factors, order=3)
-
-    return resized_image[np.newaxis, ...]

@@ -64,14 +64,20 @@ class Lits(Dataset):
             bounds: dict of tuples, includes min-max of x, y, z
         '''
 
+        # normalizations
         if normalizations == "zscores":
             image = zscore_normalise(image)
         else:
             image = irm_min_max_preprocess(image)
 
-        image = np.expand_dims(image, axis=0)
-        seg = np.expand_dims(seg, axis=0)
+        # split labels + expand dims of image
+        liver_mask = seg > 0
+        tumor_mask = seg == 2   
 
+        seg = np.stack([liver_mask, tumor_mask], axis=0)
+        image = np.expand_dims(image, axis=0)
+
+        # crop - padding - resize
         if training:
             z_indexes, y_indexes, x_indexes = np.nonzero(np.sum(image, axis=0) != 0)
             zmin, ymin, xmin = [max(0, int(np.min(arr) - 1)) for arr in (z_indexes, y_indexes, x_indexes)]
@@ -90,8 +96,6 @@ class Lits(Dataset):
             image = image[:, zmin:zmax, ymin:ymax, xmin:xmax]
             seg = seg[:, zmin:zmax, ymin:ymax, xmin:xmax]
 
-            image = resize_image(image, target_size=(128, 128, 128))
-            seg = resize_image(seg, target_size=(128, 128, 128))
 
         bounds = {
             "x": (xmin, xmax),
