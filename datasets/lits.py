@@ -2,17 +2,17 @@ import SimpleITK as sitk
 import numpy as np
 import torch
 from torch.utils.data.dataset import Dataset
-from ..processing.preprocessing import pad_or_crop_image, zscore_normalise, irm_min_max_preprocess
+from ..processing.preprocessing import pad_or_crop_image, zscore_normalise, irm_min_max_preprocess, resize_image
 
 class Lits(Dataset):
-    def __init__(self, patient_dirs, benchmarking = False, training=True, normalizations="zscores", transformations=None):
+    def __init__(self, patient_dirs, benchmarking = False, training=True, normalizations="zscores", transformations=False):
         '''
         Args:
             patient_dirs: list of dict, each dict contains id and the paths to the patient's images/ segmentations
             training: bool, whether the dataset is for training or testing
             benchmarking: bool, whether the dataset is for benchmarking
             normalizations: str, the type of normalization to apply to the images, either "zscores" or "minmax"
-            transformations: list of transformations to apply to the images -> augmentation
+            transformations: bool, whether to apply transformations to the images
         '''
         self.training = training
         self.benchmarking = benchmarking
@@ -28,9 +28,9 @@ class Lits(Dataset):
         image = self.load_nii(_patient["volume"])
         seg = self.load_nii(_patient["segmentation"])
 
-        image, seg, bounds = self.preprocessing(image, seg, self.training, self.normalizations)
+        image, seg, _ = self.preprocessing(image, seg, self.training, self.normalizations)
 
-        if self.training and self.transformations is not None:
+        if self.training and self.transformations:
             image, seg = self.augmentation(image, seg, self.transformations)
 
         image, seg = image.astype("float16"), seg.astype("bool")
@@ -42,7 +42,7 @@ class Lits(Dataset):
             image=image,
             label=seg,
             supervised=True,
-            crop_indexes = (bounds["z"], bounds["y"], bounds["x"])
+            # crop_indexes = (bounds["z"], bounds["y"], bounds["x"])
         )
 
     @staticmethod
@@ -78,41 +78,42 @@ class Lits(Dataset):
         image = np.expand_dims(image, axis=0)
 
         # crop - padding - resize
-        if training:
-            z_indexes, y_indexes, x_indexes = np.nonzero(np.sum(image, axis=0) != 0)
-            zmin, ymin, xmin = [max(0, int(np.min(arr) - 1)) for arr in (z_indexes, y_indexes, x_indexes)]
-            zmax, ymax, xmax = [int(np.max(arr) + 1) for arr in (z_indexes, y_indexes, x_indexes)]
+        # if training:
+        #     z_indexes, y_indexes, x_indexes = np.nonzero(np.sum(image, axis=0) != 0)
+        #     zmin, ymin, xmin = [max(0, int(np.min(arr) - 1)) for arr in (z_indexes, y_indexes, x_indexes)]
+        #     zmax, ymax, xmax = [int(np.max(arr) + 1) for arr in (z_indexes, y_indexes, x_indexes)]
 
-            image = image[:, zmin:zmax, ymin:ymax, xmin:xmax]
-            seg = seg[:, zmin:zmax, ymin:ymax, xmin:xmax]
+        #     image = image[:, zmin:zmax, ymin:ymax, xmin:xmax]
+        #     seg = seg[:, zmin:zmax, ymin:ymax, xmin:xmax]
 
-            image, seg = pad_or_crop_image(image, seg, target_size=(128, 128, 128))
+        #     image, seg = pad_or_crop_image(image, seg, target_size=(128, 128, 128))
 
-        else:
-            z_indexes, y_indexes, x_indexes = np.nonzero(np.sum(image, axis=0) != 0)
-            zmin, ymin, xmin = [max(0, int(np.min(arr) - 1)) for arr in (z_indexes, y_indexes, x_indexes)]
-            zmax, ymax, xmax = [int(np.max(arr) + 1) for arr in (z_indexes, y_indexes, x_indexes)]
+        # else:
+        #     z_indexes, y_indexes, x_indexes = np.nonzero(np.sum(image, axis=0) != 0)
+        #     zmin, ymin, xmin = [max(0, int(np.min(arr) - 1)) for arr in (z_indexes, y_indexes, x_indexes)]
+        #     zmax, ymax, xmax = [int(np.max(arr) + 1) for arr in (z_indexes, y_indexes, x_indexes)]
 
-            image = image[:, zmin:zmax, ymin:ymax, xmin:xmax]
-            seg = seg[:, zmin:zmax, ymin:ymax, xmin:xmax]
+        #     image = image[:, zmin:zmax, ymin:ymax, xmin:xmax]
+        #     seg = seg[:, zmin:zmax, ymin:ymax, xmin:xmax]
+        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
 
 
-        bounds = {
-            "x": (xmin, xmax),
-            "y": (ymin, ymax),
-            "z": (zmin, zmax)
-        }
-        return image, seg, bounds
+        # bounds = {
+        #     "x": (xmin, xmax),
+        #     "y": (ymin, ymax),
+        #     "z": (zmin, zmax)
+        # }
+        return image, seg, None
 
     @staticmethod
-    def augmentation(image, seg, transformations):
+    def augmentation(image, seg):
         '''
         Args:
             image: np.ndarray, the image to augment
             seg: np.ndarray, the segmentation to augment
-            transformations: list of transformations to apply to the images -> augmentation
         Returns:
             image: np.ndarray, the augmented image
             seg: np.ndarray, the augmented segmentation
         '''
+
         return image, seg
