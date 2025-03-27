@@ -118,8 +118,8 @@ class Lits(Dataset):
             image: np.ndarray, the augmented image
             seg: np.ndarray, the augmented segmentation
         '''
-            train_transforms = train_augmentations() 
-            data_dict = {"image": image, "label": seg}
-            augmented = train_transforms(data_dict)
-            
+        train_transforms = train_augmentations() 
+        data_dict = {"image": image, "label": seg}
+        augmented = train_transforms(data_dict)
+        
         return augmented["image"], augmented["label"]
