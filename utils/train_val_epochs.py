@@ -42,7 +42,6 @@ def train_epoch(model, loader, optimizer, epoch, loss_func, batch_size, max_epoc
         start_time = time.time()
         return run_loss.avg
 
-# TODO: Check this function again
 def val_epoch(model, loader, epoch, loss_func, batch_size, max_epochs, logger):
     model.eval()
     start_time = time.time()
@@ -68,3 +67,5 @@ def val_epoch(model, loader, epoch, loss_func, batch_size, max_epochs, logger):
 
             logger.info(f"Val {epoch}/{max_epochs} {idx+1}/{len(loader)}, dice_liver: {dice_liver:.6f}, dice_tumor: {dice_tumor:.6f}, time {time.time() - start_time :.2f}s")
             start_time = time.time()
+
+    return run_acc.avg
