@@ -109,7 +109,7 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, cri
                 best_epoch = epoch
                 torch.save(
                     model.state_dict(),
-                    os.path.join(path_save_model, "best_metric_model.pth"),
+                    os.path.join(path_save_model, f"best_metric_model_{model.__class__.__name__}.pth"),
                 )
             
             torch.cuda.empty_cache()
