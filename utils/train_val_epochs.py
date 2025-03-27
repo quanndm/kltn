@@ -91,12 +91,12 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, cri
             loss_epochs.append(train_loss)
             trains_epoch.append(epoch)
             epoch_time = time.time()
-            logger.info(f"\t{'*' * 20}Epoch {epoch} Validation{'*' * 20}")
+            logger.info(f"\n{'*' * 20}Epoch {epoch} Validation{'*' * 20}")
             val_acc = val_epoch(model, val_loader, epoch, acc_func, criterian_val, metric, max_epochs, logger)
 
             dice_liver, dice_tumor = val_acc[0], val_acc[1]
             val_avg_acc = np.mean(val_acc)  
-            logger.info(f"\t{'*' * 20}Epoch Summary{'*' * 20}")
+            logger.info(f"\n{'*' * 20}Epoch Summary{'*' * 20}")
             logger.info(f"Final validation stats {epoch}/{max_epochs},  dice_liver: {dice_liver:.6f}, dice_tumor: {dice_tumor:.6f}, Dice_Avg: {val_avg_acc:.6f} , time {time.time() - epoch_time:.2f}s")
 
             dices_liver.append(dice_liver)
