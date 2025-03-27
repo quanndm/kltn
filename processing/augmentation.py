@@ -1,4 +1,4 @@
-from monai.transforms import ScaleIntensityRanged, RandRotate90d, Compose, EnsureChannelFirstd
+from monai.transforms import ScaleIntensityRanged, RandRotate90d, Compose
 
 def train_augmentations():
     """
@@ -9,7 +9,6 @@ def train_augmentations():
         ScaleIntensityRanged: Scale the intensity of the image to a given range, in this case from -200 to 200 - like truncate HU from -200 to 200
     """
     return Compose([
-        EnsureChannelFirstd(keys=["image", "label"]),
         RandRotate90d(keys=["image", "label"], prob=0.5, max_k=1),
         ScaleIntensityRanged(keys=["image"], a_min=-200, a_max=200, b_min=0.0, b_max=1.0, clip=True),
     ])
