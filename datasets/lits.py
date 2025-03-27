@@ -32,7 +32,7 @@ class Lits(Dataset):
         image, seg, _ = self.preprocessing(image, seg, self.training, self.normalizations)
 
         if self.training and self.transformations:
-            image, seg = self.augmentation(image, seg, self.transformations)
+            image, seg = self.augmentation(image, seg)
 
         image, seg = image.astype("float16"), seg.astype("bool")
         image, seg = torch.from_numpy(image), torch.from_numpy(seg)
