@@ -28,7 +28,7 @@ def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zs
     test = [patients[i] for i in test_idx]
 
     # apply for dataset
-    train_dataset = Lits(train, training=True, normalizations=normalizations)
+    train_dataset = Lits(train, training=True, normalizations=normalizations, transformations=True)
     test_dataset = Lits(test, training=False, benchmarking=True, normalizations=normalizations)
 
     return train_dataset, test_dataset

@@ -2,7 +2,8 @@ import SimpleITK as sitk
 import numpy as np
 import torch
 from torch.utils.data.dataset import Dataset
-from ..processing.preprocessing import pad_or_crop_image, zscore_normalise, irm_min_max_preprocess, resize_image
+from ..processing.preprocessing import pad_or_crop_image, zscore_normalise, irm_min_max_preprocess, resize_image, truncate_HU
+from ..processing.augmentation import train_augmentations
 
 class Lits(Dataset):
     def __init__(self, patient_dirs, benchmarking = False, training=True, normalizations="zscores", transformations=False):
@@ -63,6 +64,8 @@ class Lits(Dataset):
             seg: np.ndarray, the preprocessed segmentation
             bounds: dict of tuples, includes min-max of x, y, z
         '''
+        # truncate HU values
+        image = truncate_HU(image)
 
         # normalizations
         if normalizations == "zscores":
@@ -115,5 +118,8 @@ class Lits(Dataset):
             image: np.ndarray, the augmented image
             seg: np.ndarray, the augmented segmentation
         '''
-
-        return image, seg
+            train_transforms = train_augmentations() 
+            data_dict = {"image": image, "label": seg}
+            augmented = train_transforms(data_dict)
+            
+        return augmented["image"], augmented["label"]

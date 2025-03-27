@@ -63,6 +63,8 @@ def val_epoch(model, loader, epoch, loss_func, batch_size, max_epochs, logger):
             acc, not_nans = acc_func.aggregate()
             run_acc.update(acc.cpu().numpy(), n=not_nans.cpu().numpy())
 
-            dice = run_acc.avg[0]
-            logger.info(f"Val {epoch}/{max_epochs} {idx+1}/{len(loader)}, dice: {dice:.6f}, time {time.time() - start_time :.2f}s")
+            dice_liver = run_acc.avg[0]
+            dice_tumor = run_acc.avg[1]
+
+            logger.info(f"Val {epoch}/{max_epochs} {idx+1}/{len(loader)}, dice_liver: {dice_liver:.6f}, dice_tumor: {dice_tumor:.6f}, time {time.time() - start_time :.2f}s")
             start_time = time.time()

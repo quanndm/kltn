@@ -75,3 +75,15 @@ def resize_image(image, seg, target_size=(128, 128, 128)):
     image_resized = process_tensor(image, "trilinear")
     seg_resized = process_tensor(seg, "nearest")
     return image_resized.numpy(), seg_resized.numpy()
+
+def truncate_HU(image, hu_min=-200, hu_max=200):
+    """
+    Truncate the HU values to a range.
+    Args:
+        image: np.ndarray, the image to truncate
+        hu_min: int, the minimum HU value
+        hu_max: int, the maximum HU value
+    Returns:
+        image: np.ndarray, the truncated image
+    """
+    return np.clip(image, hu_min, hu_max)
