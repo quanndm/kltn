@@ -3,7 +3,7 @@ import torch
 import numpy as np
 
 from ..processing.postprocessing import post_trans
-from utils import model_inferer
+from ..utils.utils import model_inferer
 from metrics import AverageMeter
 from monai.metrics import DiceMetric
 from monai.data import decollate_batch
