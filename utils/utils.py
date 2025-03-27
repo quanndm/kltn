@@ -19,7 +19,7 @@ def model_inferer(input, model):
         )
 
     if VAL_AMP:
-        with torch.cuda.amp.autocast():
+        with torch.amp.autocast('cuda'):
             return _compute(input)
     else:
         return _compute(input)
@@ -35,7 +35,7 @@ def inference(input, model):
             overlap=0.5,
         )
     if VAL_AMP:
-        with torch.cuda.amp.autocast():
+        with torch.amp.autocast('cuda'):
             return _compute(input)
     else:
         return _compute(input)
