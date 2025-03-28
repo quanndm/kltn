@@ -16,7 +16,7 @@ def visualize_results(model, val_loader, weight_path, num_images, device):
     model.load_state_dict(torch.load(weight_path, map_location=device))
     model.eval()
 
-    stop = 1
+    stop = 0
     for val_val  in val_loader:
         stop+=1
         with torch.no_grad():
@@ -44,7 +44,7 @@ def visualize_results(model, val_loader, weight_path, num_images, device):
             for i in range(2):
                 plt.subplot(1, 2, i + 1)
                 plt.title(f"Label channel {i}")
-                plt.imshow(label_sample_np[0, i, z_slice])
+                plt.imshow(label_sample_np[0, i, z_slice], cmap="gray")
             plt.show()
 
             # Plot output
@@ -52,7 +52,7 @@ def visualize_results(model, val_loader, weight_path, num_images, device):
             for i in range(2):
                 plt.subplot(1, 2, i + 1)
                 plt.title(f"Output channel {i}")
-                plt.imshow(val_output_np[0, i, z_slice])
+                plt.imshow(val_output_np[i, z_slice], cmap="gray")
             plt.show()
 
             # combine label
