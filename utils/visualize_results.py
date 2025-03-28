@@ -13,7 +13,7 @@ color_values = {'yellow': (255, 255, 0, 255), 'red': (255, 0, 0, 255)}
 background_color = (0, 0, 0, 255)
 
 def visualize_results(model, val_loader, weight_path, num_images, device):
-    model.load_state_dict(torch.load(weight_path), map_location=device)
+    model.load_state_dict(torch.load(weight_path, map_location=device))
     model.eval()
 
     stop = 1
