@@ -28,15 +28,15 @@ def visualize_results(model, val_loader, weight_path, num_images, device):
             val_output = post_trans(val_output[0])
             print("val_output: ", val_output.shape)
 
-            image_sample_np =  val_val["image"].numpy()
-            label_sample_np = val_val["label"].numpy()
+            image_sample_np =  val_val["image"].detach().cpu().numpy()
+            label_sample_np = val_val["label"].detach().cpu().numpy()
             val_output_np = val_output.detach().cpu().numpy() 
             z_slice =  image_sample_np.shape[2] // 2
 
             # Plot input image
             plt.figure("Input Image", (6, 6))
             plt.title("Input Image")
-            plt.imshow(image_sample_np[0, 0, z_slice].detach().cpu(), cmap="gray")
+            plt.imshow(image_sample_np[0, 0, z_slice], cmap="gray")
             plt.show()
 
             # Plot label
@@ -44,7 +44,7 @@ def visualize_results(model, val_loader, weight_path, num_images, device):
             for i in range(2):
                 plt.subplot(1, 2, i + 1)
                 plt.title(f"Label channel {i}")
-                plt.imshow(label_sample_np[0, i, z_slice].detach().cpu())
+                plt.imshow(label_sample_np[0, i, z_slice])
             plt.show()
 
             # Plot output
@@ -52,7 +52,7 @@ def visualize_results(model, val_loader, weight_path, num_images, device):
             for i in range(2):
                 plt.subplot(1, 2, i + 1)
                 plt.title(f"Output channel {i}")
-                plt.imshow(val_output_np[0, i, z_slice].detach().cpu())
+                plt.imshow(val_output_np[0, i, z_slice]))
             plt.show()
 
             # combine label
