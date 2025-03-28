@@ -74,10 +74,10 @@ class Lits(Dataset):
             image = irm_min_max_preprocess(image)
 
         # split labels + expand dims of image
-        liver_mask = (seg > 0).astype(np.uint8) 
+        liver_mask =  (seg > 0).astype(np.uint8) 
         tumor_mask = (seg == 2 ).astype(np.uint8) 
 
-        seg = np.stack([liver_mask, tumor_mask], axis=0)
+        seg = np.stack([liver_mask, tumor_mask], axis=0).astype(np.uint8)
         image = np.expand_dims(image, axis=0)
 
         # crop - padding - resize
