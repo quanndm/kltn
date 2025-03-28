@@ -75,7 +75,7 @@ class Lits(Dataset):
 
         # split labels + expand dims of image
         liver_mask = (seg > 0).astype(np.uint8) 
-        tumor_mask = (seg == 2 ) .astype(np.uint8) 
+        tumor_mask = (seg == 2 ).astype(np.uint8) 
 
         seg = np.stack([liver_mask, tumor_mask], axis=0)
         image = np.expand_dims(image, axis=0)
