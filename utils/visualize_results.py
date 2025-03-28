@@ -52,7 +52,7 @@ def visualize_results(model, val_loader, weight_path, num_images, device):
             for i in range(2):
                 plt.subplot(1, 2, i + 1)
                 plt.title(f"Output channel {i}")
-                plt.imshow(val_output_np[0, i, z_slice]))
+                plt.imshow(val_output_np[0, i, z_slice])
             plt.show()
 
             # combine label
