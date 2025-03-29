@@ -38,8 +38,9 @@ class EDiceLoss(nn.Module):
         calculate dice loss for multi-class segmentation
         '''
         dice = 0
-        ce = CE_L(inputs, torch.argmax(targets, dim=1))
+        
         CE_L = torch.nn.CrossEntropyLoss()
+        ce = CE_L(inputs, torch.argmax(targets, dim=1))
 
         for i in range(targets.shape[1]):
             dice += self.binary_dice(inputs[:, i, ...], targets[:, i, ...], i)
