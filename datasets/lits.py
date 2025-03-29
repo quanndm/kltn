@@ -29,12 +29,12 @@ class Lits(Dataset):
         image = self.load_nii(_patient["volume"])
         seg = self.load_nii(_patient["segmentation"])
 
-        image, seg, _ = self.preprocessing(image, seg, self.training, self.normalizations)
+        image, seg = self.preprocessing(image, seg, self.training, self.normalizations)
 
         if self.training and self.transformations:
             image, seg = self.augmentation(image, seg)
 
-        image, seg = image.astype("float16"), seg.astype("bool")
+        image, seg = image.astype(np.float32), seg.astype(np.uint8)
         image, seg = torch.from_numpy(image), torch.from_numpy(seg)
 
         return dict(
@@ -48,6 +48,8 @@ class Lits(Dataset):
 
     @staticmethod
     def load_nii(path):
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"File {path} not found!")
         return sitk.GetArrayFromImage(sitk.ReadImage(str(path)))
 
 
@@ -62,10 +64,12 @@ class Lits(Dataset):
         Returns:
             image: np.ndarray, the preprocessed image
             seg: np.ndarray, the preprocessed segmentation
-            bounds: dict of tuples, includes min-max of x, y, z
         '''
         # truncate HU values
         image = truncate_HU(image)
+
+        # resize image
+        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
 
         # normalizations
         if normalizations == "zscores":
@@ -76,8 +80,8 @@ class Lits(Dataset):
         # split labels + expand dims of image
         liver_mask =  (seg > 0).astype(np.uint8) 
         tumor_mask = (seg == 2 ).astype(np.uint8) 
-
         seg = np.stack([liver_mask, tumor_mask], axis=0).astype(np.uint8)
+
         image = np.expand_dims(image, axis=0)
 
         # crop - padding - resize
@@ -98,15 +102,13 @@ class Lits(Dataset):
 
         #     image = image[:, zmin:zmax, ymin:ymax, xmin:xmax]
         #     seg = seg[:, zmin:zmax, ymin:ymax, xmin:xmax]
-        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
-
 
         # bounds = {
         #     "x": (xmin, xmax),
         #     "y": (ymin, ymax),
         #     "z": (zmin, zmax)
         # }
-        return image, seg, None
+        return image, seg
 
     @staticmethod
     def augmentation(image, seg):

@@ -68,9 +68,8 @@ def resize_image(image, seg, target_size=(128, 128, 128)):
     def process_tensor(tensor, mode, new_size=target_size):
         tensor = torch.tensor(tensor, dtype=torch.float32)
 
-        tensor = tensor.unsqueeze(0)  
         tensor_resized = F.interpolate(tensor, size=new_size, mode=mode, align_corners=False if mode == "trilinear" else None)
-        return tensor_resized.squeeze(0)  
+        return tensor_resized
 
     image_resized = process_tensor(image, "trilinear")
     seg_resized = process_tensor(seg, "nearest")
