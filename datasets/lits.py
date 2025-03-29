@@ -68,9 +68,6 @@ class Lits(Dataset):
         # truncate HU values
         image = truncate_HU(image)
 
-        # resize image
-        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
-
         # normalizations
         if normalizations == "zscores":
             image = zscore_normalise(image)
@@ -84,6 +81,9 @@ class Lits(Dataset):
 
         image = np.expand_dims(image, axis=0)
 
+
+        # resize image
+        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
 
         # crop - padding - resize
         # if training:
