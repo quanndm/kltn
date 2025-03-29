@@ -3,12 +3,8 @@ from torch import optim
 import torch.nn as nn
 
 class EDiceLoss(nn.Module):
-    def __init__(self, do_sigmoid=True):
-        """
-        :param do_sigmoid: using sigmoid or not
-        """
+    def __init__(self):
         super(EDiceLoss, self).__init__()
-        self.do_sigmoid = do_sigmoid
         self.labels = ["Liver", "Tumor"]
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -17,8 +13,7 @@ class EDiceLoss(nn.Module):
         calculate dice loss for binary segmentation
         '''
         smooth = 1e-5
-        if self.do_sigmoid:
-            inputs = torch.sigmoid(inputs)
+        # inputs = torch.softmax(inputs, dim=1) # Apply softmax to the input tensor
 
         if metric_mode:
             inputs = (inputs > 0.5).float()
@@ -43,19 +38,13 @@ class EDiceLoss(nn.Module):
         calculate dice loss for multi-class segmentation
         '''
         dice = 0
-        bce = 0
-        BCE_L = torch.nn.BCEWithLogitsLoss()
+        ce = CE_L(inputs, torch.argmax(targets, dim=1))
+        CE_L = torch.nn.CrossEntropyLoss()
 
-        for i in range(targets.size(1)):
+        for i in range(targets.shape[1]):
             dice += self.binary_dice(inputs[:, i, ...], targets[:, i, ...], i)
-            bce += BCE_L(inputs[:, i, ...], targets[:, i, ...])
         
-        final_loss =  ((0.7 * dice) + (0.3 * bce)) / targets.size(1)
-
-        # dice /= targets.size(1)
-        # bce /= targets.size(1)
-        # final_loss = (0.7 * dice) + (0.3 * bce)
-
+        final_loss = (0.7 * dice / inputs.shape[1]) + (0.3 * ce)
         return final_loss
 
     def metric(self, inputs, targets):
@@ -68,19 +57,14 @@ class EDiceLoss(nn.Module):
         return dices
 
 class EDiceLoss_Val(nn.Module):
-    def __init__(self, do_sigmoid=True):
-        """
-        :param do_sigmoid: using sigmoid or not
-        """
+    def __init__(self):
         super(EDiceLoss_Val, self).__init__()
-        self.do_sigmoid = do_sigmoid
         self.labels = ["Liver", "Tumor"]
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def binary_dice(self, inputs, targets, label_index, metric_mode=False):
         smooth = 1e-5
-        if self.do_sigmoid:
-            inputs = torch.sigmoid(inputs)
+        # inputs = torch.softmax(inputs, dim=1) 
 
         if metric_mode:
             inputs = (inputs > 0.5).float()

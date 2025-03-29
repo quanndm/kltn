@@ -7,8 +7,8 @@ from monai.transforms import (
 )
 
 post_trans = Compose(
-    [EnsureType(), Activations(sigmoid=True), AsDiscrete(argmax=False, threshold=0.5)]
+    [EnsureType(), Activations(softmax=True), AsDiscrete(argmax=True)]
 )
 
-post_sigmoid = Activations(sigmoid=True)
-post_pred = AsDiscrete(argmax=False, threshold=0.5)
+post_softmax = Activations(softmax=True)  
+post_pred = AsDiscrete(argmax=True) 
