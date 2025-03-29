@@ -4,7 +4,7 @@ import torch
 from torch.utils.data.dataset import Dataset
 from ..processing.preprocessing import pad_or_crop_image, zscore_normalise, irm_min_max_preprocess, resize_image, truncate_HU
 from ..processing.augmentation import train_augmentations
-
+import os
 class Lits(Dataset):
     def __init__(self, patient_dirs, benchmarking = False, training=True, normalizations="zscores", transformations=False):
         '''
