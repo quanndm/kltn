@@ -42,7 +42,7 @@ def train_epoch(model, loader, optimizer, epoch, loss_func, batch_size, max_epoc
         start_time = time.time()
     return run_loss.avg
 
-def val_epoch(model, loader, epoch, acc_func, criterian_val, metric, max_epochs, logger):
+def val_epoch(model, loader, epoch, acc_func, criterion_val, metric, max_epochs, logger):
     model.eval()
     start_time = time.time()
     run_acc = AverageMeter('Loss', ':.4e')
@@ -70,7 +70,7 @@ def val_epoch(model, loader, epoch, acc_func, criterian_val, metric, max_epochs,
 
     return run_acc.avg
 
-def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, criterian_val, metric, scheduler, batch_size, max_epochs, start_epoch=1, val_every = 1, logger=None, path_save_model=None):
+def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, criterion_val, metric, scheduler, batch_size, max_epochs, start_epoch=1, val_every = 1, logger=None, path_save_model=None):
     val_acc_max, best_epoch = 0.0, 0
     total_time = time.time()
     dices_liver , dices_tumor, dices_avg, loss_epochs, trains_epoch = [], [], [], [], []
@@ -91,7 +91,7 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, cri
             trains_epoch.append(epoch)
             epoch_time = time.time()
             logger.info(f"\n{'*' * 20}Epoch {epoch} Validation{'*' * 20}")
-            val_acc = val_epoch(model, val_loader, epoch, acc_func, criterian_val, metric, max_epochs, logger)
+            val_acc = val_epoch(model, val_loader, epoch, acc_func, criterion_val, metric, max_epochs, logger)
 
             dice_liver, dice_tumor = val_acc[0], val_acc[1]
             val_avg_acc = np.mean(val_acc)  
