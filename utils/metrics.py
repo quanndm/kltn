@@ -46,7 +46,7 @@ class EDiceLoss(nn.Module):
             ce += BCE_L(torch.sigmoid(inputs[:, i, ...]), targets[:, i, ...])
         
         final_dice = ( 0.7 * dice + 0.3 * ce) / targets.size(1)
-        return final_loss
+        return final_dice
 
     def metric(self, inputs, targets):
         dices = []
