@@ -13,7 +13,7 @@ class EDiceLoss(nn.Module):
         calculate dice loss for binary segmentation
         '''
         smooth = 1e-5
-        # inputs = torch.softmax(inputs, dim=1) # Apply softmax to the input tensor
+        inputs = torch.sigmoid(inputs)
 
         if metric_mode:
             inputs = (inputs > 0.5).float()
@@ -37,15 +37,15 @@ class EDiceLoss(nn.Module):
         '''
         calculate dice loss for multi-class segmentation
         '''
-        dice = 0
-        
-        CE_L = torch.nn.CrossEntropyLoss()
-        ce = CE_L(inputs, torch.argmax(targets, dim=1))
+        dice = 0    
+        ce = 0
+        BCE_L = torch.nn.BCELoss()
 
-        for i in range(targets.shape[1]):
+        for i in range(target.size(1)):
             dice += self.binary_dice(inputs[:, i, ...], targets[:, i, ...], i)
+            ce += BCE_L(torch.sigmoid(inputs[:, i, ...]), target[:, i, ...])
         
-        final_loss = (0.7 * dice / inputs.shape[1]) + (0.3 * ce)
+        final_dice = ( 0.7 * dice + 0.3 * ce) / target.size(1)
         return final_loss
 
     def metric(self, inputs, targets):
@@ -65,7 +65,7 @@ class EDiceLoss_Val(nn.Module):
 
     def binary_dice(self, inputs, targets, label_index, metric_mode=False):
         smooth = 1e-5
-        # inputs = torch.softmax(inputs, dim=1) 
+        inputs = torch.sigmoid(inputs)
 
         if metric_mode:
             inputs = (inputs > 0.5).float()
