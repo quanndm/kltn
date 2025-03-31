@@ -112,7 +112,7 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, cri
             if val_dice_avg > val_acc_max:
                 print("New best ({:.6f} --> {:.6f}). At epoch {}".format(val_acc_max, val_dice_avg, epoch))
                 logger.info(f"New best ({val_acc_max:.6f} --> {val_dice_avg:.6f}). At epoch {epoch}. Time consuming: {time.time()-total_time:.2f}")
-                val_acc_max = dice_avg
+                val_acc_max = val_dice_avg
                 best_epoch = epoch
                 torch.save(
                     model.state_dict(),
