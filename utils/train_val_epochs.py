@@ -78,7 +78,7 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, cri
     val_acc_max, best_epoch = 0.0, 0
     total_time = time.time()
     # dices_per_class, dices_avg, loss_epochs, trains_epoch = [], [], [], []
-    dices_liver, dices_tumor, loss_epochs, trains_epoch = [], [], [], []
+    dices_liver, dices_tumor,dices_avg, loss_epochs, trains_epoch = [], [], [], [], []
 
     for epoch in range(start_epoch, max_epochs+1):
         logger.info(f"\n{'=' * 30}Training epoch {epoch}{'=' * 30}")
@@ -122,4 +122,4 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, cri
             torch.cuda.empty_cache()
 
     logger.info(f"Training Finished !, Best Accuracy: {val_acc_max:.6f} --At epoch: {best_epoch} --Total_time: {time.time()-total_time:.2f}")
-    return val_acc_max, best_epoch, dices_liver, dices_tumor, loss_epochs, trains_epoch
+    return val_acc_max, best_epoch, dices_liver, dices_tumor, dices_avg, loss_epochs, trains_epoch
