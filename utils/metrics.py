@@ -45,7 +45,7 @@ class EDiceLoss(nn.Module):
 
         dice_loss = self.multi_class_dice(inputs, targets)
 
-        targets = torch.argmax(targets, dim=0) 
+        targets = torch.argmax(targets, dim=1) 
         ce_loss = self.ce_loss(inputs, targets.long())
 
         final_loss = 0.7 * dice_loss + 0.3 * ce_loss
