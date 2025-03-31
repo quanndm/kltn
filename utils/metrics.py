@@ -19,8 +19,8 @@ class EDiceLoss(nn.Module):
         # targets_one_hot = torch.nn.functional.one_hot(targets, num_classes=self.num_classes)  # Shape -> (N, D, H, W, C)
         # targets_one_hot = targets_one_hot.permute(0, 4, 1, 2, 3).float() 
 
-        intersection = torch.sum(inputs * targets_one_hot, dim=(2, 3, 4))
-        dice_score = (2 * intersection + smooth) / (inputs.sum(dim=(2, 3, 4)) + targets_one_hot.sum(dim=(2, 3, 4)) + smooth)
+        intersection = torch.sum(inputs * targets, dim=(2, 3, 4))
+        dice_score = (2 * intersection + smooth) / (inputs.sum(dim=(2, 3, 4)) + targets.sum(dim=(2, 3, 4)) + smooth)
 
         if metric_mode:
             return dice_score.mean(dim=1)  
@@ -82,8 +82,8 @@ class EDiceLoss_Val(nn.Module):
         # targets_one_hot = torch.nn.functional.one_hot(targets, num_classes=self.num_classes)  # (N, D, H, W, C)
         # targets_one_hot = targets_one_hot.permute(0, 4, 1, 2, 3).float() 
 
-        intersection = torch.sum(inputs * targets_one_hot, dim=(2, 3, 4))  # (N, C)
-        dice_score = (2 * intersection + smooth) / (inputs.sum(dim=(2, 3, 4)) + targets_one_hot.sum(dim=(2, 3, 4)) + smooth)
+        intersection = torch.sum(inputs * targets, dim=(2, 3, 4))  # (N, C)
+        dice_score = (2 * intersection + smooth) / (inputs.sum(dim=(2, 3, 4)) + targets.sum(dim=(2, 3, 4)) + smooth)
 
         if metric_mode:
             return dice_score  
