@@ -24,7 +24,7 @@ def train_epoch(model, loader, optimizer, epoch, loss_func, batch_size, max_epoc
 
     for idx, batch_data in enumerate(loader):
         torch.cuda.empty_cache()
-        data, target = batch_data["image"].float().to(device), batch_data["label"].float().to(device)
+        data, target = batch_data["image"].float().to(device), batch_data["label"].to(device)
         logits = model(data)
 
         loss = loss_func(logits, target)
@@ -65,10 +65,10 @@ def val_epoch(model, loader, epoch, acc_func, criterion_val, metric, max_epochs,
             acc, not_nans = acc_func.aggregate()
             run_acc.update(acc.cpu().numpy(), n=not_nans.cpu().numpy())
 
-            dice_liver = run_acc.avg[0]
-            dice_tumor = run_acc.avg[1]
+           dice_scores = run_acc.avg
+           dice_avg = np.mean(dice_scores)
 
-            logger.info(f"Val {epoch}/{max_epochs} {idx+1}/{len(loader)}, dice_liver: {dice_liver:.6f}, dice_tumor: {dice_tumor:.6f}, time {time.time() - start_time :.2f}s")
+            logger.info(f"Val {epoch}/{max_epochs} {idx+1}/{len(loader)}, Dice_Avg: {dice_avg:.6f}, time {time.time() - start_time:.2f}s")
             start_time = time.time()
 
     return run_acc.avg
@@ -76,7 +76,7 @@ def val_epoch(model, loader, epoch, acc_func, criterion_val, metric, max_epochs,
 def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, criterion_val, metric, scheduler, batch_size, max_epochs, start_epoch=1, val_every = 1, logger=None, path_save_model=None):
     val_acc_max, best_epoch = 0.0, 0
     total_time = time.time()
-    dices_liver , dices_tumor, dices_avg, loss_epochs, trains_epoch = [], [], [], [], []
+    dices_per_class, dices_avg, loss_epochs, trains_epoch = [], [], [], []
 
     for epoch in range(start_epoch, max_epochs+1):
         logger.info(f"\n{'=' * 30}Training epoch {epoch}{'=' * 30}")
@@ -96,19 +96,18 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, cri
             logger.info(f"\n{'*' * 20}Epoch {epoch} Validation{'*' * 20}")
             val_acc = val_epoch(model, val_loader, epoch, acc_func, criterion_val, metric, max_epochs, logger)
 
-            dice_liver, dice_tumor = val_acc[0], val_acc[1]
-            val_avg_acc = np.mean(val_acc)  
+            dice_per_class = val_acc
+            dice_avg = np.mean(dice_per_class)
             logger.info(f"\n{'*' * 20}Epoch Summary{'*' * 20}")
-            logger.info(f"Final validation stats {epoch}/{max_epochs},  dice_liver: {dice_liver:.6f}, dice_tumor: {dice_tumor:.6f}, Dice_Avg: {val_avg_acc:.6f} , time {time.time() - epoch_time:.2f}s")
+            logger.info(f"Final validation stats {epoch}/{max_epochs},  Dice_per_class: {dice_per_class:.6f}, Dice_Avg: {dice_avg:.6f} , time {time.time() - epoch_time:.2f}s")
 
-            dices_liver.append(dice_liver)
-            dices_tumor.append(dice_tumor)
-            dices_avg.append(val_avg_acc)
+            dices_per_class.append(dice_per_class)
+            dices_avg.append(dice_avg)
 
-            if val_avg_acc > val_acc_max:
+            if dice_avg > val_acc_max:
                 print("New best ({:.6f} --> {:.6f}). At epoch {}".format(val_acc_max, val_avg_acc, epoch))
-                logger.info(f"New best ({val_acc_max:.6f} --> {val_avg_acc:.6f}). At epoch {epoch}. Time consuming: {time.time()-total_time:.2f}")
-                val_acc_max = val_avg_acc
+                logger.info(f"New best ({val_acc_max:.6f} --> {dice_avg:.6f}). At epoch {epoch}. Time consuming: {time.time()-total_time:.2f}")
+                val_acc_max = dice_avg
                 best_epoch = epoch
                 torch.save(
                     model.state_dict(),

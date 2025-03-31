@@ -43,7 +43,6 @@ class Lits(Dataset):
             image=image,
             label=seg,
             supervised=True,
-            # crop_indexes = (bounds["z"], bounds["y"], bounds["x"])
         )
 
     @staticmethod
@@ -74,41 +73,19 @@ class Lits(Dataset):
         else:
             image = irm_min_max_preprocess(image)
 
-        # split labels + expand dims of image
-        liver_mask =  (seg > 0).astype(np.uint8) 
-        tumor_mask = (seg == 2 ).astype(np.uint8) 
-        seg = np.stack([liver_mask, tumor_mask], axis=0).astype(np.uint8)
-
+        #  expand dims of image and segmentation
         image = np.expand_dims(image, axis=0)
-
+        seg = np.expand_dims(seg, axis=0)
 
         # resize image
         image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
 
-        # crop - padding - resize
-        # if training:
-        #     z_indexes, y_indexes, x_indexes = np.nonzero(np.sum(image, axis=0) != 0)
-        #     zmin, ymin, xmin = [max(0, int(np.min(arr) - 1)) for arr in (z_indexes, y_indexes, x_indexes)]
-        #     zmax, ymax, xmax = [int(np.max(arr) + 1) for arr in (z_indexes, y_indexes, x_indexes)]
-
-        #     image = image[:, zmin:zmax, ymin:ymax, xmin:xmax]
-        #     seg = seg[:, zmin:zmax, ymin:ymax, xmin:xmax]
-
-        #     image, seg = pad_or_crop_image(image, seg, target_size=(128, 128, 128))
-
-        # else:
-        #     z_indexes, y_indexes, x_indexes = np.nonzero(np.sum(image, axis=0) != 0)
-        #     zmin, ymin, xmin = [max(0, int(np.min(arr) - 1)) for arr in (z_indexes, y_indexes, x_indexes)]
-        #     zmax, ymax, xmax = [int(np.max(arr) + 1) for arr in (z_indexes, y_indexes, x_indexes)]
-
-        #     image = image[:, zmin:zmax, ymin:ymax, xmin:xmax]
-        #     seg = seg[:, zmin:zmax, ymin:ymax, xmin:xmax]
-
-        # bounds = {
-        #     "x": (xmin, xmax),
-        #     "y": (ymin, ymax),
-        #     "z": (zmin, zmax)
-        # }
+        # one hot
+        num_classes = 3 # background, liver, tumor
+        seg = seg.squeeze(0)  # remove channel dimension
+        seg = np.eye(num_classes)[seg.astype(np.uint8)]
+        seg = seg.transpose(3, 0, 1, 2) # change to (C, D, H, W)
+        
         return image, seg
 
     @staticmethod
