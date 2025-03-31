@@ -65,8 +65,8 @@ def val_epoch(model, loader, epoch, acc_func, criterion_val, metric, max_epochs,
             acc, not_nans = acc_func.aggregate()
             run_acc.update(acc.cpu().numpy(), n=not_nans.cpu().numpy())
 
-           dice_scores = run_acc.avg
-           dice_avg = np.mean(dice_scores)
+            dice_scores = run_acc.avg
+            dice_avg = np.mean(dice_scores)
 
             logger.info(f"Val {epoch}/{max_epochs} {idx+1}/{len(loader)}, Dice_Avg: {dice_avg:.6f}, time {time.time() - start_time:.2f}s")
             start_time = time.time()
