@@ -8,7 +8,7 @@ from monai.transforms import (
 
 
 post_trans = Compose(
-    [EnsureType(), Activations(softmax=True), AsDiscrete(argmax=True)]
+    [EnsureType(), Activations(softmax=True)]
 )
 
 post_softmax = Activations(softmax=True)
