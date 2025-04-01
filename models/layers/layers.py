@@ -161,6 +161,7 @@ class ResCoTAttention(nn.Module):
         self.conv3 = nn.Sequential(
             nn.Conv3d(self.hidden_channels, out_channels, kernel_size=3, stride=1, padding=1),
             nn.GroupNorm(num_groups=8, num_channels=out_channels),
+            self.relu
         )
 
         self.residual = None

@@ -18,27 +18,25 @@ def visualize_results(model, val_loader, weight_path, num_images, device):
         with torch.no_grad():
             val_input = val_data["image"].to(device)
             val_output = inference(val_input, model)
-            val_output = post_trans(val_output[0])  # Đầu ra có dạng (C, D, H, W)
+            val_output = post_trans(val_output[0]) 
 
             image_sample_np = val_data["image"].detach().cpu().numpy()
             label_sample_np = val_data["label"].detach().cpu().numpy()
-            val_output_np = val_output.argmax(dim=0).detach().cpu().numpy()  # Chuyển sang dạng class index (D, H, W)
+            val_output_np = val_output.argmax(dim=0).detach().cpu().numpy()  
 
-            # Đảm bảo lấy lát cắt phù hợp với cả image và output
+
             z_slice = min(image_sample_np.shape[2] // 2, val_output_np.shape[0] - 1)
             
-            # Lấy lát cắt 2D từ ảnh gốc, nhãn và dự đoán
             image_2d = image_sample_np[0, 0, z_slice, :, :]
             label_2d = label_sample_np[0, 0, z_slice, :, :]
             pred_2d = val_output_np[z_slice, :, :]
             
-            # Hiển thị ảnh gốc
             plt.figure("Input Image", (6, 6))
             plt.title("Input Image")
             plt.imshow(image_2d, cmap="gray")
             plt.show()
             
-            # Hiển thị nhãn và dự đoán dưới dạng grayscale
+
             fig, ax = plt.subplots(1, 2, figsize=(12, 6))
             ax[0].imshow(label_2d, cmap="gray_r")
             ax[0].set_title("Ground Truth")
