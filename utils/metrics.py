@@ -2,66 +2,117 @@ import torch
 from torch import optim
 import torch.nn as nn
 
-class EDiceLoss(nn.Module):
+class DiceLossWSigmoid(nn.Module):
     def __init__(self):
-        super(EDiceLoss, self).__init__()
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.ce_loss = nn.CrossEntropyLoss()
+        super(DiceLossWSigmoid, self).__init__()
+        self.bce_loss = nn.BCEWithLogitsLoss()
 
-    def multi_class_dice(self, inputs, targets,  metric_mode=False):
+    def dice_coefficient(self, inputs, targets,  metric_mode=False, smooth=1e-5):
         '''
         calculate dice loss for binary segmentation
+        args:
+            inputs: shape (N, 1, D, H, W), predictions - logits
+            targets: shape (N, 1, D, H, W), ground truth 
+            metric_mode: if True, return dice score for each class
+            smooth: smoothing factor to avoid division by zero
+        returns:
+            dice_loss: dice loss for binary segmentation
         '''
-        smooth = 1e-5
-        inputs = torch.softmax(inputs, dim=1)
+
+        inputs = torch.sigmoid(inputs)
+        inputs = (inputs > 0.5).float()
 
         intersection = torch.sum(inputs * targets, dim=(2, 3, 4))
         dice_score = (2 * intersection + smooth) / (inputs.sum(dim=(2, 3, 4)) + targets.sum(dim=(2, 3, 4)) + smooth)
 
         if metric_mode:
-            return dice_score.mean(dim=1)  
-        return 1 - dice_score.mean()
+            return dice_score.mean(dim=1) 
+        else:
+            return  1 - dice_score.mean(dim=1)
 
 
     def forward(self, inputs, targets):
         '''
-        calculate dice loss for multi-class segmentation
+        calculate dice loss for binary segmentation
         '''
-        dice_loss = self.multi_class_dice(inputs, targets)
+        dice_loss = self.dice_coefficient(inputs, targets, metric_mode=False)
 
-        targets = torch.argmax(targets, dim=1) 
-        ce_loss = self.ce_loss(inputs, targets.long())
+        bce_loss = self.bce_loss(inputs, targets)
 
         final_loss = 0.7 * dice_loss + 0.3 * ce_loss
         return final_loss
 
     def metric(self, inputs, targets):
-        dice_scores = self.multi_class_dice(inputs, targets, metric_mode=True)  # Shape: (N, C)
-        return dice_scores
+        dice_score = self.dice_coefficient(inputs, targets, metric_mode=True) 
+        return dice_score
 
-class EDiceLoss_Val(nn.Module):
+class DiceLossWSoftmax(nn.Module):
     def __init__(self):
-        super(EDiceLoss_Val, self).__init__()
-        self.labels = ["Liver", "Tumor"]
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        super(DiceLossWSoftmax, self).__init__()
+        self.ce_loss = nn.CrossEntropyLoss()
 
-    def binary_dice(self, inputs, targets, metric_mode=False):
-        smooth = 1e-5
+    def dice_coefficient(self, inputs, targets, metric_mode=False, smooth=1e-5):
+        """
+        calculate dice loss for multi-class segmentation
+        args:
+            inputs: shape (N, C, D, H, W), predictions - logits
+            targets: shape (N, C, D, H, W), ground truth 
+            metric_mode: if True, return dice score for each class
+            smooth: smoothing factor to avoid division by zero
+        """
         inputs = torch.softmax(inputs, dim=1)
+
+        # Convert targets to one-hot encoding
+        targets = torch.nn.functional.one_hot(targets, num_classes=inputs.shape[1])
+        targets = targets.permute(0, 4, 1, 2, 3)  # Change shape to (N, C, D, H, W)
 
         intersection = torch.sum(inputs * targets, dim=(2, 3, 4))  # (N, C)
         dice_score = (2 * intersection + smooth) / (inputs.sum(dim=(2, 3, 4)) + targets.sum(dim=(2, 3, 4)) + smooth)
 
         if metric_mode:
-            return dice_score  
-        return 1 - dice_score.mean()
-    
+            return dice_score
+        else:
+            return 1 - dice_score
+
     def forward(self, inputs, targets):
+        """
+        calculate dice loss for multi-class segmentation
+        """
+        dice_loss = self.dice_coefficient(inputs, targets, metric_mode=False).mean()
+        
+        # Convert targets
+        targets = targets.argmax(dim=1)
+        ce_loss = self.ce_loss(inputs, targets)
 
-        return self.multi_class_dice(inputs, targets, metric_mode=False)
-
+        final_loss = 0.7 * dice_loss + 0.3 * ce_loss
+        return final_loss
+    
     def metric(self, inputs, targets):
-        return self.multi_class_dice(inputs, targets, metric_mode=True)
+        dice_score = self.dice_coefficient(inputs, targets, metric_mode=True) 
+        return dice_score
+# class EDiceLoss_Val(nn.Module):
+#     def __init__(self):
+#         super(EDiceLoss_Val, self).__init__()
+#         self.labels = ["Liver", "Tumor"]
+#         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+#     def binary_dice(self, inputs, targets, metric_mode=False):
+#         smooth = 1e-5
+#         inputs = torch.softmax(inputs, dim=1)
+
+#         intersection = torch.sum(inputs * targets, dim=(2, 3, 4))  # (N, C)
+#         dice_score = (2 * intersection + smooth) / (inputs.sum(dim=(2, 3, 4)) + targets.sum(dim=(2, 3, 4)) + smooth)
+
+#         if metric_mode:
+#             return dice_score  
+#         return 1 - dice_score.mean()
+    
+#     def forward(self, inputs, targets):
+
+#         return self.multi_class_dice(inputs, targets, metric_mode=False)
+
+#     def metric(self, inputs, targets):
+#         return self.multi_class_dice(inputs, targets, metric_mode=True)
 
 class AverageMeter(object):
     """Computes and stores the average and current value."""

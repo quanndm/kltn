@@ -42,7 +42,7 @@ def train_epoch(model, loader, optimizer, epoch, loss_func, batch_size, max_epoc
         start_time = time.time()
     return run_loss.avg
 
-def val_epoch(model, loader, epoch, acc_func, criterion_val, metric, max_epochs, logger):
+def val_epoch(model, loader, epoch, acc_func, max_epochs, logger):
     model.eval()
     start_time = time.time()
     run_acc = AverageMeter('Loss', ':.4e')
@@ -74,7 +74,7 @@ def val_epoch(model, loader, epoch, acc_func, criterion_val, metric, max_epochs,
 
     return run_acc.avg
 
-def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, criterion_val, metric, scheduler, batch_size, max_epochs, start_epoch=1, val_every = 1, logger=None, path_save_model=None):
+def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, scheduler, batch_size, max_epochs, start_epoch=1, val_every = 1, logger=None, path_save_model=None):
     val_acc_max, best_epoch = 0.0, 0
     total_time = time.time()
     # dices_per_class, dices_avg, loss_epochs, trains_epoch = [], [], [], []
@@ -96,7 +96,7 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, cri
             trains_epoch.append(epoch)
             epoch_time = time.time()
             logger.info(f"\n{'*' * 20}Epoch {epoch} Validation{'*' * 20}")
-            val_acc = val_epoch(model, val_loader, epoch, acc_func, criterion_val, metric, max_epochs, logger)
+            val_acc = val_epoch(model, val_loader, epoch, acc_func, max_epochs, logger)
 
             val_dice_liver = val_acc[0]
             val_dice_tumor = val_acc[1]
@@ -118,8 +118,11 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, cri
                     model.state_dict(),
                     os.path.join(path_save_model, f"best_metric_model_{model.__class__.__name__}.pth"),
                 )
-            
-            torch.cuda.empty_cache()
 
+            torch.cuda.empty_cache()
+        torch.save(
+            model.state_dict(),
+            os.path.join(path_save_model, f"model_{model.__class__.__name__}_epochs_{epoch}.pth"),
+        )
     logger.info(f"Training Finished !, Best Accuracy: {val_acc_max:.6f} --At epoch: {best_epoch} --Total_time: {time.time()-total_time:.2f}")
     return val_acc_max, best_epoch, dices_liver, dices_tumor, dices_avg, loss_epochs, trains_epoch

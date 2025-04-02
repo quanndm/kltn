@@ -1,4 +1,4 @@
-from monai.transforms import ScaleIntensityRanged, RandRotate90d, Compose
+from monai.transforms import  RandRotate90d, Compose
 
 def train_augmentations():
     """

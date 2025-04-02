@@ -80,11 +80,11 @@ class Lits(Dataset):
         # resize image
         image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
 
-        # one hot
-        num_classes = 3 # background, liver, tumor
-        seg = seg.squeeze(0)  # remove channel dimension
-        seg = np.eye(num_classes)[seg.astype(np.uint8)]
-        seg = seg.transpose(3, 0, 1, 2) # change to (C, D, H, W)
+        # # one hot
+        # num_classes = 3 # background, liver, tumor
+        # seg = seg.squeeze(0)  # remove channel dimension
+        # seg = np.eye(num_classes)[seg.astype(np.uint8)]
+        # seg = seg.transpose(3, 0, 1, 2) # change to (C, D, H, W)
         
         return image, seg
 

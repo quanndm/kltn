@@ -42,8 +42,7 @@ def download_dataset_LiTS():
 
     print(h.status().name, 'complete')
 
-def unzip_dataset_LiTS():
-    dir_name = '/content/LITS17'
+def unzip_dataset_LiTS(dir_name):
     extension = ".zip"
     print(f"\nUnzipping files in {dir_name}")
     for item in os.listdir(dir_name): # loop through items in dir
@@ -55,6 +54,6 @@ def unzip_dataset_LiTS():
             os.remove(file_name) # delete zipped file
 
     print("Unzipping complete")
-def prepare_dataset_LiTS():
+def prepare_dataset_LiTS(dir_name):
     download_dataset_LiTS()
-    unzip_dataset_LiTS()
+    unzip_dataset_LiTS(dir_name)
