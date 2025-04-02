@@ -81,6 +81,7 @@ class DiceLossWSoftmax(nn.Module):
         """
         dice_loss = self.dice_coefficient(inputs, targets, metric_mode=False).mean()
         
+        targets = targets.argmax(dim=1)
         ce_loss = self.ce_loss(inputs, targets)
 
         final_loss = 0.7 * dice_loss + 0.3 * ce_loss
