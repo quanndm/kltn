@@ -63,6 +63,7 @@ class DiceLossWSoftmax(nn.Module):
         inputs = torch.softmax(inputs, dim=1)
 
         # Convert targets to one-hot encoding
+        targets = targets.squeeze(1) # Remove channel dimension
         targets = torch.nn.functional.one_hot(targets.long() , num_classes=inputs.shape[1])
         targets = targets.permute(0, 4, 1, 2, 3)  # Change shape to (N, C, D, H, W)
 
@@ -80,8 +81,6 @@ class DiceLossWSoftmax(nn.Module):
         """
         dice_loss = self.dice_coefficient(inputs, targets, metric_mode=False).mean()
         
-        # Convert targets
-        targets = targets.argmax(dim=1)
         ce_loss = self.ce_loss(inputs, targets)
 
         final_loss = 0.7 * dice_loss + 0.3 * ce_loss
