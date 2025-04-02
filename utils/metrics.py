@@ -63,7 +63,7 @@ class DiceLossWSoftmax(nn.Module):
         inputs = torch.softmax(inputs, dim=1)
 
         # Convert targets to one-hot encoding
-        targets = torch.nn.functional.one_hot(targets, num_classes=inputs.shape[1])
+        targets = torch.nn.functional.one_hot(targets.long() , num_classes=inputs.shape[1])
         targets = targets.permute(0, 4, 1, 2, 3)  # Change shape to (N, C, D, H, W)
 
         intersection = torch.sum(inputs * targets, dim=(2, 3, 4))  # (N, C)
