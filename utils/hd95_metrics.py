@@ -15,11 +15,11 @@ from monai.transforms import (
 )
 from medpy.metric import binary
 
-from ..utils.metrics import EDiceLoss_Val, AverageMeter
+from ..utils.metrics import  AverageMeter
 from ..utils.utils import model_inferer
 from ..processing.postprocessing import post_trans
 
-def val_epoch_hd95(model, loader, max_epochs, epoch, acc_func, metric, device, logger):
+def val_epoch_hd95(model, loader, max_epochs, epoch, acc_func, device, logger):
     model.eval()
     start_time = time.time()
 
@@ -102,9 +102,9 @@ def calc_hd95(model, val_loader, device, weight_path, max_epochs, logger):
     model.load_state_dict(torch.load(weight_path))
     dice_acc = DiceMetric(include_background=True, reduction='mean_batch', get_not_nans=True)
     criterian_val = EDiceLoss_Val().to(device)
-    metric = criterian_val.metric
+    # metric = criterian_val.metric
 
-    val_acc = val_epoch_hd95(model, val_loader, max_epochs, epoch=0, acc_func=dice_acc, metric = metric, device=device, logger=logger)
+    val_acc = val_epoch_hd95(model, val_loader, max_epochs, epoch=0, acc_func=dice_acc, device=device, logger=logger)
     dice_liver, dice_tumor = val_acc[0], val_acc[1]
     val_avg_acc = np.mean(val_acc)
     print(f"\n{'*' * 20}Epoch Summary{'*' * 20}")
