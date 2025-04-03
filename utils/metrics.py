@@ -51,7 +51,7 @@ class DiceLossWSoftmax(nn.Module):
     def __init__(self):
         super(DiceLossWSoftmax, self).__init__()
         self.ce_loss = nn.CrossEntropyLoss()
-        self.focal_loss = FocalLoss(gamma=2.0, alpha=0.25, softmax=True)
+        self.focal_loss = FocalLoss(gamma=2.0, alpha=0.25, use_softmax=True)
 
     def dice_coefficient(self, inputs, targets, metric_mode=False):
         """
