@@ -19,14 +19,8 @@ post_trans_v2 = Compose(
 post_softmax = Activations(softmax=True)
 
 post_pred = AsDiscrete(argmax=True)
-# post_trans = Compose(
-#     [EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)]
-# )
 
-# post_sigmoid = Activations(sigmoid=True)
-
-# post_pred = AsDiscrete(threshold=0.5)
-
+#TODO: test this function
 def apply_cca(segmentation, min_area = 500):
     """
     Apply connected component analysis to the segmentation mask.
