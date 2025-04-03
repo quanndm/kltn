@@ -51,7 +51,6 @@ class DiceLossWSoftmax(nn.Module):
     def __init__(self):
         super(DiceLossWSoftmax, self).__init__()
         self.ce_loss = nn.CrossEntropyLoss()
-        self.focal_loss = FocalLoss(gamma=2.0, alpha=0.25, use_softmax=True)
 
     def dice_coefficient(self, inputs, targets, metric_mode=False):
         """
@@ -77,16 +76,32 @@ class DiceLossWSoftmax(nn.Module):
         else:
             return 1 - dice_score
 
+    def focal_loss(self, inputs, targets):
+        """
+        calculate focal loss for multi-class
+        args:
+            inputs: shape (N, C, D, H, W), predictions - logits
+            targets: shape (N, C, D, H, W), ground truth
+
+        """
+
+        targets = targets.squeeze(1) # Remove channel dimension
+        targets = torch.nn.functional.one_hot(targets.long() , num_classes=inputs.shape[1])
+        targets = targets.permute(0, 4, 1, 2, 3).float()  # Change shape to (N, C, D, H, W)
+
+        self.fc_loss = FocalLoss(gamma=2.0, alpha=0.25, softmax=True, reduction="mean")
+        return self.fc_loss(inputs, targets)
+
     def forward(self, inputs, targets):
         """
         calculate dice loss for multi-class segmentation
         """
         dice_loss = self.dice_coefficient(inputs, targets, metric_mode=False).mean()
-
+        focal_loss = self.focal_loss(inputs, targets)
+        
         targets = targets.argmax(dim=1)
         ce_loss = self.ce_loss(inputs, targets)
-        focal_loss = self.focal_loss(inputs, targets)
-
+        
         final_loss = 0.6 * dice_loss + 0.2 * ce_loss + 0.2 * focal_loss
         return final_loss
     
