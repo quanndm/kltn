@@ -18,7 +18,7 @@ def download_dataset_LiTS():
 
     params = {
         "ti": info,
-        "save_path": "/content/"
+        "save_path": "."
     }
 
     h = ses.add_torrent(params)

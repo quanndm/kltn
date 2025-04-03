@@ -1,6 +1,7 @@
 import torch
 from torch import optim
 import torch.nn as nn
+from monai.losses import  FocalLoss
 
 class DiceLossWSigmoid(nn.Module):
     def __init__(self):
@@ -50,16 +51,17 @@ class DiceLossWSoftmax(nn.Module):
     def __init__(self):
         super(DiceLossWSoftmax, self).__init__()
         self.ce_loss = nn.CrossEntropyLoss()
+        self.focal_loss = FocalLoss(gamma=2.0, alpha=0.25, softmax=True)
 
-    def dice_coefficient(self, inputs, targets, metric_mode=False, smooth=1e-5):
+    def dice_coefficient(self, inputs, targets, metric_mode=False):
         """
         calculate dice loss for multi-class segmentation
         args:
             inputs: shape (N, C, D, H, W), predictions - logits
             targets: shape (N, C, D, H, W), ground truth 
             metric_mode: if True, return dice score for each class
-            smooth: smoothing factor to avoid division by zero
         """
+        smooth = torch.finfo(torch.float32).eps  
         inputs = torch.softmax(inputs, dim=1)
 
         # Convert targets to one-hot encoding
@@ -80,11 +82,12 @@ class DiceLossWSoftmax(nn.Module):
         calculate dice loss for multi-class segmentation
         """
         dice_loss = self.dice_coefficient(inputs, targets, metric_mode=False).mean()
-        
+
         targets = targets.argmax(dim=1)
         ce_loss = self.ce_loss(inputs, targets)
+        focal_loss = self.focal_loss(inputs, targets)
 
-        final_loss = 0.7 * dice_loss + 0.3 * ce_loss
+        final_loss = 0.6 * dice_loss + 0.2 * ce_loss + 0.2 * focal_loss
         return final_loss
     
     def metric(self, inputs, targets):

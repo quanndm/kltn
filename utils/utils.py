@@ -7,6 +7,7 @@ sw_batch_size = 1
 overlap = 0.5
 
 VAL_AMP = True
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def model_inferer(input, model):
     def _compute(input):
@@ -19,7 +20,7 @@ def model_inferer(input, model):
         )
 
     if VAL_AMP:
-        with torch.amp.autocast('cuda'):
+        with torch.autocast(device):
             return _compute(input)
     else:
         return _compute(input)
@@ -35,7 +36,7 @@ def inference(input, model):
             overlap=0.5,
         )
     if VAL_AMP:
-        with torch.amp.autocast('cuda'):
+        with torch.autocast(device):
             return _compute(input)
     else:
         return _compute(input)
