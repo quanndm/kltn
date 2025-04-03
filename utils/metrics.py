@@ -89,7 +89,7 @@ class DiceLossWSoftmax(nn.Module):
         targets = torch.nn.functional.one_hot(targets.long() , num_classes=inputs.shape[1])
         targets = targets.permute(0, 4, 1, 2, 3).float()  # Change shape to (N, C, D, H, W)
 
-        self.fc_loss = FocalLoss(gamma=2.0, alpha=0.25, softmax=True, reduction="mean")
+        self.fc_loss = FocalLoss(gamma=2.0, alpha=0.25, use_softmax=True)
         return self.fc_loss(inputs, targets)
 
     def forward(self, inputs, targets):
