@@ -7,7 +7,7 @@ sw_batch_size = 1
 overlap = 0.5
 
 VAL_AMP = True
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 def model_inferer(input, model):
     def _compute(input):
