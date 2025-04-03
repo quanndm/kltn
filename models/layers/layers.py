@@ -161,7 +161,6 @@ class ResCoTAttention(nn.Module):
         self.conv3 = nn.Sequential(
             nn.Conv3d(self.hidden_channels, out_channels, kernel_size=3, stride=1, padding=1),
             nn.GroupNorm(num_groups=8, num_channels=out_channels),
-            self.relu
         )
 
         self.residual = None
@@ -179,6 +178,57 @@ class ResCoTAttention(nn.Module):
         out = self.conv1(x)
         out = self.conv2(out)
         out = self.conv3(out)
+
+        out += identity
+        out = self.relu(out)
+
+        return out
+
+class ResNeXtCoTBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, cardinality=32):
+        super(ResNeXtCoTBlock, self).__init__()
+        mid_channels = out_channels // 2
+        self.relu = nn.ReLU(inplace=True)
+
+        self.conv1 = nn.Sequential(
+            nn.Conv3d(in_channels, mid_channels, kernel_size=1, bias=False),
+            nn.BatchNorm3d(mid_channels),
+            self.relu
+        )
+
+        self.conv2 = nn.Sequential(
+            nn.Conv3d(mid_channels, mid_channels, kernel_size=3, stride=1, padding=1, groups=cardinality, bias=False),
+            nn.BatchNorm3d(mid_channels),
+            self.relu
+        )
+
+        self.conv3 = nn.Sequential(
+            CoTAttention(mid_channels, 3),
+            nn.BatchNorm3d(mid_channels),
+            self.relu
+        )
+
+        self.conv4 = nn.Sequential(
+            nn.Conv3d(mid_channels, out_channels, kernel_size=1, bias=False),
+            nn.BatchNorm3d(out_channels)
+        )
+
+        self.residual = None
+        if in_channels != out_channels:
+            self.residual = nn.Sequential(
+                nn.Conv3d(in_channels, out_channels, kernel_size=1),
+                nn.BatchNorm3d(out_channels)
+            )
+
+    def forward(self, x):
+        identity = x    
+        if self.residual is not None:
+            identity = self.residual(x)
+
+        out = self.conv1(x)
+        out = self.conv2(out)
+        out = self.conv3(out)
+        out = self.conv4(out)
 
         out += identity
         out = self.relu(out)

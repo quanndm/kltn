@@ -102,7 +102,7 @@ class DiceLossWSoftmax(nn.Module):
         targets = targets.argmax(dim=1)
         ce_loss = self.ce_loss(inputs, targets)
         
-        final_loss = 0.7 * dice_loss + 0.3 * ce_loss + 0.5 * focal_loss
+        final_loss = 0.7 * dice_loss + 0.3 * ce_loss + 0.6 * focal_loss
         return final_loss
     
     def metric(self, inputs, targets):
