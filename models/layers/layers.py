@@ -209,6 +209,7 @@ class ResNeXtCoTBlock(nn.Module):
         self.conv3 = nn.Sequential(
             CoTAttention(inner_channels, 3),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
+            self.relu
         )
 
         self.conv4 = nn.Sequential(
