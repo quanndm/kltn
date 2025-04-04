@@ -236,6 +236,7 @@ class ResNeXtCoTBlock(nn.Module):
 
         return out
 
+    @staticmethod
     def get_suitable_cardinality(out_channels):
         min_channels_per_group = 4
         max_card = out_channels // min_channels_per_group
