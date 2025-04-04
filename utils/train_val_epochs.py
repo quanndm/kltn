@@ -3,7 +3,7 @@ import torch
 import numpy as np
 import os
 
-from ..processing.postprocessing import post_trans, post_label
+from ..processing.postprocessing import post_trans
 from ..utils.utils import model_inferer
 from ..utils.metrics import AverageMeter
 from monai.data import decollate_batch
@@ -63,7 +63,6 @@ def val_epoch(model, loader, epoch, acc_func, max_epochs, logger):
             val_output_convert = [post_trans(val_pred_tensor) for val_pred_tensor in val_outputs_list]
             val_output_convert = [t.float() for t in val_output_convert]
 
-            val_labels_list = [post_label(val_label_tensor) for val_label_tensor in val_labels_list]
             val_labels_list = [t.float() for t in val_labels_list]
             
             acc_func.reset()
