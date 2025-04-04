@@ -196,7 +196,7 @@ class ResNeXtCoTBlock(nn.Module):
         self.conv1 = nn.Sequential(
 
             nn.Conv3d(in_channels, inner_channels, kernel_size=1, bias=False),
-            nn.GroupNorm(num_groups=4, num_channels=inner_channels)
+            nn.GroupNorm(num_groups=4, num_channels=inner_channels),
             self.relu
         )
 
