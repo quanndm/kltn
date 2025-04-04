@@ -87,3 +87,19 @@ def truncate_HU(image, hu_min=-200, hu_max=200):
         image: np.ndarray, the truncated image
     """
     return np.clip(image, hu_min, hu_max)
+
+def resize_image_v2(image, seg, target_size=(128, 128, 128)):
+    """
+    Resize the image and segmentation to the target size.
+    Args:
+        image: np.ndarray, the image to resize, shape (D, H, W)
+        seg: np.ndarray, the segmentation to resize, shape (D, H, W)
+        target_size: tuple, the target size of the image and segmentation
+    Returns:
+        image: np.ndarray, the resized image
+        seg: np.ndarray, the resized segmentation
+    """
+    zoom_factors = [target / dim for target, dim in zip(target_size, image)]
+    image = zoom(image, zoom_factors, order=3)
+    seg = zoom(seg, zoom_factors, order=0)
+    return image, seg

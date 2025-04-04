@@ -97,12 +97,13 @@ class DiceLossWSoftmax(nn.Module):
         calculate dice loss for multi-class segmentation
         """
         dice_loss = self.dice_coefficient(inputs, targets, metric_mode=False).mean()
-        focal_loss = self.focal_loss(inputs, targets)
+        # focal_loss = self.focal_loss(inputs, targets)
         
         targets = targets.argmax(dim=1)
         ce_loss = self.ce_loss(inputs, targets)
         
-        final_loss = 0.7 * dice_loss + 0.3 * ce_loss + 0.6 * focal_loss
+        # final_loss = 0.7 * dice_loss + 0.3 * ce_loss + 0.6 * focal_loss
+        final_loss = 0.7 * dice_loss + 0.3 * ce_loss 
         return final_loss
     
     def metric(self, inputs, targets):

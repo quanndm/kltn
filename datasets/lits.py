@@ -2,7 +2,7 @@ import SimpleITK as sitk
 import numpy as np
 import torch
 from torch.utils.data.dataset import Dataset
-from ..processing.preprocessing import pad_or_crop_image, zscore_normalise, irm_min_max_preprocess, resize_image, truncate_HU
+from ..processing.preprocessing import pad_or_crop_image, zscore_normalise, irm_min_max_preprocess, resize_image, truncate_HU, resize_image_v2
 from ..processing.augmentation import train_augmentations
 import os
 class Lits(Dataset):
@@ -73,19 +73,13 @@ class Lits(Dataset):
         else:
             image = irm_min_max_preprocess(image)
 
-        #  expand dims of image and segmentation
+        # resize image
+        image, seg = resize_image_v2(image, seg, target_size=(128, 128, 128))  
+
+        # expand dims of image and segmentation
         image = np.expand_dims(image, axis=0)
         seg = np.expand_dims(seg, axis=0)
 
-        # resize image
-        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
-
-        # # one hot
-        # num_classes = 3 # background, liver, tumor
-        # seg = seg.squeeze(0)  # remove channel dimension
-        # seg = np.eye(num_classes)[seg.astype(np.uint8)]
-        # seg = seg.transpose(3, 0, 1, 2) # change to (C, D, H, W)
-        
         return image, seg
 
     @staticmethod
