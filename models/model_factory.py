@@ -1,8 +1,8 @@
-from unet3d  import UNet3D
-from unet3d_cot import UNet3DWCoT
-from unet3d_cot_da import UNet3DWCoTDA
-from unet3d_rescot_da import UNet3DWResCoTDA
-from unet3d_resnextcot_da import UNet3DWResNeXtCoTDA
+from .unet3d  import UNet3D
+from .unet3d_cot import UNet3DWCoT
+from .unet3d_cot_da import UNet3DWCoTDA
+from .unet3d_rescot_da import UNet3DWResCoTDA
+from .unet3d_resnextcot_da import UNet3DWResNeXtCoTDA
 
 class ModelFactory:
     _model = {
