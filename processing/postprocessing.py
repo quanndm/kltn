@@ -16,6 +16,8 @@ post_trans_v2 = Compose(
     [EnsureType(), Activations(softmax=True),AsDiscrete(argmax=True)]
 )
 
+post_label = AsDiscrete(to_onehot=3)
+
 post_softmax = Activations(softmax=True)
 
 post_pred = AsDiscrete(argmax=True)
