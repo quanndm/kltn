@@ -18,7 +18,7 @@ from medpy.metric import binary
 from ..utils.metrics import  AverageMeter
 from ..utils.utils import model_inferer
 from ..processing.postprocessing import post_trans
-
+# TODO: Test this file and rewrite the code
 def val_epoch_hd95(model, loader, max_epochs, epoch, acc_func, device, logger):
     model.eval()
     start_time = time.time()

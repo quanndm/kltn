@@ -54,7 +54,3 @@ def apply_cca(segmentation, min_area=500):
     if isinstance(segmentation, torch.Tensor):
         processed_segmentation = torch.tensor(processed_segmentation, dtype=torch.float32).to(segmentation.device) 
     return processed_segmentation
-
-
-def apply_crf():
-    pass
