@@ -52,6 +52,11 @@ def val_epoch(model, loader, epoch, acc_func, max_epochs, logger):
             val_inputs, val_labels = batch_data["image"].to(device), batch_data["label"].to(device)
             logits = model_inferer(val_inputs, model)
 
+            # convert val_labels to one-hot encoding
+            val_labels = val_labels.squeeze(1) # Remove channel dimension
+            val_labels = torch.nn.functional.one_hot(val_labels.long() , num_classes=inputs.shape[1])
+            val_labels = val_labels.permute(0, 4, 1, 2, 3)  # Change shape to (N, C, D, H, W)
+
             val_outputs_list = decollate_batch(logits)
             val_labels_list = decollate_batch(val_labels)
 

@@ -1,0 +1,13 @@
+# training
+start_epoch: 1
+max_epochs: 1
+batch_size: 1
+val_every: 1
+learning_rate: 1e-3
+weight_decay: 1e-5
+eta_min: 1e-6
+
+# path
+log_path: /content/drive/MyDrive/KLTN/logs
+source_folder_lits: /content/LITS17
+path_save_model_state: /content/drive/MyDrive/KLTN/code/weight
