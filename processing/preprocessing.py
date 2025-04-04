@@ -99,7 +99,7 @@ def resize_image_v2(image, seg, target_size=(128, 128, 128)):
         image: np.ndarray, the resized image
         seg: np.ndarray, the resized segmentation
     """
-    zoom_factors = [target / dim for target, dim in zip(target_size, image)]
+    zoom_factors = [target / dim for target, dim in zip(target_size, image.shape)]
     image = zoom(image, zoom_factors, order=3)
     seg = zoom(seg, zoom_factors, order=0)
     return image, seg
