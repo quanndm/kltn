@@ -185,12 +185,13 @@ class ResCoTAttention(nn.Module):
         return out
 
 class ResNeXtCoTBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, cardinality=32):
+    def __init__(self, in_channels, out_channels, ):
         super(ResNeXtCoTBlock, self).__init__()
         mid_channels = out_channels // 2
         self.relu = nn.ReLU(inplace=True)
-
+        cardinality = self.get_suitable_cardinality(out_channels)
         self.conv1 = nn.Sequential(
+
             nn.Conv3d(in_channels, mid_channels, kernel_size=1, bias=False),
             nn.BatchNorm3d(mid_channels),
             self.relu
@@ -234,3 +235,11 @@ class ResNeXtCoTBlock(nn.Module):
         out = self.relu(out)
 
         return out
+
+    def get_suitable_cardinality(out_channels):
+        min_channels_per_group = 4
+        max_card = out_channels // min_channels_per_group
+        for c in reversed(range(1, max_card + 1)):
+            if out_channels % c == 0:
+                return c
+        return 1
