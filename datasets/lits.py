@@ -73,12 +73,13 @@ class Lits(Dataset):
         else:
             image = irm_min_max_preprocess(image)
 
-        # resize image
-        image, seg = resize_image_v2(image, seg, target_size=(128, 128, 128))  
-
         # expand dims of image and segmentation
         image = np.expand_dims(image, axis=0)
         seg = np.expand_dims(seg, axis=0)
+        
+        # resize image
+        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
+
 
         return image, seg
 
