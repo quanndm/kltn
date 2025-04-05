@@ -52,11 +52,6 @@ def val_epoch(model, loader, epoch, acc_func, max_epochs, logger):
             val_inputs, val_labels = batch_data["image"].to(device), batch_data["label"].to(device)
             logits = model_inferer(val_inputs, model)
 
-            # convert val_labels to one-hot encoding
-            # val_labels = val_labels.squeeze(1) # Remove channel dimension
-            # val_labels = torch.nn.functional.one_hot(val_labels.long() , num_classes=val_inputs.shape[1])
-            # val_labels = val_labels.permute(0, 4, 1, 2, 3)  # Change shape to (N, C, D, H, W)
-
             val_outputs_list = decollate_batch(logits)
             val_labels_list = decollate_batch(val_labels)
 
@@ -126,9 +121,12 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, sch
                 )
 
             torch.cuda.empty_cache()
-        torch.save(
-            model.state_dict(),
-            os.path.join(path_save_model, f"model_{model.__class__.__name__}_epochs_{epoch}.pth"),
-        )
+        if epoch % 10 == 0 or epoch == max_epochs or epoch == 1:
+            logger.info(f"Epoch {epoch}/{max_epochs} ---[loss: {train_loss:.4f}] ---[val_dice: {val_dice_avg:.6f}] ---[time {time.time() - epoch_time:.2f}s]")
+            # Save the model every 10 epochs
+            torch.save(
+                model.state_dict(),
+                os.path.join(path_save_model, f"model_{model.__class__.__name__}_epochs_{epoch}.pth"),
+            )
     logger.info(f"Training Finished !, Best Accuracy: {val_acc_max:.6f} --At epoch: {best_epoch} --Total_time: {time.time()-total_time:.2f}")
     return val_acc_max, best_epoch, dices_liver, dices_tumor, dices_avg, loss_epochs, trains_epoch
