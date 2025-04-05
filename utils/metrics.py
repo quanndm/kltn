@@ -2,6 +2,7 @@ import torch
 from torch import optim
 import torch.nn as nn
 from monai.losses import  FocalLoss
+from monai.metrics import DiceMetric
 
 class DiceLossWSigmoid(nn.Module):
     def __init__(self):
