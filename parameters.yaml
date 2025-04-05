@@ -1,6 +1,6 @@
 # training
 start_epoch: 1
-max_epochs: 1
+max_epochs: 100
 batch_size: 1
 val_every: 1
 learning_rate: 1e-3
