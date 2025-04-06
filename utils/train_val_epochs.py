@@ -129,4 +129,4 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, sch
                 os.path.join(path_save_model, f"model_{model.__class__.__name__}_epochs_{epoch}.pth"),
             )
     logger.info(f"Training Finished !, Best Accuracy: {val_acc_max:.6f} --At epoch: {best_epoch} --Total_time: {time.time()-total_time:.2f}")
-    return val_acc_max, best_epoch, dices_liver, dices_tumor, dices_avg, loss_epochs, trains_epoch
+    return val_acc_max, best_epoch, dices_liver, dices_tumor, dices_avg, loss_epochs, trains_epoch, time.time()-total_time
