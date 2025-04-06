@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .layers.layers import DoubleConv, DoubleConvDownWCoT, DoubleConvUpWCoT
+from .layers.layers import DoubleConv, DoubleConvDownWCoT, DoubleConvUpWCoT, OutConv
 
 class Down(nn.Module):
     def __init__(self, in_channels, out_channels):
