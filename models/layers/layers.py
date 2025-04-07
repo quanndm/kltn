@@ -155,13 +155,16 @@ class ResCoTAttention(nn.Module):
         self.conv2 = nn.Sequential(
             nn.Conv3d(self.hidden_channels, self.hidden_channels, kernel_size=3, padding=1),
             nn.GroupNorm(num_groups=4, num_channels=self.hidden_channels),
-            self.relu,
+            self.relu
+        )
+
+        self.conv3 = nn.Sequential(
             CoTAttention(self.hidden_channels, 3),
             nn.GroupNorm(num_groups=4, num_channels=self.hidden_channels),
             self.relu
         )
 
-        self.conv3 = nn.Sequential(
+        self.conv4 = nn.Sequential(
             nn.Conv3d(self.hidden_channels, out_channels, kernel_size=3, stride=1, padding=1),
             nn.GroupNorm(num_groups=4, num_channels=out_channels),
         )
@@ -181,6 +184,7 @@ class ResCoTAttention(nn.Module):
         out = self.conv1(x)
         out = self.conv2(out)
         out = self.conv3(out)
+        out = self.conv4(out)
 
         out += identity
         out = self.relu(out)
