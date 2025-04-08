@@ -5,7 +5,7 @@ import os
 
 from ..processing.postprocessing import post_trans
 from ..utils.utils import model_inferer
-from ..utils.metrics import AverageMeter
+from ..utils.metrics import AverageMeter, IoUMetric, PrecisionMetric, RecallMetric
 from monai.data import decollate_batch
 from monai.inferers import sliding_window_inference
 from monai.transforms import (
@@ -46,6 +46,9 @@ def val_epoch(model, loader, epoch, acc_func, max_epochs, logger):
     model.eval()
     start_time = time.time()
     run_acc = AverageMeter('Loss', ':.4e')
+    iou_metric = IoUMetric(num_classes=3, ignore_background=True)
+    precision_metric = PrecisionMetric(num_classes=3, ignore_background=True)
+    recall_metric = RecallMetric(num_classes=3, ignore_background=True)
 
     with torch.no_grad():
         for idx, batch_data in enumerate(loader):
@@ -69,17 +72,37 @@ def val_epoch(model, loader, epoch, acc_func, max_epochs, logger):
             dice_liver = run_acc.avg[0]
             dice_tumor = run_acc.avg[1]
             dice_avg = np.mean(run_acc.avg)
+
+            ious = iou_metric(logits, val_labels)
+            iou_liver = ious[0]
+            iou_tumor = ious[1]
+            iou_avg = np.mean(ious)
+
+            precisions = precision_metric(logits, val_labels)
+            precision_liver = precisions[0]
+            precision_tumor = precisions[1]
+            precision_avg = np.mean(precisions)
+
+            recalls = recall_metric(logits, val_labels)
+            recall_liver = recalls[0]
+            recall_tumor = recalls[1]
+            recall_avg = np.mean(recalls)
+
             logger.info(f"Val {epoch}/{max_epochs} {idx+1}/{len(loader)}, Dice_Liver: {dice_liver:.6f}, Dice_Tumor: {dice_tumor:.6f}, Dice_Avg: {dice_avg:.6f}, time {time.time() - start_time:.2f}s")
+
 
             start_time = time.time()
 
-    return run_acc.avg
+    return run_acc.avg, ious, precisions, recalls
 
 def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, scheduler, batch_size, max_epochs, start_epoch=1, val_every = 1, logger=None, path_save_model=None, save_model=True):
     val_acc_max, best_epoch = 0.0, 0
     total_time = time.time()
     # dices_per_class, dices_avg, loss_epochs, trains_epoch = [], [], [], []
     dices_liver, dices_tumor,dices_avg, loss_epochs, trains_epoch = [], [], [], [], []
+    ious_liver, ious_tumor, ious_avg = [], [], []
+    precisions_liver, precisions_tumor, precisions_avg = [], [], []
+    recalls_liver, recalls_tumor, recals_avg = [], [], []
 
     for epoch in range(start_epoch, max_epochs+1):
         logger.info(f"\n{'=' * 30}Training epoch {epoch}{'=' * 30}")
@@ -97,11 +120,23 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, sch
             trains_epoch.append(epoch)
             epoch_time = time.time()
             logger.info(f"\n{'*' * 20}Epoch {epoch} Validation{'*' * 20}")
-            val_acc = val_epoch(model, val_loader, epoch, acc_func, max_epochs, logger)
+            val_acc , val_ious, val_precisions, val_recalls= val_epoch(model, val_loader, epoch, acc_func, max_epochs, logger)
 
             val_dice_liver = val_acc[0]
             val_dice_tumor = val_acc[1]
             val_dice_avg = np.mean(val_acc)
+
+            val_iou_liver = val_ious[0]
+            val_iou_tumor = val_ious[1]
+            val_iou_avg = np.mean(val_ious)
+
+            val_precision_liver = val_precisions[0]
+            val_precision_tumor = val_precisions[1]
+            val_precision_avg = np.mean(val_precisions)
+
+            val_recall_liver = val_recalls[0]
+            val_recall_tumor = val_recalls[1]
+            val_recall_avg = np.mean(val_recalls)
             logger.info(f"\n{'*' * 20}Epoch Summary{'*' * 20}")
             logger.info(f"Final validation stats {epoch}/{max_epochs},  Dice_Liver: {val_dice_liver:.6f}, Dice_Tumor: {val_dice_tumor:.6f}, Dice_Avg: {val_dice_avg:.6f} , time {time.time() - epoch_time:.2f}s")
             
@@ -109,6 +144,17 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, sch
             dices_tumor.append(val_dice_tumor)
             dices_avg.append(val_dice_avg)
 
+            ious_liver.append(val_iou_liver)
+            ious_tumor.append(val_iou_tumor)
+            ious_avg.append(val_iou_avg)
+
+            precisions_liver.append(val_precision_liver)
+            precisions_tumor.append(val_precision_tumor)
+            precisions_avg.append(val_precision_avg)
+
+            recalls_liver.append(val_recalls_liver)
+            recalls_tumor.append(val_recalls_tumor)
+            recalls_avg.append(val_recalls_avg)
             if val_dice_avg > val_acc_max:
                 print("New best ({:.6f} --> {:.6f}). At epoch {}".format(val_acc_max, val_dice_avg, epoch))
                 logger.info(f"New best ({val_acc_max:.6f} --> {val_dice_avg:.6f}). At epoch {epoch}. Time consuming: {time.time()-total_time:.2f}")
@@ -130,4 +176,5 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, sch
                     os.path.join(path_save_model, f"model_{model.__class__.__name__}_epochs_{epoch}.pth"),
                 )
     logger.info(f"Training Finished !, Best Accuracy: {val_acc_max:.6f} --At epoch: {best_epoch} --Total_time: {time.time()-total_time:.2f}")
-    return val_acc_max, best_epoch, dices_liver, dices_tumor, dices_avg, loss_epochs, trains_epoch, time.time()-total_time
+    time_tmp  = time.time()-total_time
+    return val_acc_max, best_epoch, dices_liver, dices_tumor, dices_avg, loss_epochs, trains_epoch, ious_liver, ious_tumor, ious_avg, precisions_liver, precisions_tumor, precisions_avg, recalls_liver, recalls_tumor, recalls_avg, time_tmp

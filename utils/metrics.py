@@ -110,29 +110,6 @@ class DiceLossWSoftmax(nn.Module):
     def metric(self, inputs, targets):
         dice_score = self.dice_coefficient(inputs, targets, metric_mode=True) 
         return dice_score
-# class EDiceLoss_Val(nn.Module):
-#     def __init__(self):
-#         super(EDiceLoss_Val, self).__init__()
-#         self.labels = ["Liver", "Tumor"]
-#         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-#     def binary_dice(self, inputs, targets, metric_mode=False):
-#         smooth = 1e-5
-#         inputs = torch.softmax(inputs, dim=1)
-
-#         intersection = torch.sum(inputs * targets, dim=(2, 3, 4))  # (N, C)
-#         dice_score = (2 * intersection + smooth) / (inputs.sum(dim=(2, 3, 4)) + targets.sum(dim=(2, 3, 4)) + smooth)
-
-#         if metric_mode:
-#             return dice_score  
-#         return 1 - dice_score.mean()
-    
-#     def forward(self, inputs, targets):
-
-#         return self.multi_class_dice(inputs, targets, metric_mode=False)
-
-#     def metric(self, inputs, targets):
-#         return self.multi_class_dice(inputs, targets, metric_mode=True)
 
 class AverageMeter(object):
     """Computes and stores the average and current value."""
@@ -178,3 +155,99 @@ class ProgressMeter(object):
         num_digits = len(str(num_batches // 1))
         fmt = '{:' + str(num_digits) + 'd}'
         return '[' + fmt + '/' + fmt.format(num_batches) + ']'
+
+class IoUMetric():
+    def __init__(self, num_classes = 3, eps =1e-6, ignore_background=True):
+        self.num_classes = num_classes
+        self.eps = eps
+        self.ignore_background = ignore_background
+
+    def __call__(self, y_pred, y_true):
+        """
+        Compute IoU for each class.
+        Args:
+            y_pred: predicted labels (B, C, D, H, W)
+            y_true: ground truth labels (B, C, D, H, W)
+        """
+        y_pred = torch.argmax(y_pred, dim=1)
+        y_true = y_true.squeeze(1)
+
+        ious = []
+        for i in range(self.num_classes):
+            if self.ignore_background and i == 0:
+                continue
+
+            pred = (y_pred == i)
+            true = (y_true == i)
+
+            intersection = (pred & true).sum().float()
+            union = (pred | true).sum().float()
+
+            iou = (intersection + self.eps) / (union + self.eps)
+            ious.append(iou.item())
+        
+        return ious
+
+class PrecisionMetric():
+    def __init__(self, num_classes = 3, eps =1e-6, ignore_background=True):
+        self.num_classes = num_classes
+        self.eps = eps
+        self.ignore_background = ignore_background
+
+    def __call__(self, y_pred, y_true):
+        """
+        Compute Precision for each class.
+        Args:
+            y_pred: predicted labels (B, C, D, H, W)
+            y_true: ground truth labels (B, C, D, H, W)
+        """
+        y_pred = torch.argmax(y_pred, dim=1)
+        y_true = y_true.squeeze(1)
+
+        precisions = []
+        for i in range(self.num_classes):
+            if self.ignore_background and i == 0:
+                continue
+
+            pred = (y_pred == i)
+            true = (y_true == i)
+
+            true_positive = (pred & true).sum().float()
+            false_positive = (pred & ~true).sum().float()
+
+            precision = (true_positive + self.eps) / (true_positive + false_positive + self.eps)
+            precisions.append(precision.item())
+
+        return precisions
+
+class RecallMetric():
+    def __init__(self, num_classes = 3, eps =1e-6, ignore_background=True):
+        self.num_classes = num_classes
+        self.eps = eps
+        self.ignore_background = ignore_background
+
+    def __call__(self, y_pred, y_true):
+        """
+        Compute Recall for each class.
+        Args:
+            y_pred: predicted labels (B, C, D, H, W)
+            y_true: ground truth labels (B, C, D, H, W)
+        """
+        y_pred = torch.argmax(y_pred, dim=1)
+        y_true = y_true.squeeze(1)
+
+        recalls = []
+        for i in range(self.num_classes):
+            if self.ignore_background and i == 0:
+                continue
+
+            pred = (y_pred == i)
+            true = (y_true == i)
+
+            true_positive = (pred & true).sum().float()
+            false_negative = (~pred & true).sum().float()
+
+            recall = (true_positive + self.eps) / (true_positive + false_negative + self.eps)
+            recalls.append(recall.item())
+        
+        return recalls
