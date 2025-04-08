@@ -2,7 +2,7 @@ import SimpleITK as sitk
 import numpy as np
 import torch
 from torch.utils.data.dataset import Dataset
-from ..processing.preprocessing import pad_or_crop_image, zscore_normalise, irm_min_max_preprocess, resize_image, truncate_HU, resize_image_v2
+from ..processing.preprocessing import pad_or_crop_image, zscore_normalise, irm_min_max_preprocess, resize_image, truncate_HU, get_liver_roi
 from ..processing.augmentation import train_augmentations
 import os
 class Lits(Dataset):
@@ -64,7 +64,10 @@ class Lits(Dataset):
             image: np.ndarray, the preprocessed image
             seg: np.ndarray, the preprocessed segmentation
         '''
-        # truncate HU values
+        # get liver ROI
+        image, seg, _ = get_liver_roi(image, seg)
+
+        # clip HU values
         image = truncate_HU(image)
 
         # normalizations
@@ -79,7 +82,6 @@ class Lits(Dataset):
         
         # resize image
         image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
-
 
         return image, seg
 

@@ -76,7 +76,7 @@ def resize_image(image, seg, target_size=(128, 128, 128)):
     seg_resized = process_tensor(seg, "nearest")
     return image_resized.numpy(), seg_resized.numpy()
 
-def truncate_HU(image, hu_min=-200, hu_max=200):
+def truncate_HU(image, hu_min=-200, hu_max=250):
     """
     Truncate the HU values to a range.
     Args:
@@ -103,3 +103,34 @@ def resize_image_v2(image, seg, target_size=(128, 128, 128)):
     image = zoom(image, zoom_factors, order=3)
     seg = zoom(seg, zoom_factors, order=0)
     return image, seg
+
+def get_liver_roi(image, seg, margin=5):
+    """
+    Get the liver ROI from the image and segmentation.
+    Args:
+        image: np.ndarray, the image to get the ROI from, shape (D, H, W)
+        seg: np.ndarray, the segmentation to get the ROI from, shape (D, H, W)
+    Returns:
+        image: np.ndarray, the image with the liver ROI
+        seg: np.ndarray, the segmentation with the liver ROI
+    """
+    # get liver ROI
+    liver_voxels = np.where(seg > 0)
+    
+    if len(liver_voxels[0]) == 0:
+        return image, seg
+    z_min = max(0, np.min(liver_voxels[0]) - margin)
+    z_max = min(image.shape[0], np.max(liver_voxels[0]) + margin + 1)
+
+    y_min = max(0, np.min(liver_voxels[1]) - margin)
+    y_max = min(image.shape[1], np.max(liver_voxels[1]) + margin + 1)
+
+    x_min = max(0, np.min(liver_voxels[2]) - margin)
+    x_max = min(image.shape[2], np.max(liver_voxels[2]) + margin + 1)
+
+    image = image[z_min:z_max, y_min:y_max, x_min:x_max]
+    seg = seg[z_min:z_max, y_min:y_max, x_min:x_max]
+
+    bbox = (z_min, z_max, y_min, y_max, x_min, x_max)
+    return image, seg, bbox
+    
