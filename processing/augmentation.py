@@ -12,7 +12,7 @@ def train_augmentations():
     return Compose([
         # RandRotate90d(keys=["image", "label"], prob=0.5, max_k=1),
         RandFlipd(keys=["image", "label"], prob=0.4, spatial_axis=2),
-        RandZoomd(keys=["image", "label"], prob=0.4, min_zoom=0.9, max_zoom=1.1, mode=["trilinear", "nearest"]),  
-        RandShiftIntensityd(keys=["image"], prob=0.4, offsets=0.1),
+        RandZoomd(keys=["image", "label"], prob=0.3 min_zoom=0.9, max_zoom=1.1, mode=["trilinear", "nearest"]),  
+        RandShiftIntensityd(keys=["image"], prob=0.3, offsets=0.1),
     ])
     
