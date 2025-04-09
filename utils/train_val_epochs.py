@@ -102,7 +102,7 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, sch
     dices_liver, dices_tumor,dices_avg, loss_epochs, trains_epoch = [], [], [], [], []
     ious_liver, ious_tumor, ious_avg = [], [], []
     precisions_liver, precisions_tumor, precisions_avg = [], [], []
-    recalls_liver, recalls_tumor, recals_avg = [], [], []
+    recalls_liver, recalls_tumor, recalls_avg = [], [], []
 
     for epoch in range(start_epoch, max_epochs+1):
         logger.info(f"\n{'=' * 30}Training epoch {epoch}{'=' * 30}")
