@@ -152,9 +152,9 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, sch
             precisions_tumor.append(val_precision_tumor)
             precisions_avg.append(val_precision_avg)
 
-            recalls_liver.append(val_recalls_liver)
-            recalls_tumor.append(val_recalls_tumor)
-            recalls_avg.append(val_recalls_avg)
+            recalls_liver.append(val_recall_liver)
+            recalls_tumor.append(val_recall_tumor)
+            recalls_avg.append(val_recall_avg)
             if val_dice_avg > val_acc_max:
                 print("New best ({:.6f} --> {:.6f}). At epoch {}".format(val_acc_max, val_dice_avg, epoch))
                 logger.info(f"New best ({val_acc_max:.6f} --> {val_dice_avg:.6f}). At epoch {epoch}. Time consuming: {time.time()-total_time:.2f}")
