@@ -30,7 +30,8 @@ class CoTAttention(nn.Module):
         self.key_embed=nn.Sequential(
             nn.Conv3d(dim,dim,kernel_size=kernel_size,padding=kernel_size//2,groups=4,bias=False),
             nn.BatchNorm3d(dim),
-            nn.ReLU()
+            # nn.ReLU()
+            nn.SiLU(),
         )
         self.value_embed=nn.Sequential(
             nn.Conv3d(dim,dim,1,bias=False),
@@ -41,7 +42,8 @@ class CoTAttention(nn.Module):
         self.attention_embed=nn.Sequential(
             nn.Conv3d(2*dim,2*dim//factor,1,bias=False),
             nn.BatchNorm3d(2*dim//factor),
-            nn.ReLU(),
+            # nn.ReLU(),
+            nn.SiLU(),
             nn.Conv3d(2*dim//factor,kernel_size*kernel_size*dim,1)
         )
 
@@ -67,11 +69,13 @@ class DoubleConvDownWCoT(nn.Module):
         self.double_conv = nn.Sequential(
             CoTAttention(in_channels, 3),
             nn.GroupNorm(num_groups=num_groups, num_channels=in_channels),
-            nn.ReLU(inplace=True),
+            # nn.ReLU(inplace=True),
+            nn.SiLU(inplace=True),
 
             nn.Conv3d(in_channels, out_channels, kernel_size=3, stride=1, padding=1),
             nn.GroupNorm(num_groups=num_groups, num_channels=out_channels),
-            nn.ReLU(inplace=True)
+            # nn.ReLU(inplace=True)
+            nn.SiLU(inplace=True),
         )
         
     def forward(self, x):
@@ -84,11 +88,13 @@ class DoubleConvUpWCoT(nn.Module):
         self.double_conv = nn.Sequential(
             nn.Conv3d(in_channels, out_channels, kernel_size=3, stride=1, padding=1),
             nn.GroupNorm(num_groups=num_groups, num_channels=out_channels),
-            nn.ReLU(inplace=True),
+            # nn.ReLU(inplace=True),
+            nn.SiLU(inplace=True),
 
             CoTAttention(out_channels, 3),
             nn.GroupNorm(num_groups=num_groups, num_channels=out_channels),
-            nn.ReLU(inplace=True)
+            # nn.ReLU(inplace=True)
+            nn.SiLU(inplace=True),
           )
 
     def forward(self,x):
