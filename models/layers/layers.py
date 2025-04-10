@@ -152,24 +152,28 @@ class ResCoTAttention(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(ResCoTAttention, self).__init__()
         self.hidden_channels = out_channels // 2
-        self.relu = nn.ReLU(inplace=True)
+        # self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.SiLU(inplace=True)
 
         self.conv1 = nn.Sequential(
             nn.Conv3d(in_channels, self.hidden_channels, kernel_size=3, stride=1, padding=1),
             nn.GroupNorm(num_groups=4, num_channels=self.hidden_channels),
-            nn.ReLU(inplace=True)
+            # nn.ReLU(inplace=True)
+            nn.SiLU(inplace=True),
         )
 
         self.conv2 = nn.Sequential(
             nn.Conv3d(self.hidden_channels, self.hidden_channels, kernel_size=3, padding=1),
             nn.GroupNorm(num_groups=4, num_channels=self.hidden_channels),
-            nn.ReLU(inplace=True)
+            # nn.ReLU(inplace=True)
+            nn.SiLU(inplace=True),
         )
 
         self.conv3 = nn.Sequential(
             CoTAttention(self.hidden_channels, 3),
             nn.GroupNorm(num_groups=4, num_channels=self.hidden_channels),
-            nn.ReLU(inplace=True)
+            # nn.ReLU(inplace=True)
+            nn.SiLU(inplace=True),
         )
 
         self.conv4 = nn.Sequential(
@@ -202,26 +206,30 @@ class ResCoTAttention(nn.Module):
 class ResNeXtCoTBlock(nn.Module):
     def __init__(self, in_channels, out_channels, cardinality = 32, bottleneck_width = 4):
         super(ResNeXtCoTBlock, self).__init__()
-        self.relu = nn.ReLU(inplace=True)
+        # self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.SiLU(inplace=True)
         inner_channels = bottleneck_width * cardinality
 
         self.conv1 = nn.Sequential(
 
             nn.Conv3d(in_channels, inner_channels, kernel_size=1, bias=False),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
-            nn.ReLU(inplace=True)
+            # nn.ReLU(inplace=True)
+            nn.SiLU(inplace=True),
         )
 
         self.conv2 = nn.Sequential(
             nn.Conv3d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1, groups=cardinality, bias=False),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
-            nn.ReLU(inplace=True)
+            # nn.ReLU(inplace=True)
+            nn.SiLU(inplace=True),
         )
 
         self.conv3 = nn.Sequential(
             CoTAttention(inner_channels, 3),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
-            nn.ReLU(inplace=True)
+            # nn.ReLU(inplace=True)
+            nn.SiLU(inplace=True),
         )
 
         self.conv4 = nn.Sequential(
