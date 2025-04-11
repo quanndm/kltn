@@ -22,7 +22,7 @@ class CombinedPretrainedModel(nn.Module):
         self.projector = nn.Conv3d(2048, in_channels, kernel_size=1)
 
         self.features = nn.Sequential(
-            self.pretrained.stem,
+            self.pretrained.conv1,
             self.pretrained.layer1,
             self.pretrained.layer2,
             self.pretrained.layer3,
