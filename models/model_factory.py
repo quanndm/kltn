@@ -22,13 +22,13 @@ class CombinedPretrainedModel(nn.Module):
         self.projector = nn.Conv3d(2048, in_channels, kernel_size=1)
 
         self.features = nn.Sequential(
-            self.backbone.stem,
-            self.backbone.layer1,
-            self.backbone.layer2,
-            self.backbone.layer3,
-            self.backbone.layer4
+            self.pretrained.stem,
+            self.pretrained.layer1,
+            self.pretrained.layer2,
+            self.pretrained.layer3,
+            self.pretrained.layer4
         )
-        
+
     def forward(self, x):
         with torch.no_grad():
             # features = self.feature_extractor(x)
