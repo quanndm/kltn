@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from ..layers.utils import LayerNorm, GRN, DropPath
+from .utils import LayerNorm, GRN, DropPath
 
 class DoubleConv(nn.Module):
     def __init__(self, in_channels, out_channels,  num_groups=8):
