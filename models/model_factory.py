@@ -2,6 +2,7 @@ from .unet3d  import UNet3D
 from .unet3d_cot import UNet3DWCoT
 from .unet3d_cot_da import UNet3DWCoTDA
 from .unet3d_resnextcot_da import UNet3DWResNeXtCoTDA
+from .unet3d_convnextv2cot_da import UNet3DWConvNeXtV2CoTDA
 
 class ModelFactory:
     _model = {
@@ -9,6 +10,7 @@ class ModelFactory:
         "unet3d_cot": UNet3DWCoT,
         "unet3d_cot_da": UNet3DWCoTDA,
         "unet3d_resnextcot_da": UNet3DWResNeXtCoTDA,
+        "unet3d_convnextv2cot_da": UNet3DWConvNeXtV2CoTDA,
     }
 
     @staticmethod

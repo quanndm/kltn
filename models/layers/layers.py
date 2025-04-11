@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from ..layers.utils import LayerNorm, GRN, DropPath
 
 class DoubleConv(nn.Module):
     def __init__(self, in_channels, out_channels,  num_groups=8):
@@ -204,3 +205,44 @@ class ResNeXtCoTBlock(nn.Module):
         out = self.relu(out)
 
         return out
+
+class ConvNeXtV2CoTBlock(nn.Module):
+    """
+    ConvNeXtV2 Block with CoT Attention
+    reference: https://github.com/facebookresearch/ConvNeXt-V2/blob/2553895753323c6fe0b2bf390683f5ea358a42b9/models/convnextv2.py#L14
+    Args:
+
+    """
+    def __init__(self, in_channels, out_channels, drop_path = 0.05):
+        self.stem = nn.Sequential(
+            nn.Conv3d(in_channels, out_channels, kernel_size=1, bias=False),
+            LayerNorm(out_channels, eps=1e-6, data_format="channels_first"),
+            nn.SiLU(),
+        )
+
+        self.dwconv = nn.Conv3d(out_channels, out_channels, kernel_size=3, padding=1, groups=out_channels)
+        self.cot = CoTAttention(out_channels, 3)
+
+        self.norm = LayerNorm(out_channels, eps=1e-6, data_format="channels_first")
+        self.pwconv1 = nn.Linear(out_channels, out_channels * 4)    
+        self.act = nn.GELU()
+        self.grn = GRN(out_channels * 4)
+        self.pwconv2 = nn.Linear(out_channels * 4, out_channels)
+        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+
+        def forward(self, x):
+            tmp = x
+
+            x = self.stem(x)
+            x = self.dwconv(x)
+            x = self.cot(x)
+
+            x = self.norm(x)
+            x = self.pwconv1(x)
+            x = self.act(x)
+            x = self.grn(x)
+            x = self.pwconv2(x) 
+
+            x =  tmp + self.drop_path(x)
+            return x
+
