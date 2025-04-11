@@ -11,7 +11,8 @@ from .unet3d_convnextv2cot_da import UNet3DWConvNeXtV2CoTDA
 class CombinedPretrainedModel(nn.Module):
     def __init__(self, in_channels, n_classes, n_channels, model):
         super(CombinedPretrainedModel, self).__init__()
-        self.pretrained = resnet50(spatial_dims=3, in_channels=in_channels, out_channels=2)
+        # self.pretrained = DenseNet121(spatial_dims=3, in_channels=in_channels, out_channels=2)
+        self.pretrained = resnet50(spatial_dims=3, n_input_channels=in_channels, out_channels=2)
         self.model = model(in_channels, n_classes, n_channels)
         self.feature_extractor = self.pretrained.features
 
@@ -25,7 +26,7 @@ class CombinedPretrainedModel(nn.Module):
             features = self.feature_extractor(x)
         features = self.projector(features)
 
-        return self.model(features)
+        return self.model()
 
 class ModelFactory:
     _model = {
