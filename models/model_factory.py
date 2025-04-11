@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from monai.networks.nets import DenseNet121
+from monai.networks.nets import DenseNet121, resnet50
 
 from .unet3d  import UNet3D
 from .unet3d_cot import UNet3DWCoT
@@ -11,7 +11,7 @@ from .unet3d_convnextv2cot_da import UNet3DWConvNeXtV2CoTDA
 class CombinedPretrainedModel(nn.Module):
     def __init__(self, in_channels, n_classes, n_channels, model):
         super(CombinedPretrainedModel, self).__init__()
-        self.pretrained = DenseNet121(spatial_dims=3, in_channels=in_channels, out_channels=2)
+        self.pretrained = resnet50(spatial_dims=3, in_channels=in_channels, out_channels=2)
         self.model = model(in_channels, n_classes, n_channels)
         self.feature_extractor = self.pretrained.features
 
