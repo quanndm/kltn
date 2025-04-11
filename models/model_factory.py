@@ -12,7 +12,7 @@ class CombinedPretrainedModel(nn.Module):
     def __init__(self, in_channels, n_classes, n_channels, model):
         super(CombinedPretrainedModel, self).__init__()
         # self.pretrained = DenseNet121(spatial_dims=3, in_channels=in_channels, out_channels=2, pretrained=True)
-        self.pretrained = resnet50(spatial_dims=3, n_input_channels=in_channels, num_classes=1, pretrained=True)
+        self.pretrained = resnet50(spatial_dims=3, n_input_channels=in_channels, num_classes=2, pretrained=True, feed_forward=False)
         self.model = model(in_channels, n_classes, n_channels)
         # self.feature_extractor = self.pretrained.features
 
