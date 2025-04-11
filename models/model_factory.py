@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from monai.networks.nets import DenseNet121
+from monai.networks.nets import DenseNet121, resnet50
 
 from .unet3d  import UNet3D
 from .unet3d_cot import UNet3DWCoT
@@ -11,18 +11,28 @@ from .unet3d_convnextv2cot_da import UNet3DWConvNeXtV2CoTDA
 class CombinedPretrainedModel(nn.Module):
     def __init__(self, in_channels, n_classes, n_channels, model):
         super(CombinedPretrainedModel, self).__init__()
-        self.pretrained = DenseNet121(spatial_dims=3, in_channels=in_channels, out_channels=2, pretrained=True, feed_forward=False )
+        # self.pretrained = DenseNet121(spatial_dims=3, in_channels=in_channels, out_channels=2, pretrained=True, feed_forward=False )
+        self.pretrained = resnet50(spatial_dims=3, n_input_channels=in_channels, pretrained=True, feed_forward=False )
         self.model = model(in_channels, n_classes, n_channels)
-        self.feature_extractor = self.pretrained.features
+        # self.feature_extractor = self.pretrained.features
 
-        for param in self.feature_extractor.parameters():
+        for param in self.pretrained.parameters():
             param.requires_grad = False
 
-        self.projector = nn.Conv3d(1024, in_channels, kernel_size=1)
+        self.projector = nn.Conv3d(2048, in_channels, kernel_size=1)
 
+        self.features = nn.Sequential(
+            self.backbone.stem,
+            self.backbone.layer1,
+            self.backbone.layer2,
+            self.backbone.layer3,
+            self.backbone.layer4
+        )
+        
     def forward(self, x):
         with torch.no_grad():
-            features = self.feature_extractor(x)
+            # features = self.feature_extractor(x)
+            features = self.features(x)
         features = self.projector(features)
 
         return self.model(features)
