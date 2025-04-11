@@ -11,7 +11,7 @@ from .unet3d_convnextv2cot_da import UNet3DWConvNeXtV2CoTDA
 class CombinedPretrainedModel(nn.Module):
     def __init__(self, in_channels, n_classes, n_channels, model):
         super(CombinedPretrainedModel, self).__init__()
-        self.pretrained = DenseNet121(spatial_dims=3, in_channels=in_channels, out_channels=2, pretrained=True)
+        self.pretrained = DenseNet121(spatial_dims=3, in_channels=in_channels, out_channels=2, pretrained=True, feed_forward=False )
         self.model = model(in_channels, n_classes, n_channels)
         self.feature_extractor = self.pretrained.features
 
