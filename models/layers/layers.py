@@ -148,60 +148,6 @@ class DoubleAttention(nn.Module):
 
         return attn_out + x
 
-class ResCoTAttention(nn.Module):
-    def __init__(self, in_channels, out_channels):
-        super(ResCoTAttention, self).__init__()
-        self.hidden_channels = out_channels // 2
-        # self.relu = nn.ReLU(inplace=True)
-        self.relu = nn.SiLU(inplace=True)
-
-        self.conv1 = nn.Sequential(
-            nn.Conv3d(in_channels, self.hidden_channels, kernel_size=3, stride=1, padding=1),
-            nn.GroupNorm(num_groups=4, num_channels=self.hidden_channels),
-            # nn.ReLU(inplace=True)
-            nn.SiLU(inplace=True),
-        )
-
-        self.conv2 = nn.Sequential(
-            nn.Conv3d(self.hidden_channels, self.hidden_channels, kernel_size=3, padding=1),
-            nn.GroupNorm(num_groups=4, num_channels=self.hidden_channels),
-            # nn.ReLU(inplace=True)
-            nn.SiLU(inplace=True),
-        )
-
-        self.conv3 = nn.Sequential(
-            CoTAttention(self.hidden_channels, 3),
-            nn.GroupNorm(num_groups=4, num_channels=self.hidden_channels),
-            # nn.ReLU(inplace=True)
-            nn.SiLU(inplace=True),
-        )
-
-        self.conv4 = nn.Sequential(
-            nn.Conv3d(self.hidden_channels, out_channels, kernel_size=3, stride=1, padding=1),
-            nn.GroupNorm(num_groups=4, num_channels=out_channels),
-        )
-
-        self.residual = None
-        if in_channels != out_channels:
-            self.residual = nn.Sequential(
-                nn.Conv3d(in_channels, out_channels, kernel_size=1),
-                nn.GroupNorm(num_groups=4, num_channels=out_channels)
-            )
-
-    def forward(self, x):
-        identity = x    
-        if self.residual is not None:
-            identity = self.residual(x)
-
-        out = self.conv1(x)
-        out = self.conv2(out)
-        out = self.conv3(out)
-        out = self.conv4(out)
-
-        out += identity
-        out = self.relu(out)
-
-        return out
 
 class ResNeXtCoTBlock(nn.Module):
     def __init__(self, in_channels, out_channels, cardinality = 32, bottleneck_width = 4):
