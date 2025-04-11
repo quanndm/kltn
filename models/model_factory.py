@@ -20,7 +20,7 @@ class CombinedPretrainedModel(nn.Module):
         for param in self.pretrained.parameters():
             param.requires_grad = False
 
-        self.projector = nn.Conv3d(2048, in_channels, kernel_size=1)
+        self.projector = nn.Conv3d(2048, in_channels, kernel_size=3, padding=1)
 
         self.features = nn.Sequential(
             self.pretrained.conv1,
@@ -32,7 +32,7 @@ class CombinedPretrainedModel(nn.Module):
 
     def forward(self, x):
         input_shape = x.shape[2:]
-        
+
         with torch.no_grad():
             # features = self.feature_extractor(x)
             features = self.features(x)
