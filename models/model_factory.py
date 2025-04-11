@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from monai.networks.nets import DenseNet121, resnet50
 
 from .unet3d  import UNet3D
@@ -30,10 +31,14 @@ class CombinedPretrainedModel(nn.Module):
         )
 
     def forward(self, x):
+        input_shape = x.shape[2:]
+        
         with torch.no_grad():
             # features = self.feature_extractor(x)
             features = self.features(x)
         features = self.projector(features)
+
+        features = F.interpolate(features, size=input_shape, mode="trilinear", align_corners=False)
 
         return self.model(features)
 
