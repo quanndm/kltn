@@ -20,7 +20,12 @@ class CombinedPretrainedModel(nn.Module):
         for param in self.pretrained.parameters():
             param.requires_grad = False
 
-        self.projector = nn.Conv3d(2048, in_channels, kernel_size=3, padding=1)
+        self.projector = nn.Sequential(
+            nn.Conv3d(2048, 512, kernel_size=3, padding=1),
+            nn.InstanceNorm3d(512),
+            nn.SiLU(inplace=True),
+            nn.Conv3d(512, in_channels, kernel_size=3, padding=1)
+        )
 
         self.features = nn.Sequential(
             self.pretrained.conv1,
