@@ -118,5 +118,6 @@ class UNet3DPretrained(nn.Module):
         mask = self.unet.dec3(mask, x1_r)
         mask = self.unet.dec4(mask, x0_r)
         mask = self.unet.out(mask)
+        mask = F.interpolate(mask, size=(128,128,128), mode='trilinear', align_corners=True)
 
         return mask
