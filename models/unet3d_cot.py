@@ -71,7 +71,7 @@ class UNet3DWCoT(nn.Module):
 
 
 class UNet3DWCoTPretrained(nn.Module):
-    def __init__(self, in_channels, n_classes, n_channels, pretrained_weights=None):
+    def __init__(self, in_channels, n_classes, n_channels):
         super(UNet3DPretrained, self).__init__()
         self.pretrained_model =  resnet50(spatial_dims=3, n_input_channels=1, pretrained=True, feed_forward=False , shortcut_type="B", bias_downsample=False)
 
@@ -102,16 +102,10 @@ class UNet3DWCoTPretrained(nn.Module):
 
     def forward(self, x):
         x1 = self.reduce_channel1(self.conv1(x))
-        x1 = self.unet.conv(x1)
-
-        x2 = self.layer1(x1)
-        x2 = self.reduce_channel2(x2)
-        x3 = self.layer2(x2)
-        x3 = self.reduce_channel3(x3)
-        x4 = self.layer3(x3)
-        x4 = self.reduce_channel4(x4)
-        x5 = self.layer4(x4)
-        x5 = self.reduce_channel5(x5)
+        x2 = self.reduce_channel2(self.layer1(x1))
+        x3 = self.reduce_channel3(self.layer2(x2))
+        x4 = self.reduce_channel4(self.layer3(x3))
+        x5 = self.reduce_channel5(self.layer4(x4))
 
         mask = self.unet.dec1(x5, x4)
         mask = self.unet.dec2(mask, x3)

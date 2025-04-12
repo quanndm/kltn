@@ -71,7 +71,7 @@ class UNet3D(nn.Module):
 
 
 class UNet3DPretrained(nn.Module):
-    def __init__(self, in_channels, n_classes, n_channels, pretrained_weights=None):
+    def __init__(self, in_channels, n_classes, n_channels):
         super(UNet3DPretrained, self).__init__()
         self.pretrained_model =  resnet50(spatial_dims=3, n_input_channels=1, pretrained=True, feed_forward=False , shortcut_type="B", bias_downsample=False)
 
@@ -102,8 +102,6 @@ class UNet3DPretrained(nn.Module):
 
     def forward(self, x):
         x1 = self.reduce_channel1(self.conv1(x))
-        x1 = self.unet.conv(x1)
-
         x2 = self.reduce_channel2(self.layer1(x1))
         x3 = self.reduce_channel3(self.layer2(x2))
         x4 = self.reduce_channel4(self.layer3(x3))
