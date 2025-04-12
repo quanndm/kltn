@@ -1,13 +1,8 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from monai.networks.nets import DenseNet121, resnet50
-
-from .unet3d  import UNet3D
-from .unet3d_cot import UNet3DWCoT
-from .unet3d_cot_da import UNet3DWCoTDA
-from .unet3d_resnextcot_da import UNet3DWResNeXtCoTDA
-from .unet3d_convnextv2cot_da import UNet3DWConvNeXtV2CoTDA
+from .unet3d  import UNet3D, UNet3DPretrained
+from .unet3d_cot import UNet3DWCoT, UNet3DWCoTPretrained
+from .unet3d_cot_da import UNet3DWCoTDA, UNet3DWCoTDAPretrained
+from .unet3d_resnextcot_da import UNet3DWResNeXtCoTDA, UNet3DWResNeXtCoTDAPretrained
+from .unet3d_convnextv2cot_da import UNet3DWConvNeXtV2CoTDA, UNet3DWConvNeXtV2CoTDAPretrained
 
 class ModelFactory:
     _model = {
@@ -19,6 +14,11 @@ class ModelFactory:
     }
 
     _model_pretrained ={
+        "unet3d": UNet3DPretrained,
+        "unet3d_cot": UNet3DWCoTPretrained,
+        "unet3d_cot_da": UNet3DWCoTDAPretrained,
+        "unet3d_resnextcot_da": UNet3DWResNeXtCoTDAPretrained,
+        "unet3d_convnextv2cot_da": UNet3DWConvNeXtV2CoTDAPretrained,
     }
     @staticmethod
     def get_model(model_name, in_channels, n_classes, n_channels, pretrained=False):
