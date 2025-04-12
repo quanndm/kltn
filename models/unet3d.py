@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from .layers.layers import DoubleConv, OutConv
-from monai.networks.nets import resnet
+from monai.networks.nets import resnet50
 
 class Down(nn.Module):
     def __init__(self, in_channels, out_channels):
