@@ -101,15 +101,22 @@ class UNet3DPretrained(nn.Module):
         self.unet = UNet3D(in_channels, n_classes, n_channels)
 
     def forward(self, x):
-        x1 = self.reduce_channel1(self.conv1(x))
-        x2 = self.reduce_channel2(self.layer1(x1))
-        x3 = self.reduce_channel3(self.layer2(x2))
-        x4 = self.reduce_channel4(self.layer3(x3))
-        x5 = self.reduce_channel5(self.layer4(x4))
+        x0 = self.conv1(x)
+        x1 = self.layer1(x0)
+        x2 = self.layer2(x1)
+        x3 = self.layer3(x2)
+        x4 = self.layer4(x3)
 
-        mask = self.unet.dec1(x5, x4)
-        mask = self.unet.dec2(mask, x3)
-        mask = self.unet.dec3(mask, x2)
-        mask = self.unet.dec4(mask, x1)
+        x0_r = self.reduce_channel1(x0)
+        x1_r = self.reduce_channel2(x1)
+        x2_r = self.reduce_channel3(x2)
+        x3_r = self.reduce_channel4(x3)
+        x4_r = self.reduce_channel5(x4)
+
+        mask = self.unet.dec1(x4_r, x3_r)
+        mask = self.unet.dec2(mask, x2_r)
+        mask = self.unet.dec3(mask, x1_r)
+        mask = self.unet.dec4(mask, x0_r)
         mask = self.unet.out(mask)
+
         return mask
