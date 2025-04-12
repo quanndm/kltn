@@ -9,44 +9,6 @@ from .unet3d_cot_da import UNet3DWCoTDA
 from .unet3d_resnextcot_da import UNet3DWResNeXtCoTDA
 from .unet3d_convnextv2cot_da import UNet3DWConvNeXtV2CoTDA
 
-class CombinedPretrainedModel(nn.Module):
-    def __init__(self, in_channels, n_classes, n_channels, model):
-        super(CombinedPretrainedModel, self).__init__()
-        # self.pretrained = DenseNet121(spatial_dims=3, in_channels=in_channels, out_channels=2, pretrained=True, feed_forward=False )
-        self.pretrained = resnet50(spatial_dims=3, n_input_channels=in_channels, pretrained=True, feed_forward=False , shortcut_type="B", bias_downsample=False)
-        self.model = model(in_channels, n_classes, n_channels)
-        # self.feature_extractor = self.pretrained.features
-
-        for param in self.pretrained.parameters():
-            param.requires_grad = False
-
-        self.projector = nn.Sequential(
-            nn.Conv3d(2048, 512, kernel_size=3, padding=1),
-            nn.InstanceNorm3d(512),
-            nn.SiLU(inplace=True),
-            nn.Conv3d(512, in_channels, kernel_size=3, padding=1)
-        )
-
-        self.features = nn.Sequential(
-            self.pretrained.conv1,
-            self.pretrained.layer1,
-            self.pretrained.layer2,
-            self.pretrained.layer3,
-            self.pretrained.layer4
-        )
-
-    def forward(self, x):
-        input_shape = x.shape[2:]
-
-        with torch.no_grad():
-            # features = self.feature_extractor(x)
-            features = self.features(x)
-        features = self.projector(features)
-
-        features = F.interpolate(features, size=input_shape, mode="trilinear", align_corners=False)
-
-        return self.model(features)
-
 class ModelFactory:
     _model = {
         "unet3d": UNet3D,
@@ -56,6 +18,8 @@ class ModelFactory:
         "unet3d_convnextv2cot_da": UNet3DWConvNeXtV2CoTDA,
     }
 
+    _model_pretrained ={
+    }
     @staticmethod
     def get_model(model_name, in_channels, n_classes, n_channels, pretrained=False):
         """
@@ -70,5 +34,6 @@ class ModelFactory:
             raise ValueError(f"Model {model_name} not found!")
         
         if pretrained:
-            return CombinedPretrainedModel(in_channels, n_classes, n_channels, ModelFactory._model[model_name])
+            return ModelFactory._model_pretrained[model_name](in_channels, n_classes, n_channels)
+            
         return ModelFactory._model[model_name](in_channels, n_classes, n_channels)

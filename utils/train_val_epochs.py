@@ -95,7 +95,7 @@ def val_epoch(model, loader, epoch, acc_func, max_epochs, logger):
 
     return run_acc.avg, ious, precisions, recalls
 
-def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, scheduler, batch_size, max_epochs, start_epoch=1, val_every = 1, logger=None, path_save_model=None, save_model=True):
+def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, scheduler, batch_size, max_epochs, start_epoch=1, val_every = 1, logger=None, path_save_model=None, save_model=True, post_fix=None):
     val_acc_max, best_epoch = 0.0, 0
     total_time = time.time()
     # dices_per_class, dices_avg, loss_epochs, trains_epoch = [], [], [], []
@@ -161,9 +161,13 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, sch
                 val_acc_max = val_dice_avg
                 best_epoch = epoch
                 if save_model:
+                    model_filename = f"best_metric_model_{model.__class__.__name__}"
+                    if post_fix is not None:
+                        model_filename += f"_{post_fix}"
+                    model_filename += ".pth"
                     torch.save(
                         model.state_dict(),
-                        os.path.join(path_save_model, f"best_metric_model_{model.__class__.__name__}.pth"),
+                        os.path.join(path_save_model, model_filename),
                     )
 
             torch.cuda.empty_cache()
@@ -171,9 +175,13 @@ def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, sch
             logger.info(f"Epoch {epoch}/{max_epochs} ---[loss: {train_loss:.4f}] ---[val_dice: {val_dice_avg:.6f}] ---[time {time.time() - epoch_time:.2f}s]")
             # Save the model every 10 epochs
             if save_model:
+                model_filename = f"model_{model.__class__.__name__}_epochs_{epoch}"
+                if post_fix is not None:
+                    model_filename += f"_{post_fix}"
+                model_filename += ".pth"
                 torch.save(
                     model.state_dict(),
-                    os.path.join(path_save_model, f"model_{model.__class__.__name__}_epochs_{epoch}.pth"),
+                    os.path.join(path_save_model, model_filename),
                 )
     logger.info(f"Training Finished !, Best Accuracy: {val_acc_max:.6f} --At epoch: {best_epoch} --Total_time: {time.time()-total_time:.2f}")
     time_tmp  = time.time()-total_time
