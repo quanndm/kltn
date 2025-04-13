@@ -154,7 +154,7 @@ class DoubleAttention(nn.Module):
 
 
 class ResNeXtCoTBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, cardinality = 32, bottleneck_width = 4):
+    def __init__(self, in_channels, out_channels):
         super(ResNeXtCoTBlock, self).__init__()
         # self.relu = nn.ReLU(inplace=True)
         self.relu = nn.SiLU(inplace=True)
