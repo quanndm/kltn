@@ -75,11 +75,9 @@ class UNet3DPretrained(nn.Module):
         super(UNet3DPretrained, self).__init__()
         self.pretrained_model =  resnet50(spatial_dims=3, n_input_channels=1, pretrained=True, feed_forward=False , shortcut_type="B", bias_downsample=False)
 
+        # Freeze layers except for layer2, layer3, and layer4
         for name, param in self.pretrained_model.named_parameters():
-            if 'layer3' in name or 'layer4' in name:
-                param.requires_grad = True 
-            else:
-                param.requires_grad = False  
+            param.requires_grad = any(layer in name for layer in ['layer2', 'layer3', 'layer4'])
 
         self.conv1 = nn.Sequential(
             self.pretrained_model.conv1,

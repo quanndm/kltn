@@ -58,6 +58,3 @@ def prepare_dataset_LiTS(dir_name):
     download_dataset_LiTS()
     unzip_dataset_LiTS(dir_name)
 
-
-def download_dataset_3dircadb():
-    pass
