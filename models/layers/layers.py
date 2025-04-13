@@ -158,7 +158,7 @@ class ResNeXtCoTBlock(nn.Module):
         super(ResNeXtCoTBlock, self).__init__()
         # self.relu = nn.ReLU(inplace=True)
         self.relu = nn.SiLU(inplace=True)
-        inner_channels = bottleneck_width * cardinality
+        inner_channels = out_channels // 2
 
         self.conv1 = nn.Sequential(
 
@@ -169,7 +169,7 @@ class ResNeXtCoTBlock(nn.Module):
         )
 
         self.conv2 = nn.Sequential(
-            nn.Conv3d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1, groups=cardinality, bias=False),
+            nn.Conv3d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1, groups=4, bias=False),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
             # nn.ReLU(inplace=True)
             nn.SiLU(inplace=True),
