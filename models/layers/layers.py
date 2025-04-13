@@ -124,7 +124,7 @@ class DoubleAttention(nn.Module):
         # step 2: Channel Attention
         self.convC = nn.Conv3d(c_m, in_channels, kernel_size=1)  # Adjust output channel
 
-        self.norm = nn.LayerNorm([in_channels, 1, 1, 1])
+        # self.norm = nn.LayerNorm([in_channels, 1, 1, 1])
     def forward(self, x):
         batch_size, _, d, h, w = x.shape
 
@@ -148,7 +148,9 @@ class DoubleAttention(nn.Module):
         attn_out = attn_out.view(batch_size, self.c_m, d, h, w)  # (B, c_m, D, H, W)
         attn_out = self.convC(attn_out)  # (B, in_channels, D, H, W)
 
-        return nn.norm(x + attn_out) 
+        # out = self.norm(x + attn_out) 
+        out = x + attn_out  # Residual connection
+        return out
 
 
 class ResNeXtCoTBlock(nn.Module):
