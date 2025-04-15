@@ -4,6 +4,7 @@ max_epochs: 100
 batch_size: 1
 val_every: 1
 learning_rate: 1e-3
+learning_rate_train: 1e-4
 learning_rate_pretrained: 1e-5
 weight_decay: 1e-5
 eta_min: 1e-6
