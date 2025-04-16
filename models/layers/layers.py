@@ -236,8 +236,15 @@ class ConvNeXtV2CoTBlock(nn.Module):
         self.pwconv2 = nn.Conv3d(out_channels * 4, out_channels, kernel_size=1)
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
 
+        if in_channels != out_channels:
+            self.residual_conv = nn.Conv3d(in_channels, out_channels, kernel_size=1)
+        else:
+            self.residual_conv = nn.Identity()
     def forward(self, x):
         tmp = x
+
+        if self.residual_conv is not None:
+            tmp = self.residual_conv(x)
 
         x = self.stem(x)
         x = self.dwconv(x)
