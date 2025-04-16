@@ -38,8 +38,8 @@ class GRN(nn.Module):
     """
     def __init__(self, dim):
         super().__init__()
-        self.gamma = nn.Parameter(torch.zeros(1, 1, 1, 1, dim))
-        self.beta = nn.Parameter(torch.zeros(1, 1, 1, 1, dim))
+        self.gamma = nn.Parameter(torch.zeros(1, dim, 1, 1, 1))
+        self.beta = nn.Parameter(torch.zeros(1, dim, 1, 1, 1))
 
     def forward(self, x):
         Gx = torch.norm(x, p=2, dim=(2,3, 4), keepdim=True)
