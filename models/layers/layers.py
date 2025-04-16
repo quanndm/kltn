@@ -217,6 +217,7 @@ class ConvNeXtV2CoTBlock(nn.Module):
 
     """
     def __init__(self, in_channels, out_channels, drop_path = 0.05):
+        super(ConvNeXtV2CoTBlock, self).__init__()
         self.stem = nn.Sequential(
             nn.Conv3d(in_channels, out_channels, kernel_size=1, bias=False),
             LayerNorm(out_channels, eps=1e-6, data_format="channels_first"),
