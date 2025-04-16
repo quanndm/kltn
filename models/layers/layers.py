@@ -224,7 +224,7 @@ class ConvNeXtV2CoTBlock(nn.Module):
             nn.SiLU(),
         )
 
-        self.dwconv = nn.Conv3d(out_channels, out_channels, kernel_size=3, padding=1, groups=out_channels)
+        self.dwconv = nn.Conv3d(out_channels, out_channels, kernel_size=3, padding=1, groups = 4, bias=False)
         self.cot = CoTAttention(out_channels, 3)
 
         self.norm = LayerNorm(out_channels, eps=1e-6, data_format="channels_first")
