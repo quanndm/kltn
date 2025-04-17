@@ -78,13 +78,25 @@ def resize_image(image, seg, target_size=(128, 128, 128)):
 
 def truncate_HU(image, hu_min=-200, hu_max=250):
     """
-    Truncate the HU values to a range.
+    clipping the HU (Hounsfield Units) values to a range.
     Args:
         image: np.ndarray, the image to truncate
         hu_min: int, the minimum HU value
         hu_max: int, the maximum HU value
     Returns:
         image: np.ndarray, the truncated image
+    
+    Notes:
+        >1000	        Bone, calcium, metal
+        100 to 600   Iodinated CT contrast
+        30 to 500	  Punctate calcifications
+        60 to 100	  Intracranial hemorrhage
+        35	                Gray matter
+        25	                White matter
+        20 to 40	   Muscle, soft tissue
+        0	                  Water
+        -30 to -70	   Fat
+        <-1000	        Air
     """
     return np.clip(image, hu_min, hu_max)
 
@@ -106,7 +118,7 @@ def resize_image_v2(image, seg, target_size=(128, 128, 128)):
 
 def get_liver_roi(image, seg, margin=5):
     """
-    Get the liver ROI from the image and segmentation.
+    Get the liver ROI (Region of Interest) from the image and segmentation.
     Args:
         image: np.ndarray, the image to get the ROI from, shape (D, H, W)
         seg: np.ndarray, the segmentation to get the ROI from, shape (D, H, W)
