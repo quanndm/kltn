@@ -251,7 +251,7 @@ def trainer_stage2(model, train_loader, val_loader, optimizer, loss_func, acc_fu
         if scheduler is not None:
             scheduler.step()
 
-       if epoch % val_every == 0 or epoch == max_epochs or epoch == 1:
+        if epoch % val_every == 0 or epoch == max_epochs or epoch == 1:
             loss_epochs.append(train_loss)
             trains_epoch.append(epoch)
             epoch_time = time.time()
