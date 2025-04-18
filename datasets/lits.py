@@ -121,7 +121,7 @@ class Stage2Dataset(Dataset):
             normalizations: str, the type of normalization to apply to the images, either "zscores" or "minmax"
             transformations: bool, whether to apply transformations to the images
         '''
-        self.device = torch.device("cpu")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.training = training
         self.normalizations = normalizations
         self.patient_dirs = patient_dirs
