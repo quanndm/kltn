@@ -259,16 +259,12 @@ def trainer_stage2(model, train_loader, val_loader, optimizer, loss_func, acc_fu
             val_acc , val_ious, val_precisions, val_recalls= val_epoch_stage2(model, val_loader, epoch, acc_func, max_epochs, logger)
 
             val_dice_tumor = val_acc[0]
-            val_dice_avg = np.mean(val_acc)
 
             val_iou_tumor = val_ious[0]
-            val_iou_avg = np.mean(val_ious)
 
             val_precision_tumor = val_precisions[0]
-            val_precision_avg = np.mean(val_precisions)
 
             val_recall_tumor = val_recalls[0]
-            val_recall_avg = np.mean(val_recalls)
             logger.info(f"\n{'*' * 20}Epoch Summary{'*' * 20}")
             logger.info(f"Final validation stats {epoch}/{max_epochs},   Dice_Tumor: {val_dice_tumor:.6f} , time {time.time() - epoch_time:.2f}s")
             
