@@ -128,7 +128,6 @@ class Stage2Dataset(Dataset):
         self.model_stage_1.eval()
 
         self.patch_size = patch_size
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def __len__(self):
         return len(self.patient_dirs)
@@ -140,7 +139,7 @@ class Stage2Dataset(Dataset):
 
         image, seg = self.preprocessing(image, seg, self.training, self.normalizations) # shape: (1, 128, 128, 128)
 
-        image_tensor = torch.from_numpy(image).unsqueeze(0).to(self.device) # shape: (1, 1, 128, 128, 128)
+        image_tensor = torch.from_numpy(image).unsqueeze(0) # shape: (1, 1, 128, 128, 128)
         with torch.no_grad():
             logits = self.model_stage_1(image_tensor) # shape: (1, 3, 128, 128, 128)
             liver_mask = extract_liver_mask(logits)[0].cpu() # shape: (1, 128, 128, 128)
