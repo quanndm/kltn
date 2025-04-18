@@ -151,7 +151,7 @@ class Stage2Dataset(Dataset):
         # mask the input image with the liver mask
         image_mask = mask_input_with_liver(image_tensor[0].cpu(), liver_mask)
 
-        image_np = image_mask.squeeze(0).detach().cpu().numpy()
+        image_np = image_mask.squeeze(0)
         seg_np = seg.squeeze(0)
 
         # crop patch around tumor
@@ -164,7 +164,7 @@ class Stage2Dataset(Dataset):
             image, seg = self.augmentation(image, seg)
 
         # convert to torch tensors
-        image, seg = torch.from_numpy(image), torch.from_numpy(seg)
+        image, seg = torch.from_numpy(image.detach().cpu().numpy()), torch.from_numpy(seg)
 
         return dict(
             idx=idx,
