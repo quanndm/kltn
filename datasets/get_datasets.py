@@ -60,6 +60,6 @@ def get_datasets_stage2(source_folder, seed, fold_number = 5, normalizations = "
 
     # apply for dataset
     train_dataset = Stage2Dataset(train, training=True, normalizations=normalizations, transformations=True, model_stage_1=model_stage_1)
-    test_dataset = Stage2Dataset(test, training=False, benchmarking=True, normalizations=normalizations, model_stage_1=model_stage_1)
+    test_dataset = Stage2Dataset(test, training=False, normalizations=normalizations, model_stage_1=model_stage_1)
 
     return train_dataset, test_dataset
