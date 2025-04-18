@@ -164,8 +164,10 @@ class Stage2Dataset(Dataset):
             image, seg = self.augmentation(image, seg)
 
         # convert to torch tensors
-        image, seg = torch.from_numpy(image.detach().cpu().numpy()), torch.from_numpy(seg.detach().cpu().numpy())
-
+        if training:
+            image, seg = torch.from_numpy(image.detach().cpu().numpy()), torch.from_numpy(seg.detach().cpu().numpy())
+        else:
+            image, seg = torch.from_numpy(image), torch.from_numpy(seg)
         return dict(
             idx=idx,
             patient_id=_patient["id"],
