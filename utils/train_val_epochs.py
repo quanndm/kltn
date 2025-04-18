@@ -120,9 +120,9 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
             acc_func(y_pred=val_output_convert, y=val_labels_list)
 
             acc, not_nans = acc_func.aggregate()
-            run_acc.update(acc.cpu().numpy(), n=not_nans.cpu().numpy())
+            # run_acc.update(acc.cpu().numpy(), n=not_nans.cpu().numpy())
 
-            dice_tumor = run_acc.avg[0]
+            dice_tumor = acc[0]
 
             ious = iou_metric(logits, val_labels)
             iou_tumor = ious[0]
@@ -137,7 +137,7 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
 
             start_time = time.time()
 
-    return run_acc.avg, ious, precisions, recalls
+    return acc, ious, precisions, recalls
 
 
 def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, scheduler, batch_size, max_epochs, start_epoch=1, val_every = 1, logger=None, path_save_model=None, save_model=True, post_fix=None):
