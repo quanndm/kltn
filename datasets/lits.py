@@ -11,6 +11,7 @@ from ..processing.preprocessing import (
     get_liver_roi,
     extract_liver_mask,
     mask_input_with_liver,
+    crop_patch_around_tumor
 )
 from ..processing.augmentation import train_augmentations, stage2_train_augmentation
 import os
