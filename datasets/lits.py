@@ -2,9 +2,19 @@ import SimpleITK as sitk
 import numpy as np
 import torch
 from torch.utils.data.dataset import Dataset
-from ..processing.preprocessing import pad_or_crop_image, zscore_normalise, irm_min_max_preprocess, resize_image, truncate_HU, get_liver_roi
-from ..processing.augmentation import train_augmentations
+from ..processing.preprocessing import (
+    pad_or_crop_image,
+    zscore_normalise,
+    irm_min_max_preprocess,
+    resize_image,
+    truncate_HU,
+    get_liver_roi,
+    extract_liver_mask,
+    mask_input_with_liver,
+)
+from ..processing.augmentation import train_augmentations, stage2_train_augmentation
 import os
+
 class Lits(Dataset):
     def __init__(self, patient_dirs, benchmarking = False, training=True, normalizations="zscores", transformations=False):
         '''
@@ -94,6 +104,122 @@ class Lits(Dataset):
         Returns:
             image: np.ndarray, the augmented image
             seg: np.ndarray, the augmented segmentation
+        '''
+        train_transforms = train_augmentations() 
+        data_dict = {"image": image, "label": seg}
+        augmented = train_transforms(data_dict)
+        
+        return augmented["image"], augmented["label"]
+
+class Stage2Dataset(Dataset):
+    def __init__(self, patient_dirs, training=True, normalizations="zscores", transformations=False, model_stage_1=None, patch_size=(96, 96, 96)):
+        '''
+        Args:
+            patient_dirs: list of dict, each dict contains id and the paths to the patient's images/ segmentations
+            training: bool, whether the dataset is for training or testing
+            normalizations: str, the type of normalization to apply to the images, either "zscores" or "minmax"
+            transformations: bool, whether to apply transformations to the images
+        '''
+        self.training = training
+        self.normalizations = normalizations
+        self.patient_dirs = patient_dirs
+        self.transformations = transformations
+        self.model_stage1 = model_stage1.eval().cuda()
+        self.patch_size = patch_size
+
+    def __len__(self):
+        return len(self.patient_dirs)
+
+    def __getitem__(self, idx):
+        _patient = self.patient_dirs[idx]
+        image = self.load_nii(_patient["volume"])
+        seg = self.load_nii(_patient["segmentation"])
+
+        image, seg = self.preprocessing(image, seg, self.training, self.normalizations) # shape: (1, 128, 128, 128)
+
+        image_tensor = torch.from_numpy(image).unsqueeze(0).cuda()
+        with torch.no_grad():
+            logits = self.model_stage1(image_tensor) # shape: (1, 3, 128, 128, 128)
+            liver_mask = extract_liver_mask(logits)[0].cpu() # shape: (1, 128, 128, 128)
+
+        # mask the input image with the liver mask
+        image_mask = mask_input_with_liver(image_tensor[0].cpu(), liver_mask)
+
+        image_np = image_mask.squeeze(0).numpy()
+        seg_np = seg.squeeze(0).numpy()
+
+        # crop patch around tumor
+        img_patch, seg_patch = crop_patch_around_tumor(image_np, seg_np, self.patch_size, margin=10)
+
+        image, seg = img_patch.astype(np.float32), seg_patch.astype(np.uint8)
+        image, seg = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0)
+
+        if self.training and self.transformations:
+            image, seg = self.augmentation(image, seg)
+
+        # convert to torch tensors
+        image, seg = torch.from_numpy(image), torch.from_numpy(seg)
+
+        return dict(
+            idx=idx,
+            patient_id=_patient["id"],
+            image=image,
+            label=seg,
+            supervised=True,
+        )
+
+    @staticmethod
+    def load_nii(path):
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"File {path} not found!")
+        return sitk.GetArrayFromImage(sitk.ReadImage(str(path)))
+    
+    @staticmethod
+    def preprocessing(image, seg, training, normalizations):
+        '''
+        Args:
+            image: np.ndarray, the image to preprocess
+            seg: np.ndarray, the segmentation to preprocess
+            training: bool, whether the dataset is for training or testing
+            normalizations: str, the type of normalization to apply to the images, either "zscores" or "minmax"
+        Returns:
+            image: np.ndarray, the preprocessed image
+            seg: np.ndarray, the preprocessed segmentation
+        '''
+        # get liver ROI
+        image, seg, _ = get_liver_roi(image, seg)
+
+        # clip HU values
+        image = truncate_HU(image)
+
+        # normalizations
+        if normalizations == "zscores":
+            image = zscore_normalise(image)
+        else:
+            image = irm_min_max_preprocess(image)
+
+        # get tumor mask
+        seg = (seg == 2).astype(np.uint8)
+
+        # expand dims of image and segmentation
+        image = np.expand_dims(image, axis=0)
+        seg = np.expand_dims(seg, axis=0)
+        
+        # resize image
+        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
+
+        return image, seg
+    
+    @staticmethod
+    def augmentation(image, seg):
+        '''
+        Args:
+            image: np.ndarray, the image to augment
+            seg: np.ndarray, the segmentation to augment
+        Returns:
+            image: np.ndarray, the augmented image
+            seg: np.ndarray, the augmented segmentation
+        
         '''
         train_transforms = train_augmentations() 
         data_dict = {"image": image, "label": seg}

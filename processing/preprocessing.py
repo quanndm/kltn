@@ -146,3 +146,81 @@ def get_liver_roi(image, seg, margin=5):
     bbox = (z_min, z_max, y_min, y_max, x_min, x_max)
     return image, seg, bbox
     
+def extract_liver_mask(pred_logits):
+    """
+    Extract the liver mask from the predicted logits.
+    Args:
+        pred_logits: tensor, output of the model, shape (B, 3, D, H, W)
+    Returns:
+        liver_mask: tensor, the liver mask, shape (B,1, D, H, W)
+    """
+    out = torch.softmax(pred_logits, dim=1)
+    liver_mask = (out.argmax(dim=1) == 1).float().unsqueeze(1)
+
+    return liver_mask
+
+def mask_input_with_liver(img, liver_mask):
+    """
+    Input: inputs (1, D, H, W), mask liver ( 1, D, H, W)
+    Output: masked inputs (1, D, H, W) only liver region
+    """
+    return img * liver_mask
+
+
+def crop_patch_around_tumor(image, tumor_mask, patch_size=(96, 96, 96), margin=10):
+    """
+    image: np.ndarray, shape (D, H, W)
+    tumor_mask: np.ndarray, shape (D, H, W), binary mask (0 or 1)
+    patch_size: size of the output patch (D, H, W)
+    margin: number of voxels to expand around tumor
+
+    return: cropped image and mask patch
+    """
+
+    assert image.shape == tumor_mask.shape
+
+    # 1. find tumor coordinates
+    coords = np.argwhere(tumor_mask > 0)
+    if coords.shape[0] == 0:
+        #  if no tumor, random crop
+        # Randomly crop a patch from the image
+        D, H, W = image.shape
+        start_z = np.random.randint(0, max(1, D - patch_size[0]))
+        start_y = np.random.randint(0, max(1, H - patch_size[1]))
+        start_x = np.random.randint(0, max(1, W - patch_size[2]))
+    else:
+        min_z, min_y, min_x = coords.min(0) - margin
+        max_z, max_y, max_x = coords.max(0) + margin
+
+        # limit to image size
+        min_z = max(0, min_z)
+        min_y = max(0, min_y)
+        min_x = max(0, min_x)
+        max_z = min(image.shape[0], max_z)
+        max_y = min(image.shape[1], max_y)
+        max_x = min(image.shape[2], max_x)
+
+        # get center of the tumor
+        center_z = (min_z + max_z) // 2
+        center_y = (min_y + max_y) // 2
+        center_x = (min_x + max_x) // 2
+
+        # solve for the start coordinates of the patch
+        start_z = max(0, center_z - patch_size[0] // 2)
+        start_y = max(0, center_y - patch_size[1] // 2)
+        start_x = max(0, center_x - patch_size[2] // 2)
+
+        # ensure the patch is within the image bounds
+        start_z = min(start_z, image.shape[0] - patch_size[0])
+        start_y = min(start_y, image.shape[1] - patch_size[1])
+        start_x = min(start_x, image.shape[2] - patch_size[2])
+
+    # 2. Crop the patch from the image and mask
+    end_z = start_z + patch_size[0]
+    end_y = start_y + patch_size[1]
+    end_x = start_x + patch_size[2]
+
+    img_patch = image[start_z:end_z, start_y:end_y, start_x:end_x]
+    mask_patch = tumor_mask[start_z:end_z, start_y:end_y, start_x:end_x]
+
+    return img_patch, mask_patch

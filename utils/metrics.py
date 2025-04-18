@@ -1,7 +1,7 @@
 import torch
 from torch import optim
 import torch.nn as nn
-from monai.losses import  FocalLoss
+from monai.losses import  FocalLoss, TverskyLoss
 from monai.metrics import DiceMetric
 
 class DiceLossWSigmoid(nn.Module):
@@ -110,6 +110,21 @@ class DiceLossWSoftmax(nn.Module):
     def metric(self, inputs, targets):
         dice_score = self.dice_coefficient(inputs, targets, metric_mode=True) 
         return dice_score
+
+class TverskyLossWSigmoid(nn.Module):
+    def __init__(self, alpha=0.7, beta=0.3):
+        super(TverskyLossWSigmoid, self).__init__()
+        self.alpha = alpha
+        self.beta = beta
+        self.bce_loss = nn.BCEWithLogitsLoss()
+        self.tversky_loss = TverskyLoss(include_background=False, alpha=self.alpha, beta=self.beta, sigmoid=True)
+
+    def forward(self, inputs, targets):
+        bce_loss = self.bce_loss(inputs, targets)
+        tversky_loss = self.tversky_loss(inputs, targets)
+        final_loss = 0.7 * tversky_loss + 0.3 * bce_loss
+        return final_loss
+        
 
 class AverageMeter(object):
     """Computes and stores the average and current value."""
