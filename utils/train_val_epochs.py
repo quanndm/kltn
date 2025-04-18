@@ -292,7 +292,7 @@ def trainer_stage2(model, train_loader, val_loader, optimizer, loss_func, acc_fu
 
             torch.cuda.empty_cache()
         if epoch % 10 == 0 or epoch == max_epochs or epoch == 1:
-            logger.info(f"Epoch {epoch}/{max_epochs} ---[loss: {train_loss:.4f}] ---[val_dice: {val_dice_avg:.6f}] ---[time {time.time() - epoch_time:.2f}s]")
+            logger.info(f"Epoch {epoch}/{max_epochs} ---[loss: {train_loss:.4f}] ---[val_dice: {val_dice_tumor:.6f}] ---[time {time.time() - epoch_time:.2f}s]")
             # Save the model every 10 epochs
             if save_model:
                 model_filename = f"model_{model.__class__.__name__}_epochs_{epoch}"
