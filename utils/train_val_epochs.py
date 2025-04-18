@@ -256,7 +256,7 @@ def trainer_stage2(model, train_loader, val_loader, optimizer, loss_func, acc_fu
             trains_epoch.append(epoch)
             epoch_time = time.time()
             logger.info(f"\n{'*' * 20}Epoch {epoch} Validation{'*' * 20}")
-            val_acc , val_ious, val_precisions, val_recalls= val_epoch(model, val_loader, epoch, acc_func, max_epochs, logger)
+            val_acc , val_ious, val_precisions, val_recalls= val_epoch_stage2(model, val_loader, epoch, acc_func, max_epochs, logger)
 
             val_dice_tumor = val_acc[0]
             val_dice_avg = np.mean(val_acc)
