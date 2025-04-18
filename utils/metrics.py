@@ -117,7 +117,7 @@ class TverskyLossWSigmoid(nn.Module):
         self.alpha = alpha
         self.beta = beta
         self.bce_loss = nn.BCEWithLogitsLoss()
-        self.tversky_loss = TverskyLoss(include_background=False, alpha=self.alpha, beta=self.beta, sigmoid=True)
+        self.tversky_loss = TverskyLoss( alpha=self.alpha, beta=self.beta, sigmoid=True)
 
     def forward(self, inputs, targets):
         bce_loss = self.bce_loss(inputs, targets)
@@ -171,98 +171,128 @@ class ProgressMeter(object):
         fmt = '{:' + str(num_digits) + 'd}'
         return '[' + fmt + '/' + fmt.format(num_batches) + ']'
 
-class IoUMetric():
-    def __init__(self, num_classes = 3, eps =1e-6, ignore_background=True):
+class IoUMetric:
+    def __init__(self, num_classes=1, eps=1e-6, ignore_background=True, threshold=0.5):
         self.num_classes = num_classes
         self.eps = eps
         self.ignore_background = ignore_background
+        self.threshold = threshold
 
     def __call__(self, y_pred, y_true):
-        """
-        Compute IoU for each class.
-        Args:
-            y_pred: predicted labels (B, C, D, H, W)
-            y_true: ground truth labels (B, C, D, H, W)
-        """
-        y_pred = torch.argmax(y_pred, dim=1)
-        y_true = y_true.squeeze(1)
+        if y_true.ndim == 4:
+            y_true = y_true.unsqueeze(1)
 
-        ious = []
-        for i in range(self.num_classes):
-            if self.ignore_background and i == 0:
-                continue
+        if y_pred.shape[1] == 1:
+            # Binary segmentation
+            if y_pred.max() > 1 or y_pred.min() < 0:
+                y_pred = torch.sigmoid(y_pred)
+            y_pred = (y_pred > self.threshold).long().squeeze(1)
+            y_true = y_true.squeeze(1)
 
-            pred = (y_pred == i)
-            true = (y_true == i)
-
-            intersection = (pred & true).sum().float()
-            union = (pred | true).sum().float()
-
+            intersection = (y_pred & y_true).sum().float()
+            union = ((y_pred + y_true) > 0).sum().float()
             iou = (intersection + self.eps) / (union + self.eps)
-            ious.append(iou.item())
-        
-        return ious
+            return [iou.item()]
+        else:
+            # Multi-class segmentation
+            y_pred = torch.argmax(y_pred, dim=1)
+            y_true = y_true.squeeze(1)
 
-class PrecisionMetric():
-    def __init__(self, num_classes = 3, eps =1e-6, ignore_background=True):
+            ious = []
+            for i in range(self.num_classes):
+                if self.ignore_background and i == 0:
+                    continue
+
+                pred = (y_pred == i)
+                true = (y_true == i)
+
+                intersection = (pred & true).sum().float()
+                union = (pred | true).sum().float()
+
+                iou = (intersection + self.eps) / (union + self.eps)
+                ious.append(iou.item())
+            return ious
+
+
+class PrecisionMetric:
+    def __init__(self, num_classes=1, eps=1e-6, ignore_background=True, threshold=0.5):
         self.num_classes = num_classes
         self.eps = eps
         self.ignore_background = ignore_background
+        self.threshold = threshold
 
     def __call__(self, y_pred, y_true):
-        """
-        Compute Precision for each class.
-        Args:
-            y_pred: predicted labels (B, C, D, H, W)
-            y_true: ground truth labels (B, C, D, H, W)
-        """
-        y_pred = torch.argmax(y_pred, dim=1)
-        y_true = y_true.squeeze(1)
+        if y_true.ndim == 4:
+            y_true = y_true.unsqueeze(1)
 
-        precisions = []
-        for i in range(self.num_classes):
-            if self.ignore_background and i == 0:
-                continue
+        if y_pred.shape[1] == 1:
+            if y_pred.max() > 1 or y_pred.min() < 0:
+                y_pred = torch.sigmoid(y_pred)
+            y_pred = (y_pred > self.threshold).long().squeeze(1)
+            y_true = y_true.squeeze(1)
 
-            pred = (y_pred == i)
-            true = (y_true == i)
+            tp = (y_pred & y_true).sum().float()
+            fp = (y_pred & (1 - y_true)).sum().float()
 
-            true_positive = (pred & true).sum().float()
-            false_positive = (pred & ~true).sum().float()
+            precision = (tp + self.eps) / (tp + fp + self.eps)
+            return [precision.item()]
+        else:
+            y_pred = torch.argmax(y_pred, dim=1)
+            y_true = y_true.squeeze(1)
 
-            precision = (true_positive + self.eps) / (true_positive + false_positive + self.eps)
-            precisions.append(precision.item())
+            precisions = []
+            for i in range(self.num_classes):
+                if self.ignore_background and i == 0:
+                    continue
 
-        return precisions
+                pred = (y_pred == i)
+                true = (y_true == i)
 
-class RecallMetric():
-    def __init__(self, num_classes = 3, eps =1e-6, ignore_background=True):
+                tp = (pred & true).sum().float()
+                fp = (pred & ~true).sum().float()
+
+                precision = (tp + self.eps) / (tp + fp + self.eps)
+                precisions.append(precision.item())
+            return precisions
+
+
+class RecallMetric:
+    def __init__(self, num_classes=1, eps=1e-6, ignore_background=True, threshold=0.5):
         self.num_classes = num_classes
         self.eps = eps
         self.ignore_background = ignore_background
+        self.threshold = threshold
 
     def __call__(self, y_pred, y_true):
-        """
-        Compute Recall for each class.
-        Args:
-            y_pred: predicted labels (B, C, D, H, W)
-            y_true: ground truth labels (B, C, D, H, W)
-        """
-        y_pred = torch.argmax(y_pred, dim=1)
-        y_true = y_true.squeeze(1)
+        if y_true.ndim == 4:
+            y_true = y_true.unsqueeze(1)
 
-        recalls = []
-        for i in range(self.num_classes):
-            if self.ignore_background and i == 0:
-                continue
+        if y_pred.shape[1] == 1:
+            if y_pred.max() > 1 or y_pred.min() < 0:
+                y_pred = torch.sigmoid(y_pred)
+            y_pred = (y_pred > self.threshold).long().squeeze(1)
+            y_true = y_true.squeeze(1)
 
-            pred = (y_pred == i)
-            true = (y_true == i)
+            tp = (y_pred & y_true).sum().float()
+            fn = ((1 - y_pred) & y_true).sum().float()
 
-            true_positive = (pred & true).sum().float()
-            false_negative = (~pred & true).sum().float()
+            recall = (tp + self.eps) / (tp + fn + self.eps)
+            return [recall.item()]
+        else:
+            y_pred = torch.argmax(y_pred, dim=1)
+            y_true = y_true.squeeze(1)
 
-            recall = (true_positive + self.eps) / (true_positive + false_negative + self.eps)
-            recalls.append(recall.item())
-        
-        return recalls
+            recalls = []
+            for i in range(self.num_classes):
+                if self.ignore_background and i == 0:
+                    continue
+
+                pred = (y_pred == i)
+                true = (y_true == i)
+
+                tp = (pred & true).sum().float()
+                fn = (~pred & true).sum().float()
+
+                recall = (tp + self.eps) / (tp + fn + self.eps)
+                recalls.append(recall.item())
+            return recalls

@@ -99,9 +99,9 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
     model.eval()
     start_time = time.time()
     run_acc = AverageMeter('Loss', ':.4e')
-    iou_metric = IoUMetric(num_classes=2, ignore_background=True)
-    precision_metric = PrecisionMetric(num_classes=2, ignore_background=True)
-    recall_metric = RecallMetric(num_classes=2, ignore_background=True)
+    iou_metric = IoUMetric(num_classes=1, ignore_background=True)
+    precision_metric = PrecisionMetric(num_classes=1, ignore_background=True)
+    recall_metric = RecallMetric(num_classes=1, ignore_background=True)
 
     with torch.no_grad():
         for idx, batch_data in enumerate(loader):
