@@ -156,7 +156,7 @@ class Stage2Dataset(Dataset):
         # crop patch around tumor
         img_patch, seg_patch = crop_patch_around_tumor(image_np, seg_np, self.patch_size, margin=10)
 
-        image, seg = img_patch.numpy().astype(np.float32), seg_patch.numpy().astype(np.uint8)
+        image, seg = img_patch.numpy().astype(np.float32), seg_patch.astype(np.uint8)
         image, seg = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0)
 
         if self.training and self.transformations:
