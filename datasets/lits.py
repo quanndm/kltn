@@ -121,12 +121,13 @@ class Stage2Dataset(Dataset):
             normalizations: str, the type of normalization to apply to the images, either "zscores" or "minmax"
             transformations: bool, whether to apply transformations to the images
         '''
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cpu")
         self.training = training
         self.normalizations = normalizations
         self.patient_dirs = patient_dirs
         self.transformations = transformations
         self.model_stage_1 = model_stage_1
+        self.model_stage_1.to(self.device)
         self.model_stage_1.eval()
 
         self.patch_size = patch_size
@@ -150,13 +151,13 @@ class Stage2Dataset(Dataset):
         # mask the input image with the liver mask
         image_mask = mask_input_with_liver(image_tensor[0].cpu(), liver_mask)
 
-        image_np = image_mask.squeeze(0)
+        image_np = image_mask.squeeze(0).numpy()
         seg_np = seg.squeeze(0)
 
         # crop patch around tumor
         img_patch, seg_patch = crop_patch_around_tumor(image_np, seg_np, self.patch_size, margin=10)
 
-        image, seg = img_patch.numpy().astype(np.float32), seg_patch.astype(np.uint8)
+        image, seg = img_patch.astype(np.float32), seg_patch.astype(np.uint8)
         image, seg = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0)
 
         if self.training and self.transformations:
