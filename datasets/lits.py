@@ -124,7 +124,7 @@ class Stage2Dataset(Dataset):
         self.normalizations = normalizations
         self.patient_dirs = patient_dirs
         self.transformations = transformations
-        self.model_stage1 = model_stage1.eval().cuda()
+        self.model_stage_1 = model_stage_1.eval().cuda()
         self.patch_size = patch_size
 
     def __len__(self):
@@ -139,7 +139,7 @@ class Stage2Dataset(Dataset):
 
         image_tensor = torch.from_numpy(image).unsqueeze(0).cuda()
         with torch.no_grad():
-            logits = self.model_stage1(image_tensor) # shape: (1, 3, 128, 128, 128)
+            logits = self.model_stage_1(image_tensor) # shape: (1, 3, 128, 128, 128)
             liver_mask = extract_liver_mask(logits)[0].cpu() # shape: (1, 128, 128, 128)
 
         # mask the input image with the liver mask
