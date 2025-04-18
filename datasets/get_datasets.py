@@ -33,7 +33,7 @@ def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zs
 
     return train_dataset, test_dataset
 
-def get_datasets_stage2(source_folder, seed, fold_number = 5, normalizations = "zscores", model_stage1=None):
+def get_datasets_stage2(source_folder, seed, fold_number = 5, normalizations = "zscores", model_stage_1=None):
     base_folder  = pathlib.Path(source_folder).resolve()
 
     # Get the list of volume the files in the folder
