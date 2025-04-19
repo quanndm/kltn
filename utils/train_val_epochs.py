@@ -271,7 +271,7 @@ def trainer_stage2(model, train_loader, val_loader, optimizer, loss_func, acc_fu
 
             val_precision_tumor = val_precisions
 
-            val_recall_tumor = val_recalls[0]
+            val_recall_tumor = val_recalls
             logger.info(f"\n{'*' * 20}Epoch Summary{'*' * 20}")
             logger.info(f"Final validation stats {epoch}/{max_epochs},   Dice_Tumor: {val_dice_tumor:.6f} , time {time.time() - epoch_time:.2f}s")
             
