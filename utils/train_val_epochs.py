@@ -103,6 +103,8 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
     precision_metric = PrecisionMetric(num_classes=1, ignore_background=True)
     recall_metric = RecallMetric(num_classes=1, ignore_background=True)
 
+    dice_list = []
+    iou_list, precision_list, recall_list = [], [], []
     with torch.no_grad():
         for idx, batch_data in enumerate(loader):
             val_inputs, val_labels = batch_data["image"].to(device), batch_data["label"].to(device)
@@ -123,20 +125,25 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
             # run_acc.update(acc.cpu().numpy(), n=not_nans.cpu().numpy())
 
             dice_tumor = acc[0]
+            dice_list.append(dice_tumor)
 
             ious = iou_metric(logits, val_labels)
-            iou_tumor = ious[0]
+            iou_list.append(ious[0])
 
             precisions = precision_metric(logits, val_labels)
-            precision_tumor = precisions[0]
+            precision_list.append(precisions[0])
 
             recalls = recall_metric(logits, val_labels)
-            recall_tumor = recalls[0]
+            recall_list.append(recalls[0])
 
             logger.info(f"Val {epoch}/{max_epochs} {idx+1}/{len(loader)}, Dice_Tumor: {dice_tumor:.6f}, time {time.time() - start_time:.2f}s")
 
             start_time = time.time()
 
+    acc = np.mean(dice_list)
+    ious = np.mean(iou_list)
+    precisions = np.mean(precision_list)
+    recalls = np.mean(recall_list)
     return acc, ious, precisions, recalls
 
 
