@@ -125,16 +125,16 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
             # run_acc.update(acc.cpu().numpy(), n=not_nans.cpu().numpy())
 
             dice_tumor = acc[0]
-            dice_list.append(dice_tumor)
+            dice_list.append(dice_tumor.cpu().numpy())
 
             ious = iou_metric(logits, val_labels)
-            iou_list.append(ious[0])
+            iou_list.append(ious[0].cpu().numpy())
 
             precisions = precision_metric(logits, val_labels)
-            precision_list.append(precisions[0])
+            precision_list.append(precisions[0].cpu().numpy())
 
             recalls = recall_metric(logits, val_labels)
-            recall_list.append(recalls[0])
+            recall_list.append(recalls[0].cpu().numpy())
 
             logger.info(f"Val {epoch}/{max_epochs} {idx+1}/{len(loader)}, Dice_Tumor: {dice_tumor:.6f}, time {time.time() - start_time:.2f}s")
 
