@@ -39,7 +39,7 @@ class DiceLossWSigmoid(nn.Module):
         '''
         dice_loss = self.dice_coefficient(inputs, targets, metric_mode=False)
 
-        bce_loss = self.bce_loss(inputs, targets)
+        bce_loss = self.bce_loss(inputs, targets.float())
 
         final_loss = 0.7 * dice_loss + 0.3 * bce_loss
         return final_loss
