@@ -22,6 +22,6 @@ post_softmax = Activations(softmax=True)
 
 post_pred = AsDiscrete(argmax=True)
 
-post_trans_stage2 = Compose(
+post_trans_stage1 = post_trans_stage2 = Compose(
     [EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)]
 )

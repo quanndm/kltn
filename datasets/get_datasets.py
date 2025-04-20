@@ -2,7 +2,18 @@ from sklearn.model_selection import KFold
 import pathlib
 from .lits import Lits, Stage2Dataset
 
-def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores"):
+def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores", mode = "all"):
+    """
+    Get the datasets for the LiTS dataset.
+    The function will return the training and testing datasets based on the fold number.
+    The datasets are created using the Lits class from the lits module.
+    Arguments:
+    source_folder: str, the path to the folder containing the LiTS dataset.
+    seed: int, the random seed for the KFold split.
+    fold_number: int, the fold number for the KFold split.
+    normalizations: str, the normalization method to be used. Default is "zscores".
+    mode: str, all | liver
+    """
     base_folder  = pathlib.Path(source_folder).resolve()
 
     # Get the list of volume the files in the folder
@@ -28,8 +39,8 @@ def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zs
     test = [patients[i] for i in test_idx]
 
     # apply for dataset
-    train_dataset = Lits(train, training=True, normalizations=normalizations, transformations=True)
-    test_dataset = Lits(test, training=False, benchmarking=True, normalizations=normalizations)
+    train_dataset = Lits(train, training=True, normalizations=normalizations, transformations=True, mode=mode)
+    test_dataset = Lits(test, training=False, benchmarking=True, normalizations=normalizations, mode=mode)
 
     return train_dataset, test_dataset
 

@@ -30,7 +30,7 @@ class DiceLossWSigmoid(nn.Module):
         if metric_mode:
             return dice_score.mean(dim=1) 
         else:
-            return  1 - dice_score.mean(dim=1)
+            return  1 - dice_score.mean()
 
 
     def forward(self, inputs, targets):
@@ -41,7 +41,7 @@ class DiceLossWSigmoid(nn.Module):
 
         bce_loss = self.bce_loss(inputs, targets)
 
-        final_loss = 0.7 * dice_loss + 0.3 * ce_loss
+        final_loss = 0.7 * dice_loss + 0.3 * bce_loss
         return final_loss
 
     def metric(self, inputs, targets):

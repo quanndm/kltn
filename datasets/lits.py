@@ -17,7 +17,7 @@ from ..processing.augmentation import train_augmentations, stage2_train_augmenta
 import os
 
 class Lits(Dataset):
-    def __init__(self, patient_dirs, benchmarking = False, training=True, normalizations="zscores", transformations=False):
+    def __init__(self, patient_dirs, benchmarking = False, training=True, normalizations="zscores", transformations=False, mode="all"):
         '''
         Args:
             patient_dirs: list of dict, each dict contains id and the paths to the patient's images/ segmentations
@@ -25,12 +25,14 @@ class Lits(Dataset):
             benchmarking: bool, whether the dataset is for benchmarking
             normalizations: str, the type of normalization to apply to the images, either "zscores" or "minmax"
             transformations: bool, whether to apply transformations to the images
+            mode: all | liver
         '''
         self.training = training
         self.benchmarking = benchmarking
         self.normalizations = normalizations
         self.patient_dirs = patient_dirs
         self.transformations = transformations
+        self.mode = mode
 
     def __len__(self):
         return len(self.patient_dirs)
@@ -41,6 +43,9 @@ class Lits(Dataset):
         seg = self.load_nii(_patient["segmentation"])
 
         image, seg = self.preprocessing(image, seg, self.training, self.normalizations)
+
+        if self.mode == "liver":
+            seg = (seg > 0).astype(np.uint8)
 
         if self.training and self.transformations:
             image, seg = self.augmentation(image, seg)
