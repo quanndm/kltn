@@ -75,7 +75,7 @@ class DiceLossWSoftmax(nn.Module):
         if metric_mode:
             return dice_score
         else:
-            return 1 - dice_score
+            return 1 - dice_score.mean()
 
     def focal_loss(self, inputs, targets):
         """
@@ -97,7 +97,7 @@ class DiceLossWSoftmax(nn.Module):
         """
         calculate dice loss for multi-class segmentation
         """
-        dice_loss = self.dice_coefficient(inputs, targets, metric_mode=False).mean()
+        dice_loss = self.dice_coefficient(inputs, targets, metric_mode=False)
         # focal_loss = self.focal_loss(inputs, targets)
         
         targets = targets.argmax(dim=1)
