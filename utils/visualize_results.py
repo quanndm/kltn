@@ -56,7 +56,7 @@ def visualize_results_stage_1(model, val_loader, weight_path, num_images, device
     model.eval()
     stop = 0
 
-    cmap = mcolors.ListedColormap(["black", "yellơ"])  # 0: background, 1: tumor
+    cmap = mcolors.ListedColormap(["black", "yellow"])  # 0: background, 1: tumor
 
     for val_data in val_loader:
         stop += 1
