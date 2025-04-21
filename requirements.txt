@@ -4,7 +4,6 @@ SimpleITK
 requests
 libtorrent
 scikit-learn
-numpy==1.26.4
 medpy
 PyYAML
 scipy
