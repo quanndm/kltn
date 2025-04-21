@@ -27,7 +27,7 @@ post_trans_stage1 = post_trans_stage2 = Compose(
     [EnsureType(), Activations(sigmoid=True), AsDiscrete(threshold=0.5)]
 )
 
-def post_processing_stage2(logits, threshold=0.5, device):
+def post_processing_stage2(logits, threshold=0.5, device=None):
     """
     Post-processing for stage 2 of the model.
     Args:
