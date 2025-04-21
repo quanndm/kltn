@@ -159,6 +159,19 @@ def extract_liver_mask(pred_logits):
 
     return liver_mask
 
+def extract_liver_mask_binary(logits, threshold=0.5):
+    """
+    Extract the liver mask from the predicted logits.
+    Args:
+        logits: tensor, output of the model, shape (1, 1, D, H, W)
+        threshold: float, threshold to binarize the mask
+    Returns:
+        liver_mask: tensor, the liver mask, shape (1, 1, D, H, W)
+    """
+    probs = torch.sigmoid(logits)  # shape: (1, 1, D, H, W)
+    liver_mask = (probs > threshold).float()
+    return liver_mask
+
 def mask_input_with_liver(img, liver_mask):
     """
     Input: inputs (1, D, H, W), mask liver ( 1, D, H, W)

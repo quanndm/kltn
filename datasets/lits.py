@@ -9,7 +9,7 @@ from ..processing.preprocessing import (
     resize_image,
     truncate_HU,
     get_liver_roi,
-    extract_liver_mask,
+    extract_liver_mask_binary,
     mask_input_with_liver,
     crop_patch_around_tumor
 )
@@ -150,8 +150,8 @@ class Stage2Dataset(Dataset):
         image_tensor = torch.from_numpy(image).unsqueeze(0) # shape: (1, 1, 128, 128, 128)
         image_tensor = image_tensor.to(self.device)
         with torch.no_grad():
-            logits = self.model_stage_1(image_tensor) # shape: (1, 3, 128, 128, 128)
-            liver_mask = extract_liver_mask(logits)[0].cpu() # shape: (1, 128, 128, 128)
+            logits = self.model_stage_1(image_tensor) # shape: (1, 1, 128, 128, 128)
+            liver_mask = extract_liver_mask_binary(logits)[0].cpu() # shape: (1, 128, 128, 128)
 
         # mask the input image with the liver mask
         image_mask = mask_input_with_liver(image_tensor[0].cpu(), liver_mask)

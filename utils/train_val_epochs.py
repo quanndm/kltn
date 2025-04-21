@@ -3,7 +3,7 @@ import torch
 import numpy as np
 import os
 
-from ..processing.postprocessing import post_trans, post_trans_stage2, post_trans_stage1
+from ..processing.postprocessing import post_trans, post_trans_stage2, post_trans_stage1, post_processing_stage2
 from ..utils.utils import model_inferer
 from ..utils.metrics import AverageMeter, IoUMetric, PrecisionMetric, RecallMetric
 from monai.data import decollate_batch
@@ -112,7 +112,6 @@ def val_epoch_stage1(model, loader, epoch, acc_func, max_epochs, logger):
             val_outputs_list = decollate_batch(logits)
             val_labels_list = decollate_batch(val_labels)
 
-            #check this below
             val_output_convert = [post_trans_stage1(val_pred_tensor) for val_pred_tensor in val_outputs_list]
             val_output_convert = [t.float() for t in val_output_convert]
 
@@ -149,7 +148,7 @@ def val_epoch_stage1(model, loader, epoch, acc_func, max_epochs, logger):
 def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
     model.eval()
     start_time = time.time()
-    run_acc = AverageMeter('Loss', ':.4e')
+    # run_acc = AverageMeter('Loss', ':.4e')
     iou_metric = IoUMetric(num_classes=1, ignore_background=True)
     precision_metric = PrecisionMetric(num_classes=1, ignore_background=True)
     recall_metric = RecallMetric(num_classes=1, ignore_background=True)
@@ -160,20 +159,18 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
         for idx, batch_data in enumerate(loader):
             val_inputs, val_labels = batch_data["image"].to(device), batch_data["label"].to(device)
             logits = model_inferer(val_inputs, model)
+            logits = post_processing_stage2(logits, threshold=0.5, device=device)
 
             val_outputs_list = decollate_batch(logits)
             val_labels_list = decollate_batch(val_labels)
 
-            val_output_convert = [post_trans_stage2(val_pred_tensor) for val_pred_tensor in val_outputs_list]
-            val_output_convert = [t.float() for t in val_output_convert]
-
+            val_output_convert = [t.float() for t in val_outputs_list]
             val_labels_list = [t.float() for t in val_labels_list]
             
             acc_func.reset()
             acc_func(y_pred=val_output_convert, y=val_labels_list)
 
             acc, not_nans = acc_func.aggregate()
-            # run_acc.update(acc.cpu().numpy(), n=not_nans.cpu().numpy())
 
             dice_tumor = acc[0]
             dice_list.append(dice_tumor.cpu().numpy())
