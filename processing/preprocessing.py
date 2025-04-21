@@ -180,6 +180,16 @@ def mask_input_with_liver(img, liver_mask):
     return img * liver_mask
 
 
+def pad_image(image, mask, pad_width):
+    """
+    Pad ảnh và mask nếu cần, để tránh mất dữ liệu khi crop gần biên
+    Args:
+        pad_width: int, số voxel cần pad mỗi phía (z, y, x)
+    Returns:
+        padded image, padded mask
+    """
+    return np.pad(image, ((pad_width, pad_width), (pad_width, pad_width), (pad_width, pad_width)), mode='constant'), np.pad(mask, ((pad_width, pad_width), (pad_width, pad_width), (pad_width, pad_width)), mode='constant')
+
 def crop_patch_around_tumor(image, tumor_mask, patch_size=(96, 96, 96), margin=10):
     """
     image: np.ndarray, shape (D, H, W)
@@ -190,7 +200,9 @@ def crop_patch_around_tumor(image, tumor_mask, patch_size=(96, 96, 96), margin=1
     return: cropped image and mask patch
     """
 
-    assert image.shape == tumor_mask.shape
+    # pad the image and mask to avoid losing data when cropping near the edges
+    pad_width = (patch_size[0] // 2) + margin
+    image, tumor_mask = pad_image(image, tumor_mask, pad_width)
 
     # 1. find tumor coordinates
     coords = np.argwhere(tumor_mask > 0)
