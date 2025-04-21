@@ -45,8 +45,8 @@ def post_processing_stage2(logits, threshold=0.5, device=None):
     tumor_mask = np.squeeze(tumor_mask) # shape(1, 1, D, H, W) -> (D, H, W)
 
     # Morphological closing and opening
-    tumor_mask = morphology.binary_closing(tumor_mask, morphology.ball(2))
-    tumor_mask = morphology.binary_opening(tumor_mask, morphology.ball(2))
+    tumor_mask = morphology.binary_closing(tumor_mask, morphology.ball(1))
+    tumor_mask = morphology.binary_opening(tumor_mask, morphology.ball(1))
 
     # fill holes
     tumor_mask = ndi.binary_fill_holes(tumor_mask)

@@ -2,6 +2,7 @@ import SimpleITK as sitk
 import numpy as np
 import torch
 from torch.utils.data.dataset import Dataset
+from ..utils.utils import inference
 from ..processing.preprocessing import (
     pad_or_crop_image,
     zscore_normalise,
@@ -150,8 +151,8 @@ class Stage2Dataset(Dataset):
         image_tensor = torch.from_numpy(image).unsqueeze(0) # shape: (1, 1, 128, 128, 128)
         image_tensor = image_tensor.to(self.device)
         with torch.no_grad():
-            logits = self.model_stage_1(image_tensor) # shape: (1, 1, 128, 128, 128)
-            liver_mask = extract_liver_mask_binary(logits)[0].cpu() # shape: (1, 128, 128, 128)
+            logits = inference(image_tensor, self.model_stage_1) # shape: (1, 1, 128, 128, 128)
+            liver_mask = extract_liver_mask_binary(logits, threshold=0.4)[0].cpu() # shape: (1, 128, 128, 128)
 
         # mask the input image with the liver mask
         image_mask = mask_input_with_liver(image_tensor[0].cpu(), liver_mask)
@@ -160,8 +161,9 @@ class Stage2Dataset(Dataset):
         seg_np = seg.squeeze(0)
 
         # crop patch around tumor
-        img_patch, seg_patch = crop_patch_around_tumor(image_np, seg_np, self.patch_size, margin=10)
-
+        # img_patch, seg_patch = crop_patch_around_tumor(image_np, seg_np, self.patch_size, margin=10)
+        img_patch, seg_patch = image_np, seg_np
+        
         image, seg = img_patch.astype(np.float32), seg_patch.astype(np.uint8)
         image, seg = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0)
 
