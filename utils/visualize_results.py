@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from monai.metrics import DiceMetric
 from monai.inferers import sliding_window_inference
 from ..utils.utils import inference
-from ..processing.postprocessing import post_trans, post_trans_stage1
+from ..processing.postprocessing import post_trans, post_trans_stage1, post_processing_stage2
 import matplotlib.colors as mcolors 
 
 def visualize_results(model, val_loader, weight_path, num_images, device):
@@ -82,6 +82,55 @@ def visualize_results_stage_1(model, val_loader, weight_path, num_images, device
             plt.show()
 
             # Show label and prediction
+            fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+            ax[0].imshow(label_2d, cmap=cmap, vmin=0, vmax=1)
+            ax[0].set_title("Ground Truth (Tumor)")
+            ax[0].axis("off")
+
+            ax[1].imshow(pred_2d, cmap=cmap, vmin=0, vmax=1)
+            ax[1].set_title("Prediction (Tumor)")
+            ax[1].axis("off")
+
+            plt.tight_layout()
+            plt.show()
+
+        if stop == num_images:
+            break
+
+def visualize_results_stage_2(model, val_loader, weight_path, num_images, device, threshold=0.5):
+    model.load_state_dict(torch.load(weight_path, map_location=device))
+    model.eval()
+    stop = 0
+
+    cmap = mcolors.ListedColormap(["black", "yellow"])  # 0: background, 1: tumor
+
+    for val_data in val_loader:
+        stop += 1
+        with torch.no_grad():
+            val_input = val_data["image"].to(device)  # input đã crop liver ROI
+            val_output = inference(val_input, model)             # raw logits
+
+            # Apply sigmoid + thresholding + post-processing
+            pred_mask = post_processing_stage2(val_output, threshold=threshold, device=device)  # [1, 1, D, H, W]
+
+            # Get data to numpy
+            image_np = val_input.detach().cpu().numpy()[0, 0]            # [D, H, W]
+            label_np = val_data["label"].detach().cpu().numpy()[0, 0]    # [D, H, W]
+            pred_np = pred_mask.detach().cpu().numpy()[0, 0]             # [D, H, W]
+
+            # Max projection
+            image_2d = np.max(image_np, axis=0)
+            label_2d = np.max(label_np, axis=0)
+            pred_2d = np.max(pred_np, axis=0)
+
+            # Show image
+            plt.figure(figsize=(6, 6))
+            plt.title("Input Image (Liver ROI - Max Projection)")
+            plt.imshow(image_2d, cmap="gray")
+            plt.axis("off")
+            plt.show()
+
+            # Show GT and prediction
             fig, ax = plt.subplots(1, 2, figsize=(12, 6))
             ax[0].imshow(label_2d, cmap=cmap, vmin=0, vmax=1)
             ax[0].set_title("Ground Truth (Tumor)")
