@@ -112,7 +112,7 @@ class DiceLossWSoftmax(nn.Module):
         return dice_score
 
 class TverskyLossWSigmoid(nn.Module):
-    def __init__(self, alpha=0.3, beta=0.7):
+    def __init__(self, alpha=0.7, beta=0.3):
         super(TverskyLossWSigmoid, self).__init__()
         self.alpha = alpha
         self.beta = beta
