@@ -39,21 +39,21 @@ def stage2_train_augmentation():
     """
     return Compose([
     
-        # RandFlipd(keys=["image", "label"], spatial_axis=[0, 1, 2], prob=0.3),
+        RandFlipd(keys=["image", "label"], spatial_axis=[0, 1, 2], prob=0.3),
 
-        # RandAffined(
-        #     keys=["image", "label"],
-        #     rotate_range=(0.05, 0.05, 0.05),   # ±5 
-        #     scale_range=(0.05, 0.05, 0.05),      # ±5%
-        #     # translate_range=(2, 2, 2),       # translate 5 voxel
-        #     mode=("bilinear", "nearest"),
-        #     padding_mode="border",
-        #     prob=0.1
-        # ),
+        RandAffined(
+            keys=["image", "label"],
+            rotate_range=(0.05, 0.05, 0.05),   # ±5 
+            scale_range=(0.05, 0.05, 0.05),      # ±5%
+            # translate_range=(2, 2, 2),       # translate 5 voxel
+            mode=("bilinear", "nearest"),
+            padding_mode="border",
+            prob=0.2
+        ),
 
-        RandAdjustContrastd(keys=["image"], prob=0.1, gamma=(0.6, 1.2)),
-        RandScaleIntensityd(keys=["image"], prob=0.1, factors=0.1),   # ±10%
-        RandShiftIntensityd(keys=["image"], prob=0.1, offsets=0.05),  # ±5%
+        RandAdjustContrastd(keys=["image"], prob=0.2, gamma=(0.8, 1.2)),
+        RandScaleIntensityd(keys=["image"], prob=0.2, factors=0.1),   # ±10%
+        RandShiftIntensityd(keys=["image"], prob=0.2, offsets=0.05),  # ±5%
 
         RandGaussianNoised(keys=["image"], prob=0.1, mean=0.0, std=0.01),
     ])
