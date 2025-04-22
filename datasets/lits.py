@@ -12,7 +12,8 @@ from ..processing.preprocessing import (
     get_liver_roi,
     extract_liver_mask_binary,
     mask_input_with_liver,
-    crop_patch_around_tumor
+    crop_patch_around_tumor,
+    normalize
 )
 from ..processing.augmentation import train_augmentations, stage2_train_augmentation
 import os
@@ -210,7 +211,7 @@ class Stage2Dataset(Dataset):
         if normalizations == "zscores":
             image = zscore_normalise(image)
         else:
-            image = irm_min_max_preprocess(image)
+            image = normalize(image)
 
         # get tumor mask
         seg = (seg == 2).astype(np.uint8)
