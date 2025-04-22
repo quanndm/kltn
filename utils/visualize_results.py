@@ -84,11 +84,11 @@ def visualize_results_stage_1(model, val_loader, weight_path, num_images, device
             # Show label and prediction
             fig, ax = plt.subplots(1, 2, figsize=(12, 6))
             ax[0].imshow(label_2d, cmap=cmap, vmin=0, vmax=1)
-            ax[0].set_title("Ground Truth (Tumor)")
+            ax[0].set_title("Ground Truth (liver)")
             ax[0].axis("off")
 
             ax[1].imshow(pred_2d, cmap=cmap, vmin=0, vmax=1)
-            ax[1].set_title("Prediction (Tumor)")
+            ax[1].set_title("Prediction (liver)")
             ax[1].axis("off")
 
             plt.tight_layout()
