@@ -161,8 +161,7 @@ class Stage2Dataset(Dataset):
         seg_np = seg.squeeze(0)
 
         # crop patch around tumor
-        # img_patch, seg_patch = crop_patch_around_tumor(image_np, seg_np, self.patch_size, margin=10)
-        img_patch, seg_patch = image_np, seg_np
+        img_patch, seg_patch = crop_patch_around_tumor(image_np, seg_np, self.patch_size, margin=10)
         
         image, seg = img_patch.astype(np.float32), seg_patch.astype(np.uint8)
         image, seg = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0)
