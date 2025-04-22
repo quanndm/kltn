@@ -162,7 +162,7 @@ class Stage2Dataset(Dataset):
         seg_np = seg.squeeze(0)
 
         # crop patch around tumor
-        img_patch, seg_patch = crop_patch_around_tumor(image_np, seg_np, self.patch_size, margin=10)
+        img_patch, seg_patch = crop_patch_around_tumor(image_np, seg_np, self.patch_size, margin=15)
         
         if seg_patch.sum() == 0 and self.training:
             return self.__getitem__((idx + 1) % self.__len__())

@@ -159,12 +159,12 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
         for idx, batch_data in enumerate(loader):
             val_inputs, val_labels = batch_data["image"].to(device), batch_data["label"].to(device)
             logits = model_inferer(val_inputs, model)
-            logits = post_processing_stage2(logits, threshold=0.5, device=device)
+            # logits = post_processing_stage2(logits, threshold=0.5, device=device)
 
             val_outputs_list = decollate_batch(logits)
             val_labels_list = decollate_batch(val_labels)
 
-            # val_output_convert = [post_trans_stage1(val_pred_tensor) for val_pred_tensor in val_outputs_list]
+            val_output_convert = [post_trans_stage1(val_pred_tensor) for val_pred_tensor in val_outputs_list]
             val_output_convert = [t.float() for t in val_outputs_list]
             val_labels_list = [t.float() for t in val_labels_list]
             

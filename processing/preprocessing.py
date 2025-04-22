@@ -190,7 +190,7 @@ def pad_image(image, mask, pad_width):
     """
     return np.pad(image, ((pad_width, pad_width), (pad_width, pad_width), (pad_width, pad_width)), mode='constant'), np.pad(mask, ((pad_width, pad_width), (pad_width, pad_width), (pad_width, pad_width)), mode='constant')
 
-def crop_patch_around_tumor(image, tumor_mask, patch_size=(96, 96, 96), margin=20):
+def crop_patch_around_tumor(image, tumor_mask, patch_size=(96, 96, 96), margin=15):
     """
     image: np.ndarray, shape (D, H, W)
     tumor_mask: np.ndarray, shape (D, H, W), binary mask (0 or 1)

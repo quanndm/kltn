@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from monai.metrics import DiceMetric
 from monai.inferers import sliding_window_inference
 from ..utils.utils import inference
-from ..processing.postprocessing import post_trans, post_trans_stage1, post_processing_stage2
+from ..processing.postprocessing import post_trans, post_trans_stage1, post_processing_stage2, post_trans_stage2
 import matplotlib.colors as mcolors 
 
 def visualize_results(model, val_loader, weight_path, num_images, device):
