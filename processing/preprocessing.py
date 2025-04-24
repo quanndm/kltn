@@ -198,28 +198,38 @@ def crop_patch_around_tumor(image, tumor_mask, patch_size=(96, 96, 96), margin=1
     if coords.shape[0] == 0:
         # no tumor → fallback random crop
         D, H, W = image.shape
-        start_z = np.random.randint(0, max(1, D - patch_size[0]))
-        start_y = np.random.randint(0, max(1, H - patch_size[1]))
-        start_x = np.random.randint(0, max(1, W - patch_size[2]))
+        center_z = D // 2
+        center_y = H // 2
+        center_x = W // 2
     else:
-        center_z, center_y, center_x = coords[np.random.randint(len(coords))]  # pick random tumor voxel
+        # Tìm bounding box tumor mở rộng thêm margin
+        min_z, min_y, min_x = coords.min(0) - margin
+        max_z, max_y, max_x = coords.max(0) + margin 
 
-        # random shift within small range to augment
-        shift_range = 10
-        center_z += np.random.randint(-shift_range, shift_range + 1)
-        center_y += np.random.randint(-shift_range, shift_range + 1)
-        center_x += np.random.randint(-shift_range, shift_range + 1)
+        # Clamp về trong ảnh
+        min_z = max(0, min_z)
+        min_y = max(0, min_y)
+        min_x = max(0, min_x)
+        max_z = min(image.shape[0], max_z)
+        max_y = min(image.shape[1], max_y)
+        max_x = min(image.shape[2], max_x)
 
-        # calculate crop start positions
-        start_z = max(0, center_z - patch_size[0] // 2)
-        start_y = max(0, center_y - patch_size[1] // 2)
-        start_x = max(0, center_x - patch_size[2] // 2)
+        # Tính center của vùng tumor mở rộng
+        center_z = (min_z + max_z) // 2
+        center_y = (min_y + max_y) // 2
+        center_x = (min_x + max_x) // 2
 
-        # clip to image boundary
-        start_z = min(start_z, image.shape[0] - patch_size[0])
-        start_y = min(start_y, image.shape[1] - patch_size[1])
-        start_x = min(start_x, image.shape[2] - patch_size[2])
+    # Tính tọa độ bắt đầu crop
+    start_z = max(0, center_z - patch_size[0] // 2)
+    start_y = max(0, center_y - patch_size[1] // 2)
+    start_x = max(0, center_x - patch_size[2] // 2)
 
+    # Giới hạn không vượt quá shape
+    start_z = min(start_z, image.shape[0] - patch_size[0])
+    start_y = min(start_y, image.shape[1] - patch_size[1])
+    start_x = min(start_x, image.shape[2] - patch_size[2])
+
+    # Crop patch
     end_z = start_z + patch_size[0]
     end_y = start_y + patch_size[1]
     end_x = start_x + patch_size[2]
