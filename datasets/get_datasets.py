@@ -3,6 +3,7 @@ import pathlib
 from .lits import Lits, Stage2Dataset
 from ..processing.preprocessing  import extract_liver_mask_binary
 import torch
+import numpy as np
 
 def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores", mode = "all", liver_masks = None):
     """
@@ -89,8 +90,8 @@ def get_liver_mask(source_folder, model_stage_1=None, device=None):
     for i in range(len(dataset)):
         data = dataset[i]
         image = data["image"].to(device)
-        seg = data["label"]
-
+        image = image.unsqueeze(0)
+        
         with torch.no_grad():
             logits = model_stage_1(image.unsqueeze(0))
             liver_mask = extract_liver_mask_binary(logits, threshold=0.5)[0].cpu().numpy()
