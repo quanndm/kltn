@@ -93,7 +93,7 @@ def get_liver_mask(source_folder, model_stage_1=None, device=None):
         image = image.unsqueeze(0)
         
         with torch.no_grad():
-            logits = model_stage_1(image.unsqueeze(0))
+            logits = model_stage_1(image)
             liver_mask = extract_liver_mask_binary(logits, threshold=0.5)[0].cpu().numpy()
 
         liver_masks.append(liver_mask.astype(np.uint8))
