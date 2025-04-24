@@ -112,17 +112,25 @@ class DiceLossWSoftmax(nn.Module):
         return dice_score
 
 class TverskyLossWSigmoid(nn.Module):
-    def __init__(self, alpha=0.7, beta=0.3):
+    def __init__(self, alpha=0.7, beta=0.3, gamma = 2.0, alpha_fc = 0.75, use_fc=False, weight_tversky=0.7, weight_bce_or_fc=0.3):
         super(TverskyLossWSigmoid, self).__init__()
         self.alpha = alpha
         self.beta = beta
         self.bce_loss = nn.BCEWithLogitsLoss()
         self.tversky_loss = TverskyLoss( alpha=self.alpha, beta=self.beta, sigmoid=True)
-
+        self.fc_loss = FocalLoss(gamma=gamma, alpha=alpha_fc)
+        self.use_fc = use_fc    
+        self.weight_tversky = weight_tversky
+        self.weight_bce_or_fc = weight_bce_or_fc
     def forward(self, inputs, targets):
-        bce_loss = self.bce_loss(inputs, targets)
         tversky_loss = self.tversky_loss(inputs, targets)
-        final_loss = 0.7 * tversky_loss + 0.3 * bce_loss
+
+        if self.use_fc:
+            focal_loss = self.fc_loss(inputs, targets)
+            final_loss = self.weight_tversky * tversky_loss + self.weight_bce_or_fc * focal_loss
+        else:
+            bce_loss = self.bce_loss(inputs, targets)
+            final_loss = self.weight_tversky * tversky_loss + self.weight_bce_or_fc * bce_loss
         return final_loss
         
 
