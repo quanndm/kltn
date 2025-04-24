@@ -120,7 +120,7 @@ class Lits(Dataset):
         return augmented["image"], augmented["label"]
 
 class Stage2Dataset(Dataset):
-    def __init__(self, patient_dirs, training=True, normalizations="zscores", transformations=False, model_stage_1=None, patch_size=(96, 96, 96)):
+    def __init__(self, patient_dirs, training=True, normalizations="zscores", transformations=False, liver_masks=None, patch_size=(96, 96, 96)):
         '''
         Args:
             patient_dirs: list of dict, each dict contains id and the paths to the patient's images/ segmentations
@@ -133,9 +133,7 @@ class Stage2Dataset(Dataset):
         self.normalizations = normalizations
         self.patient_dirs = patient_dirs
         self.transformations = transformations
-        self.model_stage_1 = model_stage_1
-        self.model_stage_1.to(self.device)
-        self.model_stage_1.eval()
+        self.liver_masks = liver_masks
 
         self.patch_size = patch_size
 
@@ -146,17 +144,12 @@ class Stage2Dataset(Dataset):
         _patient = self.patient_dirs[idx]
         image = self.load_nii(_patient["volume"])
         seg = self.load_nii(_patient["segmentation"])
-
+        liver_mask = self.liver_masks[idx] if self.liver_masks is not None else None
         image, seg = self.preprocessing(image, seg, self.training, self.normalizations) # shape: (1, 128, 128, 128)
 
-        image_tensor = torch.from_numpy(image).unsqueeze(0) # shape: (1, 1, 128, 128, 128)
-        image_tensor = image_tensor.to(self.device)
-        with torch.no_grad():
-            logits = inference(image_tensor, self.model_stage_1) # shape: (1, 1, 128, 128, 128)
-            liver_mask = extract_liver_mask_binary(logits, threshold=0.4)[0].cpu() # shape: (1, 128, 128, 128)
-
         # mask the input image with the liver mask
-        image_mask = mask_input_with_liver(image_tensor[0].cpu(), liver_mask)
+        if liver_mask is not None:
+            image_mask = mask_input_with_liver(image, liver_mask)
 
         image_np = image_mask.squeeze(0).detach().cpu().numpy()
         seg_np = seg.squeeze(0)

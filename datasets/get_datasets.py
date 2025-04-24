@@ -1,8 +1,9 @@
 from sklearn.model_selection import KFold
 import pathlib
 from .lits import Lits, Stage2Dataset
+from ..processing.preprocessing  import extract_liver_mask_binary
 
-def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores", mode = "all", model_stage_1=None):
+def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores", mode = "all", liver_masks = None):
     """
     Get the datasets for the LiTS dataset.
     The function will return the training and testing datasets based on the fold number.
@@ -38,6 +39,10 @@ def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zs
     train = [patients[i] for i in train_idx]
     test = [patients[i] for i in test_idx]
 
+    if liver_masks is not None:
+        train_liver_masks = [liver_masks[i] for i in train_idx] 
+        test_liver_masks = [liver_masks[i] for i in test_idx]
+
     if mode == "tumor":
         train_dataset = Stage2Dataset(train, training=True, normalizations=normalizations, transformations=True, model_stage_1=model_stage_1)
         test_dataset = Stage2Dataset(test, training=False, normalizations=normalizations, model_stage_1=model_stage_1)
@@ -46,3 +51,48 @@ def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zs
         test_dataset = Lits(test, training=False, benchmarking=True, normalizations=normalizations, mode=mode)
 
     return train_dataset, test_dataset
+
+def get_full_dataset(source_folder, normalizations = "zscores"):
+    base_folder  = pathlib.Path(source_folder).resolve()
+
+    # Get the list of volume the files in the folder
+    volume_files = list(base_folder.glob('volume-*.nii')) 
+
+    patients = []
+    # Get the list of segmentation files in the folder, and match them with the volume files 
+    for vol in volume_files:
+        patient_id = vol.stem.split("-")[1]
+        seg_file = base_folder / vol.name.replace("volume", "segmentation")
+        patients.append({
+            "id": patient_id,
+            "volume": vol,
+            "segmentation": seg_file
+        })
+
+    dataset = Lits(patients, training=False, normalizations=normalizations, mode="all")
+
+    return dataset
+
+def get_liver_mask(source_folder, model_stage_1=None, device=None):
+    dataset = get_full_dataset(source_folder)
+    liver_masks = []
+
+    if model_stage_1 is None:
+        return None
+
+    if model_stage_1 is not None:
+        model_stage_1.eval()
+        model_stage_1.to(device)
+    
+
+    for i in range(len(dataset)):
+        data = dataset[i]
+        image = data["image"].to(device)
+        seg = data["label"]
+
+        with torch.no_grad():
+            logits = model_stage_1(image.unsqueeze(0))
+            liver_mask = extract_liver_mask_binary(logits, threshold=0.4)[0].cpu().numpy()
+
+        liver_masks.append(liver_mask.astype(np.uint8))
+    return liver_masks
