@@ -39,7 +39,7 @@ def stage2_train_augmentation():
     """
     return Compose([
     
-        RandFlipd(keys=["image", "label"], spatial_axis=[0, 1, 2], prob=0.3),
+        RandFlipd(keys=["image", "label"], spatial_axis=[0, 1, 2], prob=0.35),
 
         RandAffined(
             keys=["image", "label"],
@@ -48,11 +48,11 @@ def stage2_train_augmentation():
             # translate_range=(2, 2, 2),       # translate 5 voxel
             mode=("bilinear", "nearest"),
             padding_mode="border",
-            prob=0.2
+            prob=0.25
         ),
 
-        RandAdjustContrastd(keys=["image"], prob=0.2, gamma=(0.8, 1.2)),
-        RandScaleIntensityd(keys=["image"], prob=0.2, factors=0.1),   # ±10%
+        # RandAdjustContrastd(keys=["image"], prob=0.2, gamma=(0.8, 1.2)),
+        # RandScaleIntensityd(keys=["image"], prob=0.2, factors=0.1),   # ±10%
         RandShiftIntensityd(keys=["image"], prob=0.2, offsets=0.05),  # ±5%
 
         RandGaussianNoised(keys=["image"], prob=0.1, mean=0.0, std=0.01),

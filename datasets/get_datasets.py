@@ -2,6 +2,7 @@ from sklearn.model_selection import KFold
 import pathlib
 from .lits import Lits, Stage2Dataset
 from ..processing.preprocessing  import extract_liver_mask_binary
+import torch
 
 def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores", mode = "all", liver_masks = None):
     """
