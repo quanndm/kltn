@@ -151,7 +151,7 @@ class Stage2Dataset(Dataset):
         if liver_mask is not None:
             image_mask = mask_input_with_liver(image, liver_mask)
 
-        image_np = image_mask.squeeze(0).detach().cpu().numpy()
+        image_np = image_mask.squeeze(0)
         seg_np = seg.squeeze(0)
 
         # crop patch around tumor
