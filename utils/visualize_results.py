@@ -111,7 +111,7 @@ def visualize_results_stage_2(model, val_loader, weight_path, num_images, device
             val_output = inference(val_input, model)             # raw logits
 
             # Apply sigmoid + thresholding + post-processing
-            pred_mask = post_processing_stage2(val_output, threshold=threshold, device=device)  # [1, 1, D, H, W]
+            pred_mask = post_trans_stage2(val_output, threshold=threshold, device=device)  # [1, 1, D, H, W]
 
             # Get data to numpy
             image_np = val_input.detach().cpu().numpy()[0, 0]            # [D, H, W]

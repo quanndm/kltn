@@ -151,17 +151,18 @@ class Stage2Dataset(Dataset):
         if liver_mask is not None:
             image_mask = mask_input_with_liver(image, liver_mask)
 
-        image_np = image_mask.squeeze(0)
-        seg_np = seg.squeeze(0)
+        # image_np = image_mask.squeeze(0)  #  squeeze if crop patch
+        # seg_np = seg.squeeze(0) #  squeeze if crop patch
 
         # crop patch around tumor
-        img_patch, seg_patch = crop_patch_around_tumor(image_np, seg_np, self.patch_size, margin=15)
-        
+        # img_patch, seg_patch = crop_patch_around_tumor(image_np, seg_np, self.patch_size, margin=15)
+        img_patch, seg_patch = image_mask, seg
+
         if seg_patch.sum() == 0 and self.training:
             return self.__getitem__((idx + 1) % self.__len__())
 
         image, seg = img_patch.astype(np.float32), seg_patch.astype(np.uint8)
-        image, seg = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0)
+        # image, seg = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0) # squeeze if crop
 
         if self.training and self.transformations:
             image, seg = self.augmentation(image, seg)

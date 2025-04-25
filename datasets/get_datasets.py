@@ -4,6 +4,7 @@ from .lits import Lits, Stage2Dataset
 from ..processing.preprocessing  import extract_liver_mask_binary
 import torch
 import numpy as np
+from ..utils.utils import model_inferer
 
 def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores", mode = "all", liver_masks = None):
     """
@@ -93,7 +94,7 @@ def get_liver_mask(source_folder, model_stage_1=None, device=None):
         image = image.unsqueeze(0)
         
         with torch.no_grad():
-            logits = model_stage_1(image)
+            logits = model_inferer(image, model_stage_1)
             liver_mask = extract_liver_mask_binary(logits, threshold=0.5)[0].cpu().numpy()
 
         liver_masks.append(liver_mask.astype(np.uint8))

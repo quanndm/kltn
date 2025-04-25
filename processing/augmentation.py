@@ -8,6 +8,7 @@ from monai.transforms import (
     RandAdjustContrastd,
     RandScaleIntensityd,
     RandGaussianNoised,
+    RandGaussianSmoothd
 )
 
 def train_augmentations():
@@ -39,21 +40,23 @@ def stage2_train_augmentation():
     """
     return Compose([
     
-        RandFlipd(keys=["image", "label"], spatial_axis=[0, 1, 2], prob=0.35),
+        RandFlipd(keys=["image", "label"], spatial_axis=[0, 1, 2], prob=0.4),
 
         RandAffined(
             keys=["image", "label"],
             rotate_range=(0.05, 0.05, 0.05),   # ±5 
             scale_range=(0.05, 0.05, 0.05),      # ±5%
-            # translate_range=(2, 2, 2),       # translate 2 voxel
+            translate_range=(2, 2, 2),       # translate 2 voxel
             mode=("bilinear", "nearest"),
             padding_mode="border",
-            prob=0.3
+            prob=0.4
         ),
 
-        # RandAdjustContrastd(keys=["image"], prob=0.2, gamma=(0.8, 1.3)),
-        # RandScaleIntensityd(keys=["image"], prob=0.2, factors=0.1),   # ±10%
+        RandAdjustContrastd(keys=["image"], prob=0.2, gamma=(0.9, 1.2)),
+        RandScaleIntensityd(keys=["image"], prob=0.2, factors=0.05),   # ±10%
         RandShiftIntensityd(keys=["image"], prob=0.2, offsets=0.05),  # ±5%
 
         RandGaussianNoised(keys=["image"], prob=0.1, mean=0.0, std=0.01),
+
+        RandGaussianSmoothd(keys=["image"], sigma_x=(0.25, 1.0), prob=0.05)
     ])
