@@ -145,24 +145,17 @@ class Stage2Dataset(Dataset):
         image = self.load_nii(_patient["volume"])
         seg = self.load_nii(_patient["segmentation"])
         liver_mask = self.liver_masks[idx] if self.liver_masks is not None else None
-        image, seg = self.preprocessing(image, seg, self.training, self.normalizations) # shape: (1, 128, 128, 128)
 
-        # mask the input image with the liver mask
-        if liver_mask is not None:
-            image_mask = mask_input_with_liver(image, liver_mask)
+        # training: seg - 1, D, H, W - 1, 128, 128, 128
+        # testing: seg  - 1, D, H, W - 1, D, 512, 512
+        image, seg, bbox = self.preprocessing(image, seg, self.training, self.normalizations) # shape: (1, 128, 128, 128)
 
-        # image_np = image_mask.squeeze(0)  #  squeeze if crop patch
-        # seg_np = seg.squeeze(0) #  squeeze if crop patch
-
-        # crop patch around tumor
-        # img_patch, seg_patch = crop_patch_around_tumor(image_np, seg_np, self.patch_size, margin=15)
         img_patch, seg_patch = image_mask, seg
 
-        if seg_patch.sum() == 0 and self.training:
+        if self.training and seg_patch.sum() == 0:
             return self.__getitem__((idx + 1) % self.__len__())
 
         image, seg = img_patch.astype(np.float32), seg_patch.astype(np.uint8)
-        # image, seg = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0) # squeeze if crop
 
         if self.training and self.transformations:
             image, seg = self.augmentation(image, seg)
@@ -172,12 +165,14 @@ class Stage2Dataset(Dataset):
             image, seg = torch.from_numpy(image.detach().cpu().numpy()), torch.from_numpy(seg.detach().cpu().numpy())
         else:
             image, seg = torch.from_numpy(image), torch.from_numpy(seg)
+
         return dict(
             idx=idx,
             patient_id=_patient["id"],
             image=image,
             label=seg,
             supervised=True,
+            bbox = bbox
         )
 
     @staticmethod
@@ -187,19 +182,24 @@ class Stage2Dataset(Dataset):
         return sitk.GetArrayFromImage(sitk.ReadImage(str(path)))
     
     @staticmethod
-    def preprocessing(image, seg, training, normalizations):
+    def preprocessing(image, seg, training, normalizations, liver_mask=None):
         '''
         Args:
             image: np.ndarray, the image to preprocess
             seg: np.ndarray, the segmentation to preprocess
             training: bool, whether the dataset is for training or testing
             normalizations: str, the type of normalization to apply to the images, either "zscores" or "minmax"
+            liver_mask: np.ndarray, the liver mask predicted from the model stage 1
         Returns:
             image: np.ndarray, the preprocessed image
             seg: np.ndarray, the preprocessed segmentation
         '''
+
         # get liver ROI
-        image, seg, _ = get_liver_roi(image, seg)
+        if training:
+            image, seg, bbox = get_liver_roi(image, seg)
+        else:
+            image, _, bbox = get_liver_roi(image, liver_mask)
 
         # clip HU values
         image = truncate_HU(image)
@@ -211,17 +211,22 @@ class Stage2Dataset(Dataset):
             image = normalize(image)
 
         # get tumor mask
-        seg = (seg == 2).astype(np.uint8)
+        if training:
+            seg = (seg == 2).astype(np.uint8)
+        else:
+            pass
 
         # expand dims of image and segmentation
         image = np.expand_dims(image, axis=0)
         seg = np.expand_dims(seg, axis=0)
         
         # resize image
-        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
-
-        return image, seg
+        if training:
+            image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
+        else:
+            image, _ = resize_image(image, None, target_size=(128, 128, 128))
     
+        return image, seg, bbox
     @staticmethod
     def augmentation(image, seg):
         '''

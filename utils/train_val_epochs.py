@@ -4,6 +4,7 @@ import numpy as np
 import os
 
 from ..processing.postprocessing import post_trans, post_trans_stage2, post_trans_stage1, post_processing_stage2
+from ..processing.preprocessing import resize_crop_to_bbox_size, uncrop_to_full_image
 from ..utils.utils import model_inferer
 from ..utils.metrics import AverageMeter, IoUMetric, PrecisionMetric, RecallMetric
 from monai.data import decollate_batch
@@ -14,6 +15,7 @@ from monai.transforms import (
     Compose,
     EnsureType
 )
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -158,20 +160,24 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
     with torch.no_grad():
         for idx, batch_data in enumerate(loader):
             val_inputs, val_labels = batch_data["image"].to(device), batch_data["label"].to(device)
+            bbox = batch_data["bbox"]
             logits = model_inferer(val_inputs, model)
             # logits = post_processing_stage2(logits, threshold=0.5, device=device)
 
             val_outputs_list = decollate_batch(logits)
             val_labels_list = decollate_batch(val_labels)
 
-            val_output_convert = [post_trans_stage1(val_pred_tensor) for val_pred_tensor in val_outputs_list]
-            val_output_convert = [t.float() for t in val_outputs_list]
-            val_labels_list = [t.float() for t in val_labels_list]
+            val_output_convert = [post_trans_stage2(val_pred_tensor) for val_pred_tensor in val_outputs_list]
+            val_output_convert = [resize_crop_to_bbox_size(val_pred_tensor, bbox) for val_pred_tensor in val_output_convert]
+            val_output_convert = [uncrop_to_full_image(val_pred_tensor, bbox, val_labels.squeeze().shape) for val_pred_tensor in val_output_convert]
+            val_output_convert = [t.float() for t in val_output_convert]
+
+            val_labels_list = [(t == 2).float() for t in val_labels_list]
             
             acc_func.reset()
             acc_func(y_pred=val_output_convert, y=val_labels_list)
 
-            acc, not_nans = acc_func.aggregate()
+            acc, _ = acc_func.aggregate()
 
             dice_tumor = acc[0]
             dice_list.append(dice_tumor.cpu().numpy())

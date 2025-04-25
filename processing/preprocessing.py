@@ -64,7 +64,7 @@ def irm_min_max_preprocess(image, low_perc=1, high_perc=99):
     image = normalize(image)
     return image
 
-def resize_image(image, seg, target_size=(128, 128, 128)):
+def resize_image(image, seg = None, target_size=(128, 128, 128)):
     def process_tensor(tensor, mode, new_size=target_size):
         tensor = torch.tensor(tensor, dtype=torch.float32)
 
@@ -73,7 +73,10 @@ def resize_image(image, seg, target_size=(128, 128, 128)):
         return tensor_resized.squeeze(0)  
 
     image_resized = process_tensor(image, "trilinear")
-    seg_resized = process_tensor(seg, "nearest")
+    if seg is not None:
+        seg_resized = process_tensor(seg, "nearest")
+    else:
+        seg_resized = None
     return image_resized.numpy(), seg_resized.numpy()
 
 def truncate_HU(image, hu_min=-200, hu_max=250):
@@ -238,3 +241,52 @@ def crop_patch_around_tumor(image, tumor_mask, patch_size=(96, 96, 96), margin=1
     mask_patch = tumor_mask[start_z:end_z, start_y:end_y, start_x:end_x]
 
     return img_patch, mask_patch
+
+
+def resize_crop_to_bbox_size(tensor_crop, bbox):
+    """
+    Resize tensor crop (e.g., predicted tumor mask) to the size of the liver ROI crop (dz, dy, dx).
+    
+    Args:
+        tensor_crop (tensor): The tensor crop to be resized. shape: (1, D, H, W)
+        bbox (tuple): The bounding box of the liver ROI crop.
+
+    Returns:
+        np.ndarray: (tensor): The resized tensor crop. shape: (1, dz, dy, dx)
+    """
+    # Ensure tensor is float for interpolation
+    tensor_crop = tensor_crop.unsqueeze(0) # shape 1, D, H, W => 1, 1, D, H, W
+    # tarrget size
+    dz, dy, dx = bbox[1] - bbox[0], bbox[3] - bbox[2], bbox[5] - bbox[4]
+    target_size = (dz, dy, dx)
+    resized = F.interpolate(
+        tensor_crop.float(),
+        size=target_size,
+        mode="nearest"  # because it's a binary mask
+    )
+
+    return resized.squeeze(0).to(torch.uint8)
+
+def uncrop_to_full_image(crop_mask, bbox, full_image_shape):
+    """
+    Uncrop the cropped mask to the full image size.
+    
+    Args:
+        crop_mask (tensor): The cropped mask to be uncropped.
+        bbox (tuple): The bounding box of the liver ROI crop.
+        full_image_shape (tuple): The shape of the full image.
+
+    Returns:
+        np.ndarray: (tensor): The uncropped mask.
+    """
+    # Create a tensor of zeros with the same shape as the full image
+    full_mask = torch.zeros(full_image_shape, dtype=torch.uint8, device=crop_mask.device)
+
+    # Get the bounding box coordinates
+    z_min, z_max, y_min, y_max, x_min, x_max = bbox
+
+    crop_mask = crop_mask.squeeze(0)  # shape: (1, dz, dy, dx) -> (dz, dy, dx)
+    # Place the cropped mask in the correct position in the full mask
+    full_mask[z_min:z_max, y_min:y_max, x_min:x_max] = crop_mask
+
+    return full_mask.unsqueeze(0)  # shape: (dz, dy, dx) -> (1, dz, dy, dx)
