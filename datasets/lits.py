@@ -50,7 +50,9 @@ class Lits(Dataset):
             seg = (seg > 0).astype(np.uint8)
 
             _seg = np.expand_dims(_seg, axis=0)
-            _seg = (_seg > 0).astype(np.uint8)
+            _seg = _seg.astype(np.uint8)    
+            _seg = torch.from_numpy(seg)
+            # _seg = (_seg > 0).astype(np.uint8)
 
         if self.training and self.transformations:
             image, seg = self.augmentation(image, seg)
