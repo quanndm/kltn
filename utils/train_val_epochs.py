@@ -124,8 +124,8 @@ def val_epoch_stage1(model, loader, epoch, acc_func, max_epochs, logger):
             val_labels_list_float = [t.float() for t in val_labels_list]
             
             acc_func.reset()
-            dice_acc(y_pred=val_output_convert, y=val_labels_list_float)
-            
+            acc_func(y_pred=val_output_convert, y=val_labels_list_float)
+
             acc, not_nans = acc_func.aggregate()
             dice_liver = acc[0]
             dice_list.append(dice_liver.cpu().numpy())
