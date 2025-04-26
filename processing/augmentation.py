@@ -8,7 +8,8 @@ from monai.transforms import (
     RandAdjustContrastd,
     RandScaleIntensityd,
     RandGaussianNoised,
-    RandGaussianSmoothd
+    RandGaussianSmoothd,
+    RandBiasFieldd
 )
 
 def train_augmentations():
@@ -22,9 +23,19 @@ def train_augmentations():
     """
     return Compose([
         # RandRotate90d(keys=["image", "label"], prob=0.5, max_k=1),
-        RandFlipd(keys=["image", "label"], prob=0.4, spatial_axis=2),
-        RandZoomd(keys=["image", "label"], prob=0.3, min_zoom=0.9, max_zoom=1.1, mode=["trilinear", "nearest"]),  
+        RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=2),
+        RandZoomd(keys=["image", "label"], prob=0.4, min_zoom=0.9, max_zoom=1.1, mode=["trilinear", "nearest"]),  
+        RandAffined(
+            keys=["image", "label"], 
+            prob=0.3,
+            rotate_range=(0.05, 0.05, 0.05),  
+            scale_range=(0.05, 0.05, 0.05),
+            mode=["trilinear", "nearest"]
+        ),
         RandShiftIntensityd(keys=["image"], prob=0.3, offsets=0.1),
+
+        RandGaussianNoised(keys=["image"], prob=0.15, mean=0.0, std=0.01),
+        RandBiasFieldd(keys=["image"], prob=0.15),
     ])
     
 def stage2_train_augmentation():
@@ -62,5 +73,6 @@ def stage2_train_augmentation():
         RandZoomd(keys=["image", "label"], prob=0.3, min_zoom=0.9, max_zoom=1.1, mode=["trilinear", "nearest"]),  
         RandShiftIntensityd(keys=["image"], prob=0.3, offsets=0.1),
 
+        RandGaussianNoised(keys=["image"], prob=0.1, mean=0.0, std=0.01),
         RandGaussianSmoothd(keys=["image"], sigma_x=(0.25, 1.0), prob=0.05)
     ])
