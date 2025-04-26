@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .utils import LayerNorm, GRN, DropPath
 
 class DoubleConv(nn.Module):
     def __init__(self, in_channels, out_channels,  num_groups=8):
@@ -162,14 +161,14 @@ class ResNeXtCoTBlock(nn.Module):
 
         self.conv1 = nn.Sequential(
 
-            nn.Conv3d(in_channels, inner_channels, kernel_size=1, bias=False),
+            nn.Conv3d(in_channels, inner_channels, kernel_size=1, bias=True),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
             # nn.ReLU(inplace=True)
             nn.SiLU(inplace=True),
         )
 
         self.conv2 = nn.Sequential(
-            nn.Conv3d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1, groups=4, bias=False),
+            nn.Conv3d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1, groups=4, bias=True),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
             # nn.ReLU(inplace=True)
             nn.SiLU(inplace=True),
@@ -183,7 +182,7 @@ class ResNeXtCoTBlock(nn.Module):
         )
 
         self.conv4 = nn.Sequential(
-            nn.Conv3d(inner_channels, out_channels, kernel_size=1, bias=False),
+            nn.Conv3d(inner_channels, out_channels, kernel_size=1, bias=True),
             nn.GroupNorm(num_groups=4, num_channels=out_channels)
         )
 
@@ -208,54 +207,4 @@ class ResNeXtCoTBlock(nn.Module):
         out = self.relu(out)
 
         return out
-
-class ConvNeXtV2CoTBlock(nn.Module):
-    """
-    ConvNeXtV2 Block with CoT Attention
-    reference: https://github.com/facebookresearch/ConvNeXt-V2/blob/2553895753323c6fe0b2bf390683f5ea358a42b9/models/convnextv2.py#L14
-    Args:
-
-    """
-    def __init__(self, in_channels, out_channels, drop_path = 0.05):
-        super(ConvNeXtV2CoTBlock, self).__init__()
-        self.stem = nn.Sequential(
-            nn.Conv3d(in_channels, out_channels, kernel_size=1, bias=False),
-            LayerNorm(out_channels, eps=1e-6, data_format="channels_first"),
-            nn.SiLU(),
-        )
-
-        self.dwconv = nn.Conv3d(out_channels, out_channels, kernel_size=3, padding=1, groups = 4, bias=False)
-        self.cot = CoTAttention(out_channels, 3)
-
-        self.norm = LayerNorm(out_channels, eps=1e-6, data_format="channels_first")
-        # self.pwconv1 = nn.Linear(out_channels, out_channels * 4)    
-        self.pwconv1 = nn.Conv3d(out_channels, out_channels * 4, kernel_size=1)
-        self.act = nn.GELU()
-        self.grn = GRN(out_channels * 4)
-        # self.pwconv2 = nn.Linear(out_channels * 4, out_channels)
-        self.pwconv2 = nn.Conv3d(out_channels * 4, out_channels, kernel_size=1)
-        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
-
-        if in_channels != out_channels:
-            self.residual_conv = nn.Conv3d(in_channels, out_channels, kernel_size=1)
-        else:
-            self.residual_conv = nn.Identity()
-    def forward(self, x):
-        tmp = x
-
-        if self.residual_conv is not None:
-            tmp = self.residual_conv(x)
-
-        x = self.stem(x)
-        x = self.dwconv(x)
-        x = self.cot(x)
-
-        x = self.norm(x)
-        x = self.pwconv1(x)
-        x = self.act(x)
-        x = self.grn(x)
-        x = self.pwconv2(x) 
-
-        x =  tmp + self.drop_path(x)
-        return x
 

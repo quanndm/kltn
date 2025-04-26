@@ -41,13 +41,14 @@ class Lits(Dataset):
 
     def __getitem__(self, idx):
         _patient = self.patient_dirs[idx]
-        image = self.load_nii(_patient["volume"])
-        seg = self.load_nii(_patient["segmentation"])
+        _image = self.load_nii(_patient["volume"])
+        _seg = self.load_nii(_patient["segmentation"])
 
-        image, seg = self.preprocessing(image, seg, self.training, self.normalizations)
+        image, seg, bbox = self.preprocessing(_image, _seg, self.training, self.normalizations)
 
         if self.mode == "liver":
             seg = (seg > 0).astype(np.uint8)
+            _seg = (_seg > 0).astype(np.uint8)
 
         if self.training and self.transformations:
             image, seg = self.augmentation(image, seg)
@@ -60,6 +61,9 @@ class Lits(Dataset):
             patient_id=_patient["id"],
             image=image,
             label=seg,
+            root_image = _image,
+            root_label= _seg
+            bbox=bbox,
             supervised=True,
         )
 
@@ -83,7 +87,7 @@ class Lits(Dataset):
             seg: np.ndarray, the preprocessed segmentation
         '''
         # get liver ROI
-        image, seg, _ = get_liver_roi(image, seg)
+        image, seg, bbox = get_liver_roi(image, seg)
 
         # clip HU values
         image = truncate_HU(image)
@@ -101,7 +105,7 @@ class Lits(Dataset):
         # resize image
         image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
 
-        return image, seg
+        return image, seg, bbox
 
     @staticmethod
     def augmentation(image, seg):

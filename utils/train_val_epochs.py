@@ -109,12 +109,16 @@ def val_epoch_stage1(model, loader, epoch, acc_func, max_epochs, logger):
     with torch.no_grad():
         for idx, batch_data in enumerate(loader):
             val_inputs, val_labels = batch_data["image"].to(device), batch_data["label"].to(device)
+            root_labels = batch_data["root_label"].to(device)
+            bbox = batch_data["bbox"]
             logits = model_inferer(val_inputs, model)
 
             val_outputs_list = decollate_batch(logits)
-            val_labels_list = decollate_batch(val_labels)
+            val_labels_list = decollate_batch(root_labels)
 
             val_output_convert = [post_trans_stage1(val_pred_tensor) for val_pred_tensor in val_outputs_list]
+            val_output_convert = [resize_crop_to_bbox_size(val_pred_tensor, bbox) for val_pred_tensor in val_output_convert]
+            val_output_convert = [uncrop_to_full_image(val_pred_tensor, bbox, root_labels.squeeze().shape) for val_pred_tensor in val_output_convert]
             val_output_convert = [t.float() for t in val_output_convert]
 
             val_labels_list = [t.float() for t in val_labels_list]
@@ -128,13 +132,13 @@ def val_epoch_stage1(model, loader, epoch, acc_func, max_epochs, logger):
             dice_liver = acc[0]
             dice_list.append(dice_liver.cpu().numpy())
 
-            ious = iou_metric(logits, val_labels)
+            ious = iou_metric(val_output_convert[0], val_labels_list[0])
             iou_list.append(ious[0])
 
-            precisions = precision_metric(logits, val_labels)
+            precisions = precision_metric(val_output_convert[0], val_labels_list[0])
             precision_list.append(precisions[0])
 
-            recalls = recall_metric(logits, val_labels)
+            recalls = recall_metric(val_output_convert[0], val_labels_list[0])
             recall_list.append(recalls[0])
 
             logger.info(f"Val {epoch}/{max_epochs} {idx+1}/{len(loader)}, Dice_Liver: {dice_liver:.6f}, time {time.time() - start_time:.2f}s")
