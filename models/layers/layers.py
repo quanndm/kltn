@@ -161,14 +161,14 @@ class ResNeXtCoTBlock(nn.Module):
 
         self.conv1 = nn.Sequential(
 
-            nn.Conv3d(in_channels, inner_channels, kernel_size=1),
+            nn.Conv3d(in_channels, inner_channels, kernel_size=1, bias=False),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
             # nn.ReLU(inplace=True)
             nn.SiLU(inplace=True),
         )
 
         self.conv2 = nn.Sequential(
-            nn.Conv3d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1, groups=4),
+            nn.Conv3d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1, groups=4, bias=False),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
             # nn.ReLU(inplace=True)
             nn.SiLU(inplace=True),
@@ -182,14 +182,14 @@ class ResNeXtCoTBlock(nn.Module):
         )
 
         self.conv4 = nn.Sequential(
-            nn.Conv3d(inner_channels, out_channels, kernel_size=1),
+            nn.Conv3d(inner_channels, out_channels, kernel_size=1, bias=False),
             nn.GroupNorm(num_groups=4, num_channels=out_channels)
         )
 
         self.residual = None
         if in_channels != out_channels:
             self.residual = nn.Sequential(
-                nn.Conv3d(in_channels, out_channels, kernel_size=1),
+                nn.Conv3d(in_channels, out_channels, kernel_size=1, bias=False),
                 nn.GroupNorm(num_groups=4, num_channels=out_channels)
             )
 
