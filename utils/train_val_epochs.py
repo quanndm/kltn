@@ -121,24 +121,22 @@ def val_epoch_stage1(model, loader, epoch, acc_func, max_epochs, logger):
             val_output_convert = [uncrop_to_full_image(val_pred_tensor, bbox, root_labels.squeeze().shape) for val_pred_tensor in val_output_convert]
             val_output_convert = [t.float() for t in val_output_convert]
 
-            val_labels_list = [t.float() for t in val_labels_list]
+            val_labels_list_float = [t.float() for t in val_labels_list]
             
             acc_func.reset()
-            acc_func(y_pred=val_output_convert, y=val_labels_list)
-
+            dice_acc(y_pred=val_output_convert, y=val_labels_list_float)
+            
             acc, not_nans = acc_func.aggregate()
-            # run_acc.update(acc.cpu().numpy(), n=not_nans.cpu().numpy())
-
             dice_liver = acc[0]
             dice_list.append(dice_liver.cpu().numpy())
 
-            ious = iou_metric(val_output_convert[0], val_labels_list[0])
+            ious = iou_metric(val_output_convert[0].unsqueeze(0), val_labels_list[0].unsqueeze(0))
             iou_list.append(ious[0])
 
-            precisions = precision_metric(val_output_convert[0], val_labels_list[0])
+            precisions = precision_metric(val_output_convert[0].unsqueeze(0), val_labels_list[0].unsqueeze(0))
             precision_list.append(precisions[0])
 
-            recalls = recall_metric(val_output_convert[0], val_labels_list[0])
+            recalls = recall_metric(val_output_convert[0].unsqueeze(0), val_labels_list[0].unsqueeze(0))
             recall_list.append(recalls[0])
 
             logger.info(f"Val {epoch}/{max_epochs} {idx+1}/{len(loader)}, Dice_Liver: {dice_liver:.6f}, time {time.time() - start_time:.2f}s")

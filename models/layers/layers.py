@@ -189,7 +189,7 @@ class ResNeXtCoTBlock(nn.Module):
         self.residual = None
         if in_channels != out_channels:
             self.residual = nn.Sequential(
-                nn.Conv3d(in_channels, out_channels, kernel_size=1, bias=False),
+                nn.Conv3d(in_channels, out_channels, kernel_size=1),
                 nn.GroupNorm(num_groups=4, num_channels=out_channels)
             )
 
