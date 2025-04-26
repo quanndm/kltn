@@ -51,7 +51,7 @@ class Lits(Dataset):
 
             _seg = np.expand_dims(_seg, axis=0)
             _seg = (_seg > 0).astype(np.uint8)    
-            _seg = torch.from_numpy(_seg)
+        _seg = torch.from_numpy(_seg)
 
 
         if self.training and self.transformations:
@@ -65,9 +65,6 @@ class Lits(Dataset):
             patient_id=_patient["id"],
             image=image,
             label=seg,
-            root_image = _image,
-            root_label= _seg,
-            bbox=bbox,
             supervised=True,
         )
 
@@ -91,7 +88,7 @@ class Lits(Dataset):
             seg: np.ndarray, the preprocessed segmentation
         '''
         # get liver ROI
-        image, seg, bbox = get_liver_roi(image, seg)
+        # image, seg, bbox = get_liver_roi(image, seg)
 
         # clip HU values
         image = truncate_HU(image)

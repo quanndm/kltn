@@ -109,16 +109,12 @@ def val_epoch_stage1(model, loader, epoch, acc_func, max_epochs, logger):
     with torch.no_grad():
         for idx, batch_data in enumerate(loader):
             val_inputs, val_labels = batch_data["image"].to(device), batch_data["label"].to(device)
-            root_labels = batch_data["root_label"].to(device)
-            bbox = batch_data["bbox"]
             logits = model_inferer(val_inputs, model)
 
             val_outputs_list = decollate_batch(logits)
-            val_labels_list = decollate_batch(root_labels)
+            val_labels_list = decollate_batch(val_labels)
 
             val_output_convert = [post_trans_stage1(val_pred_tensor) for val_pred_tensor in val_outputs_list]
-            val_output_convert = [resize_crop_to_bbox_size(val_pred_tensor, bbox) for val_pred_tensor in val_output_convert]
-            val_output_convert = [uncrop_to_full_image(val_pred_tensor, bbox, root_labels.squeeze().shape) for val_pred_tensor in val_output_convert]
             val_output_convert = [t.float() for t in val_output_convert]
 
             val_labels_list_float = [t.float() for t in val_labels_list]
