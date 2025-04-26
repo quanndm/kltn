@@ -6,12 +6,12 @@ class DoubleConv(nn.Module):
     def __init__(self, in_channels, out_channels,  num_groups=8):
         super().__init__()
         self.double_conv = nn.Sequential(
-            nn.Conv3d(in_channels, out_channels, kernel_size=3, stride=1, padding=1),
+            nn.Conv3d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False),
             nn.GroupNorm(num_groups=num_groups, num_channels=out_channels),
             # nn.ReLU(inplace=True),
             nn.SiLU(inplace=True),
 
-            nn.Conv3d(out_channels, out_channels, kernel_size=3, stride=1, padding=1),
+            nn.Conv3d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False),
             nn.GroupNorm(num_groups=num_groups, num_channels=out_channels),
             # nn.ReLU(inplace=True),
             nn.SiLU(inplace=True)
