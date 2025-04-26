@@ -48,6 +48,8 @@ class Lits(Dataset):
 
         if self.mode == "liver":
             seg = (seg > 0).astype(np.uint8)
+            
+            _seg = np.expand_dims(seg, axis=0)
             _seg = (_seg > 0).astype(np.uint8)
 
         if self.training and self.transformations:
