@@ -44,7 +44,7 @@ class Lits(Dataset):
         _image = self.load_nii(_patient["volume"])
         _seg = self.load_nii(_patient["segmentation"])
 
-        image, seg, bbox = self.preprocessing(_image, _seg, self.training, self.normalizations)
+        image, seg = self.preprocessing(_image, _seg, self.training, self.normalizations)
 
         if self.mode == "liver":
             seg = (seg > 0).astype(np.uint8)
@@ -106,7 +106,7 @@ class Lits(Dataset):
         # resize image
         image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
 
-        return image, seg, bbox
+        return image, seg
 
     @staticmethod
     def augmentation(image, seg):
