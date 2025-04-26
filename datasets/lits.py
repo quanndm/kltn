@@ -62,7 +62,7 @@ class Lits(Dataset):
             image=image,
             label=seg,
             root_image = _image,
-            root_label= _seg
+            root_label= _seg,
             bbox=bbox,
             supervised=True,
         )
