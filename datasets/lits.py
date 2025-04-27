@@ -151,9 +151,7 @@ class Stage2Dataset(Dataset):
         seg = self.load_nii(_patient["segmentation"])
         liver_mask = self.liver_masks[idx] if self.liver_masks is not None else None
 
-        # training: seg - 1, D, H, W - 1, 128, 128, 128
-        # testing: seg  - 1, D, H, W - 1, D, 512, 512
-        image, seg, bbox = self.preprocessing(image, seg, self.training, self.normalizations) # shape: (1, 128, 128, 128)
+        image, seg, bbox = self.preprocessing(image, seg, self.training, self.normalizations, liver_mask=liver_mask) # shape: (1, 128, 128, 128)
 
         img_patch, seg_patch = image_mask, seg
 
@@ -176,6 +174,7 @@ class Stage2Dataset(Dataset):
             patient_id=_patient["id"],
             image=image,
             label=seg,
+            liver_mask = self.liver_mask,
             supervised=True,
             bbox = bbox
         )
@@ -200,11 +199,15 @@ class Stage2Dataset(Dataset):
             seg: np.ndarray, the preprocessed segmentation
         '''
 
+        # expand dims of image and segmentation
+        image = np.expand_dims(image, axis=0)
+        seg = np.expand_dims(seg, axis=0)
+        
+        # resize image
+        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
+
         # get liver ROI
-        if training:
-            image, seg, bbox = get_liver_roi(image, seg)
-        else:
-            image, _, bbox = get_liver_roi(image, liver_mask)
+        image, seg, bbox = get_liver_roi(image, liver_mask, margin=15)
 
         # clip HU values
         image = truncate_HU(image)
@@ -216,20 +219,7 @@ class Stage2Dataset(Dataset):
             image = normalize(image)
 
         # get tumor mask
-        if training:
-            seg = (seg == 2).astype(np.uint8)
-        else:
-            pass
-
-        # expand dims of image and segmentation
-        image = np.expand_dims(image, axis=0)
-        seg = np.expand_dims(seg, axis=0)
-        
-        # resize image
-        if training:
-            image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
-        else:
-            image, _ = resize_image(image, None, target_size=(128, 128, 128))
+        seg = (seg == 2).astype(np.uint8)
     
         return image, seg, bbox
     @staticmethod
