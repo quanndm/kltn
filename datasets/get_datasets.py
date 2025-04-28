@@ -100,6 +100,6 @@ def get_liver_mask(source_folder, model_stage_1=None, device=None):
             liver_mask = extract_liver_mask_binary(logits, threshold=0.5)[0]
             liver_mask = keep_largest_connected_component(liver_mask, target_size=root_size)
             liver_mask = smooth_mask(liver_mask, kernel_size=3)
-            liver_mask = resize_image(seg = liver_mask, root_size)
+            liver_mask = resize_image(seg = liver_mask,target_size= root_size)
         liver_masks.append(liver_mask.cpu().numpy())
     return liver_masks
