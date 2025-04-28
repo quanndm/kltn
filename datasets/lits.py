@@ -205,7 +205,7 @@ class Stage2Dataset(Dataset):
         # get liver ROI
         liver_mask = np.squeeze(liver_mask, axis=0)
         image, seg = np.squeeze(image, axis=0), np.squeeze(seg, axis=0)
-        image, seg, bbox = get_liver_roi(image, liver_mask, margin=15)
+        image, seg, bbox = get_liver_roi(image, seg, liver_mask, margin=15)
 
         # clip HU values
         image = truncate_HU(image)
