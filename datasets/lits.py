@@ -17,6 +17,7 @@ from ..processing.preprocessing import (
 )
 from ..processing.augmentation import train_augmentations, stage2_train_augmentation
 import os
+import torch.nn.functional as F
 
 class Lits(Dataset):
     def __init__(self, patient_dirs, benchmarking = False, training=True, normalizations="zscores", transformations=False, mode="all"):
@@ -198,6 +199,9 @@ class Stage2Dataset(Dataset):
             image: np.ndarray, the preprocessed image
             seg: np.ndarray, the preprocessed segmentation
         '''           
+        liver_mask = F.interpolate(liver_mask, image.shape, mode='nearest', align_corners=False)
+        liver_mask = liver_mask.squeeze(0).cpu().numpy()
+
         # get liver ROI
         image, seg, bbox = get_liver_roi(image, seg, liver_mask, margin=10)
 
