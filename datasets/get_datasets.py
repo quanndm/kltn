@@ -9,6 +9,7 @@ from ..utils.utils import model_inferer
 import torch
 import torch.nn.functional as F
 import gc
+from torch.utils.data import DataLoader
 
 def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores", mode = "all", liver_masks = None):
     """
@@ -82,32 +83,34 @@ def get_full_dataset(source_folder, normalizations = "zscores"):
 
 def get_liver_mask(source_folder, model_stage_1=None, device=None):
     dataset = get_full_dataset(source_folder)
+    dataloader = DataLoader(
+        dataset,
+        batch_size=1,    # xử lý nhiều ảnh cùng lúc
+        shuffle=False,            # thứ tự giữ nguyên
+        pin_memory=True           # tăng tốc copy từ CPU -> GPU
+    )
     liver_masks = []
 
     if model_stage_1 is None:
         return None
 
-    if model_stage_1 is not None:
-        model_stage_1.eval()
-        model_stage_1.to(device)
+    model_stage_1.to(device)
+    model_stage_1.eval()
     
+    with torch.no_grad():   
+        for data in dataloader:
+            image = data["image"].to(device)
+            root_size = data["root_size"]
+            image = image.unsqueeze(0)
 
-    for i in range(len(dataset)):
-        data = dataset[i]
-        image = data["image"].to(device)
-        root_size = data["root_size"]
-        image = image.unsqueeze(0)
-        
-        with torch.no_grad():
             logits = model_inferer(image, model_stage_1)
             liver_mask = extract_liver_mask_binary(logits, threshold=0.5)
             liver_mask = F.interpolate(liver_mask, size=root_size, mode='nearest')
-        liver_masks.append(liver_mask.cpu().numpy())
+            liver_masks.append(liver_mask.cpu().numpy())
 
         torch.cuda.empty_cache()
         gc.collect()
         del image
         del logits
         del liver_mask
-
     return liver_masks
