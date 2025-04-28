@@ -67,7 +67,7 @@ def irm_min_max_preprocess(image, low_perc=1, high_perc=99):
 def resize_image(image=None, seg=None, target_size=(128, 128, 128)):
     def process_tensor(tensor, mode, new_size=target_size):
         tensor = torch.tensor(tensor, dtype=torch.float32).unsqueeze(0)
-        return F.interpolate(tensor, size=new_size, mode=mode, align_corners=(mode == "trilinear")).squeeze(0).numpy()
+        return F.interpolate(tensor, size=new_size, mode=mode, align_corners=(False if mode == "trilinear" else None)).squeeze(0).numpy()
 
     image_resized = process_tensor(image, "trilinear") if image is not None else None
     seg_resized = process_tensor(seg, "nearest") if seg is not None else None
@@ -114,7 +114,7 @@ def get_liver_roi(image, seg, liver_mask=None, margin=5):
     
     if len(liver_voxels[0]) == 0:
         return image, seg, (0, image.shape[0], 0, image.shape[1], 0, image.shape[2])
-        
+
     z_min = max(0, np.min(liver_voxels[0]) - margin)
     z_max = min(image.shape[0], np.max(liver_voxels[0]) + margin + 1)
 
