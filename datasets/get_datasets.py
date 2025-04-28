@@ -8,6 +8,7 @@ import numpy as np
 from ..utils.utils import model_inferer
 import torch
 import torch.nn.functional as F
+import gc
 
 def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores", mode = "all", liver_masks = None):
     """
@@ -105,6 +106,7 @@ def get_liver_mask(source_folder, model_stage_1=None, device=None):
         liver_masks.append(liver_mask.cpu().numpy())
 
         torch.cuda.empty_cache()
+        gc.collect()
         del image
         del logits
         del liver_mask
