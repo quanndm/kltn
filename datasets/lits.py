@@ -172,7 +172,7 @@ class Stage2Dataset(Dataset):
             patient_id=_patient["id"],
             image=image,
             label=seg,
-            liver_mask = self.liver_mask,
+            liver_mask = liver_mask,
             supervised=True,
             root_size=root_size,
             bbox = bbox
