@@ -199,7 +199,7 @@ class Stage2Dataset(Dataset):
             image: np.ndarray, the preprocessed image
             seg: np.ndarray, the preprocessed segmentation
         '''           
-        liver_mask_resize = F.interpolate(liver_mask.unsqueeze(0), image.shape, mode='nearest')
+        liver_mask_resize = F.interpolate(liver_mask.unsqueeze(0).cpu(), image.shape, mode='nearest')
         liver_mask_resize = liver_mask_resize.squeeze(0).cpu().numpy()
 
         # get liver ROI
