@@ -201,7 +201,7 @@ class Stage2Dataset(Dataset):
         '''           
 
         liver_mask_resize = F.interpolate(liver_mask.unsqueeze(0), image.shape, mode='nearest')
-        liver_mask_resize = liver_mask_resize.squeeze(0).numpy()
+        liver_mask_resize = liver_mask_resize.squeeze(0).cpu().numpy()
 
         # get liver ROI
         image, seg, bbox = get_liver_roi(image, seg, liver_mask_resize, margin=10)
