@@ -102,7 +102,7 @@ def truncate_HU(image, hu_min=-200, hu_max=250):
     """
     return np.clip(image, hu_min, hu_max)
 
-def get_liver_roi(image, seg, liver_mask=None, margin=5):
+def get_liver_roi(image, seg, liver_mask, margin=5):
     """
     Get the liver ROI (Region of Interest) from the image and segmentation.
     Args:
