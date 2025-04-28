@@ -167,6 +167,7 @@ class Stage2Dataset(Dataset):
         else:
             image, seg = torch.from_numpy(image), torch.from_numpy(seg)
 
+        liver_mask = torch.from_numpy(liver_mask)
         return dict(
             idx=idx,
             patient_id=_patient["id"],
@@ -185,7 +186,7 @@ class Stage2Dataset(Dataset):
         return sitk.GetArrayFromImage(sitk.ReadImage(str(path)))
     
     @staticmethod
-    def preprocessing(image, seg, training, normalizations, liver_mask=None):
+    def preprocessing(image, seg, training, normalizations, liver_mask):
         '''
         Args:
             image: np.ndarray, the image to preprocess
