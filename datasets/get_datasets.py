@@ -104,5 +104,8 @@ def get_liver_mask(source_folder, model_stage_1=None, device=None):
         liver_masks.append(liver_mask)
 
         torch.cuda.empty_cache()
-        del image, del logits, del liver_mask
+        del image
+        del logits
+        del liver_mask
+        
     return liver_masks
