@@ -141,8 +141,6 @@ class Stage2Dataset(Dataset):
         self.transformations = transformations
         self.liver_masks = liver_masks
 
-        self.patch_size = patch_size
-
     def __len__(self):
         return len(self.patient_dirs)
 
