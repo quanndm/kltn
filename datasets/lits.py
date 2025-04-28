@@ -224,7 +224,7 @@ class Stage2Dataset(Dataset):
 
         # expand dims of image and segmentation and resize image
         image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
-        return image, seg, bbox, liver_mask
+        return image, seg, bbox, liver_mask.cpu().numpy()   
     @staticmethod
     def augmentation(image, seg):
         '''
