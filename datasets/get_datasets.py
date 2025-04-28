@@ -100,7 +100,7 @@ def get_liver_mask(source_folder, model_stage_1=None, device=None):
         with torch.no_grad():
             logits = model_inferer(image, model_stage_1)
             liver_mask = extract_liver_mask_binary(logits, threshold=0.5)
-            liver_mask = F.interpolate(liver_mask, size=target_size, mode='nearest')
+            liver_mask = F.interpolate(liver_mask, size=root_size, mode='nearest')
             liver_mask = smooth_mask(liver_mask, kernel_size=3)
         liver_masks.append(liver_mask.cpu().numpy())
 
