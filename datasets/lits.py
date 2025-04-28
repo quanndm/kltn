@@ -156,7 +156,7 @@ class Stage2Dataset(Dataset):
         if self.training and seg.sum() == 0:
             return self.__getitem__((idx + 1) % self.__len__())
 
-        image, seg = image_mask.astype(np.float32), seg.astype(np.uint8)
+        image, seg = image.astype(np.float32), seg.astype(np.uint8)
 
         if self.training and self.transformations:
             image, seg = self.augmentation(image, seg)
