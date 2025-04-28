@@ -199,8 +199,14 @@ class Stage2Dataset(Dataset):
             image: np.ndarray, the preprocessed image
             seg: np.ndarray, the preprocessed segmentation
         '''           
+
+        # expand dims of image and segmentation and resize image
+        image, seg = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0)
+        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
+
         # get liver ROI
         liver_mask = np.squeeze(liver_mask, axis=0)
+        image, seg = np.squeeze(image, axis=0), np.squeeze(seg, axis=0)
         image, seg, bbox = get_liver_roi(image, liver_mask, margin=15)
 
         # clip HU values
@@ -215,11 +221,10 @@ class Stage2Dataset(Dataset):
         # get tumor mask
         seg = (seg == 2).astype(np.uint8)
     
+
         # expand dims of image and segmentation and resize image
         image, seg = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0)
-        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
-
-        liver_mask = resize_image(seg = np.expand_dims(liver_mask, axis=0), target_size=(128, 128, 128))
+        liver_mask = np.expand_dims(liver_mask, axis=0)
 
         return image, seg, bbox, liver_mask
     @staticmethod
