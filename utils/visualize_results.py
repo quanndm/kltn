@@ -123,22 +123,21 @@ def visualize_results_stage_2(model, val_loader, weight_path, num_images, device
             label_2d = np.max(label_np, axis=0)
             pred_2d = np.max(pred_np, axis=0)
 
-            # Show image
-            plt.figure(figsize=(6, 6))
-            plt.title("Input Image (Liver ROI - Max Projection)")
-            plt.imshow(image_2d, cmap="gray")
-            plt.axis("off")
-            plt.show()
 
             # Show GT and prediction
-            fig, ax = plt.subplots(1, 2, figsize=(12, 6))
-            ax[0].imshow(label_2d, cmap=cmap, vmin=0, vmax=1)
-            ax[0].set_title("Ground Truth (Tumor)")
-            ax[0].axis("off")
-
-            ax[1].imshow(pred_2d, cmap=cmap, vmin=0, vmax=1)
-            ax[1].set_title("Prediction (Tumor)")
+            fig, ax = plt.subplots(1, 3, figsize=(18, 6))
+            # Show image
+            ax[1].title("Input Image (Liver ROI - Max Projection)")
+            ax[1].imshow(image_2d, cmap="gray")
             ax[1].axis("off")
+
+            ax[1].imshow(label_2d, cmap=cmap, vmin=0, vmax=1)
+            ax[1].set_title("Ground Truth (Tumor)")
+            ax[1].axis("off")
+
+            ax[2].imshow(pred_2d, cmap=cmap, vmin=0, vmax=1)
+            ax[2].set_title("Prediction (Tumor)")
+            ax[2].axis("off")
 
             plt.tight_layout()
             plt.show()

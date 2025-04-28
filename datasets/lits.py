@@ -43,7 +43,7 @@ class Lits(Dataset):
         _patient = self.patient_dirs[idx]
         _image = self.load_nii(_patient["volume"])
         _seg = self.load_nii(_patient["segmentation"])
-
+        root_size = _image.shape
         image, seg = self.preprocessing(_image, _seg, self.training, self.normalizations)
 
         if self.mode == "liver":
@@ -65,6 +65,7 @@ class Lits(Dataset):
             patient_id=_patient["id"],
             image=image,
             label=seg,
+            root_size=root_size,
             supervised=True,
         )
 
@@ -125,15 +126,15 @@ class Lits(Dataset):
         return augmented["image"], augmented["label"]
 
 class Stage2Dataset(Dataset):
-    def __init__(self, patient_dirs, training=True, normalizations="zscores", transformations=False, liver_masks=None, patch_size=(96, 96, 96)):
+    def __init__(self, patient_dirs, training=True, normalizations="zscores", transformations=False, liver_masks=None):
         '''
         Args:
             patient_dirs: list of dict, each dict contains id and the paths to the patient's images/ segmentations
             training: bool, whether the dataset is for training or testing
             normalizations: str, the type of normalization to apply to the images, either "zscores" or "minmax"
             transformations: bool, whether to apply transformations to the images
+            liver_mask: liver mask predict, shape (1, D, H, W)
         '''
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.training = training
         self.normalizations = normalizations
         self.patient_dirs = patient_dirs
@@ -149,16 +150,15 @@ class Stage2Dataset(Dataset):
         _patient = self.patient_dirs[idx]
         image = self.load_nii(_patient["volume"])
         seg = self.load_nii(_patient["segmentation"])
+        root_size = image.shape
         liver_mask = self.liver_masks[idx] if self.liver_masks is not None else None
 
-        image, seg, bbox = self.preprocessing(image, seg, self.training, self.normalizations, liver_mask=liver_mask) # shape: (1, 128, 128, 128)
+        image, seg, bbox, liver_mask = self.preprocessing(image, seg, self.training, self.normalizations, liver_mask=liver_mask) # shape: (1, 128, 128, 128)
 
-        img_patch, seg_patch = image_mask, seg
-
-        if self.training and seg_patch.sum() == 0:
+        if self.training and seg.sum() == 0:
             return self.__getitem__((idx + 1) % self.__len__())
 
-        image, seg = img_patch.astype(np.float32), seg_patch.astype(np.uint8)
+        image, seg = image_mask.astype(np.float32), seg.astype(np.uint8)
 
         if self.training and self.transformations:
             image, seg = self.augmentation(image, seg)
@@ -176,6 +176,7 @@ class Stage2Dataset(Dataset):
             label=seg,
             liver_mask = self.liver_mask,
             supervised=True,
+            root_size=root_size,
             bbox = bbox
         )
 
@@ -193,20 +194,13 @@ class Stage2Dataset(Dataset):
             seg: np.ndarray, the segmentation to preprocess
             training: bool, whether the dataset is for training or testing
             normalizations: str, the type of normalization to apply to the images, either "zscores" or "minmax"
-            liver_mask: np.ndarray, the liver mask predicted from the model stage 1
+            liver_mask: np.ndarray, the liver mask predicted from the model stage 1, shape (1, D, H, W)
         Returns:
             image: np.ndarray, the preprocessed image
             seg: np.ndarray, the preprocessed segmentation
-        '''
-
-        # expand dims of image and segmentation
-        image = np.expand_dims(image, axis=0)
-        seg = np.expand_dims(seg, axis=0)
-        
-        # resize image
-        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
-
+        '''           
         # get liver ROI
+        liver_mask = np.squeeze(liver_mask, axis=0)
         image, seg, bbox = get_liver_roi(image, liver_mask, margin=15)
 
         # clip HU values
@@ -221,7 +215,13 @@ class Stage2Dataset(Dataset):
         # get tumor mask
         seg = (seg == 2).astype(np.uint8)
     
-        return image, seg, bbox
+        # expand dims of image and segmentation and resize image
+        image, seg = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0)
+        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
+
+        liver_mask = resize_image(seg = np.expand_dims(liver_mask, axis=0), target_size=(128, 128, 128))
+
+        return image, seg, bbox, liver_mask
     @staticmethod
     def augmentation(image, seg):
         '''

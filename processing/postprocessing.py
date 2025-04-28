@@ -75,7 +75,7 @@ def keep_largest_connected_component(predicted_mask):
     largest_label = np.argmax(sizes)
     largest_component = np.where(labeled_mask == largest_label, 1, 0)
 
-    return torch.from_numpy(largest_component).unsqueeze(0).unsqueeze(0)  # shape (1, 1, D, H, W)
+    return torch.from_numpy(largest_component).unsqueeze(0)  # shape (1, D, H, W)
 
 
 def smooth_mask(mask, kernel_size=3):
@@ -87,4 +87,4 @@ def smooth_mask(mask, kernel_size=3):
     structure = np.ones((kernel_size, kernel_size, kernel_size))
     mask = ndi.binary_closing(mask, structure=structure).astype(np.uint8)
     mask = ndi.binary_opening(mask, structure=structure).astype(np.uint8)
-    return torch.from_numpy(mask).unsqueeze(0).unsqueeze(0)  # shape (1, 1, D, H, W)
+    return torch.from_numpy(mask).unsqueeze(0)  # shape (1, 1, D, H, W)

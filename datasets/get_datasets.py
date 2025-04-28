@@ -1,7 +1,7 @@
 from sklearn.model_selection import KFold
 import pathlib
 from .lits import Lits, Stage2Dataset
-from ..processing.preprocessing  import extract_liver_mask_binary
+from ..processing.preprocessing  import extract_liver_mask_binary, resize_image
 from ..processing.postprocessing import keep_largest_connected_component, smooth_mask
 import torch
 import numpy as np
@@ -92,12 +92,14 @@ def get_liver_mask(source_folder, model_stage_1=None, device=None):
     for i in range(len(dataset)):
         data = dataset[i]
         image = data["image"].to(device)
+        root_size = data["root_size"]
         image = image.unsqueeze(0)
         
         with torch.no_grad():
             logits = model_inferer(image, model_stage_1)
             liver_mask = extract_liver_mask_binary(logits, threshold=0.5)[0]
-            liver_mask = keep_largest_connected_component(liver_mask)
+            liver_mask = keep_largest_connected_component(liver_mask, target_size=root_size)
             liver_mask = smooth_mask(liver_mask, kernel_size=3)
-        liver_masks.append(liver_mask.float().cpu().numpy())
+            liver_mask = resize_image(seg = liver_mask, root_size)
+        liver_masks.append(liver_mask.cpu().numpy())
     return liver_masks

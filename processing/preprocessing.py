@@ -64,20 +64,16 @@ def irm_min_max_preprocess(image, low_perc=1, high_perc=99):
     image = normalize(image)
     return image
 
-def resize_image(image, seg = None, target_size=(128, 128, 128)):
+def resize_image(image=None, seg=None, target_size=(128, 128, 128)):
     def process_tensor(tensor, mode, new_size=target_size):
-        tensor = torch.tensor(tensor, dtype=torch.float32)
+        tensor = torch.tensor(tensor, dtype=torch.float32).unsqueeze(0)
+        return F.interpolate(tensor, size=new_size, mode=mode, align_corners=(mode == "trilinear")).squeeze(0).numpy()
 
-        tensor = tensor.unsqueeze(0)  
-        tensor_resized = F.interpolate(tensor, size=new_size, mode=mode, align_corners=False if mode == "trilinear" else None)
-        return tensor_resized.squeeze(0)  
+    image_resized = process_tensor(image, "trilinear") if image is not None else None
+    seg_resized = process_tensor(seg, "nearest") if seg is not None else None
 
-    image_resized = process_tensor(image, "trilinear")
-    if seg is not None:
-        seg_resized = process_tensor(seg, "nearest")
-    else:
-        seg_resized = None
-    return image_resized.numpy(), seg_resized.numpy()
+    return image_resized, seg_resized
+
 
 def truncate_HU(image, hu_min=-200, hu_max=250):
     """
@@ -103,23 +99,7 @@ def truncate_HU(image, hu_min=-200, hu_max=250):
     """
     return np.clip(image, hu_min, hu_max)
 
-def resize_image_v2(image, seg, target_size=(128, 128, 128)):
-    """
-    Resize the image and segmentation to the target size.
-    Args:
-        image: np.ndarray, the image to resize, shape (D, H, W)
-        seg: np.ndarray, the segmentation to resize, shape (D, H, W)
-        target_size: tuple, the target size of the image and segmentation
-    Returns:
-        image: np.ndarray, the resized image
-        seg: np.ndarray, the resized segmentation
-    """
-    zoom_factors = [target / dim for target, dim in zip(target_size, image.shape)]
-    image = zoom(image, zoom_factors, order=3)
-    seg = zoom(seg, zoom_factors, order=0)
-    return image, seg
-
-def get_liver_roi(image, seg, margin=5):
+def get_liver_roi(image, seg, liver_mask=None, margin=5):
     """
     Get the liver ROI (Region of Interest) from the image and segmentation.
     Args:
@@ -130,10 +110,11 @@ def get_liver_roi(image, seg, margin=5):
         seg: np.ndarray, the segmentation with the liver ROI
     """
     # get liver ROI
-    liver_voxels = np.where(seg > 0)
+    liver_voxels = np.where(liver_mask > 0)
     
     if len(liver_voxels[0]) == 0:
-        return image, seg
+        return image, seg, (0, image.shape[0], 0, image.shape[1], 0, image.shape[2])
+        
     z_min = max(0, np.min(liver_voxels[0]) - margin)
     z_max = min(image.shape[0], np.max(liver_voxels[0]) + margin + 1)
 
