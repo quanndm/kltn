@@ -101,7 +101,6 @@ def get_liver_mask(source_folder, model_stage_1=None, device=None):
         for data in dataloader:
             image = data["image"].to(device)
             root_size = data["root_size"]
-            image = image.unsqueeze(0)
 
             logits = model_inferer(image, model_stage_1)
             liver_mask = extract_liver_mask_binary(logits, threshold=0.5)
