@@ -135,7 +135,6 @@ class Stage2Dataset(Dataset):
             transformations: bool, whether to apply transformations to the images
             liver_mask: liver mask predict, shape (1, D, H, W)
         '''
-        self.device = device
         self.training = training
         self.normalizations = normalizations
         self.patient_dirs = patient_dirs
