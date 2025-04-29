@@ -123,7 +123,7 @@ def truncate_HU(image, hu_min=-200, hu_max=250):
 
 def get_bbox_liver(liver_mask, margin):
     liver_voxels = np.where(liver_mask > 0)
-
+    liver_voxels = liver_voxels.detach().cpu().numpy()
     if len(liver_voxels[0]) == 0:
         return (0, liver_mask.shape[0], 0, liver_mask.shape[1], 0, liver_mask.shape[2])
 

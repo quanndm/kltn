@@ -204,17 +204,17 @@ class Stage2Dataset(Dataset):
         # clip HU values
         image = truncate_HU(image)
 
-        # normalizations
-        # if normalizations == "zscores":
-        #     image = zscore_normalise(image)
-        # else:
-        #     image = normalize(image)        
+        normalizations
+        if normalizations == "zscores":
+            image = zscore_normalise(image)
+        else:
+            image = normalize(image)        
 
         # expand dims of image and segmentation and resize image
         image, seg= np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0)
 
         # expand dims of image and segmentation and resize image
-        # image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
+        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
         return image, seg
     @staticmethod
     def augmentation(image, seg):
