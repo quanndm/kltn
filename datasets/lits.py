@@ -169,7 +169,7 @@ class Stage2Dataset(Dataset):
         else:
             image, seg = torch.from_numpy(image), torch.from_numpy(seg)
 
-        
+        liver_mask  = torch.from_numpy(liver_mask)
         return dict(
             idx=idx,
             patient_id=_patient["id"],
