@@ -162,7 +162,7 @@ class Stage2Dataset(Dataset):
         seg = (seg == 2).astype(np.uint8)
         # convert to torch tensors
         if self.training:
-            image, seg = torch.from_numpy(image.detach().cpu().numpy()), torch.from_numpy(seg))
+            image, seg = torch.from_numpy(image.detach().cpu().numpy()), torch.from_numpy(seg)
         else:
             image, seg = torch.from_numpy(image), torch.from_numpy(seg)
 
