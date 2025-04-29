@@ -164,7 +164,7 @@ class Stage2Dataset(Dataset):
             logits = inference(image_tensor, self.model_stage_1)
             liver_mask = extract_liver_mask_binary(logits, threshold=0.4).squeeze(0).cpu().numpy()
             _, liver_mask = resize_image(seg=liver_mask, target_size=root_size, device=self.device)
-            liver_mask_bbox = get_bbox_liver(liver_mask, margin = 10)
+            liver_mask_bbox = get_bbox_liver(np.squeeze(liver_mask, 0), margin = 10)
 
 
         image, seg = self.preprocessing(image, seg, self.training, self.normalizations, liver_mask_bbox=liver_mask_bbox) # shape: (1, 128, 128, 128)
