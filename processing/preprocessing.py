@@ -123,18 +123,17 @@ def truncate_HU(image, hu_min=-200, hu_max=250):
 
 def get_bbox_liver(liver_mask, margin):
     liver_voxels = np.where(liver_mask > 0)
-    liver_voxels = liver_voxels.detach().cpu().numpy()
     if len(liver_voxels[0]) == 0:
         return (0, liver_mask.shape[0], 0, liver_mask.shape[1], 0, liver_mask.shape[2])
 
-    z_min = max(0, np.min(liver_voxels[0]) - margin)
-    z_max = min(liver_mask.shape[0], np.max(liver_voxels[0]) + margin + 1)
+    z_min = max(0, np.min(liver_voxels[0]) - margin).detach().cpu().numpy()
+    z_max = min(liver_mask.shape[0], np.max(liver_voxels[0]) + margin + 1).detach().cpu().numpy()
 
-    y_min = max(0, np.min(liver_voxels[1]) - margin)
-    y_max = min(liver_mask.shape[1], np.max(liver_voxels[1]) + margin + 1)
+    y_min = max(0, np.min(liver_voxels[1]) - margin).detach().cpu().numpy()
+    y_max = min(liver_mask.shape[1], np.max(liver_voxels[1]) + margin + 1).detach().cpu().numpy()
 
-    x_min = max(0, np.min(liver_voxels[2]) - margin)
-    x_max = min(liver_mask.shape[2], np.max(liver_voxels[2]) + margin + 1)
+    x_min = max(0, np.min(liver_voxels[2]) - margin).detach().cpu().numpy()
+    x_max = min(liver_mask.shape[2], np.max(liver_voxels[2]) + margin + 1).detach().cpu().numpy()
 
     if z_max <= z_min:
         z_max = z_min + 1
