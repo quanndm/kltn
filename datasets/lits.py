@@ -147,12 +147,12 @@ class Stage2Dataset(Dataset):
 
     def __getitem__(self, idx):
         _patient = self.patient_dirs[idx]
-        image = self.load_nii(_patient["volume"])
-        seg = self.load_nii(_patient["segmentation"])
+        _image = self.load_nii(_patient["volume"])
+        _seg = self.load_nii(_patient["segmentation"])
         root_size = image.shape
         liver_mask_bbox = self.liver_masks_bbox[idx] if self.liver_masks_bbox is not None else None
 
-        image, seg = self.preprocessing(image, seg, self.training, self.normalizations, liver_mask_bbox=liver_mask_bbox) # shape: (1, 128, 128, 128)
+        image, seg = self.preprocessing(_image, _seg, self.training, self.normalizations, liver_mask_bbox=liver_mask_bbox) # shape: (1, 128, 128, 128)
         image, seg = image.astype(np.float32), seg.astype(np.uint8)
 
 
@@ -176,6 +176,8 @@ class Stage2Dataset(Dataset):
             liver_mask = liver_mask,
             supervised=True,
             root_size=root_size,
+            root_image=_image,
+            root_seg = _seg,
             bbox = liver_mask_bbox
         )
 
