@@ -10,7 +10,7 @@ import torch
 import torch.nn.functional as F
 import gc
 
-def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores", mode = "all", liver_masks_bbox = None):
+def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores", mode = "all"):
     """
     Get the datasets for the LiTS dataset.
     The function will return the training and testing datasets based on the fold number.
@@ -46,42 +46,22 @@ def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zs
     train = [patients[i] for i in train_idx]
     test = [patients[i] for i in test_idx]
 
-    if liver_masks_bbox is not None:
-        train_liver_masks_bbox = [liver_masks_bbox[i] for i in train_idx] 
-        test_liver_masks_bbox = [liver_masks_bbox[i] for i in test_idx]
+    train_bbox = get_liver_mask_bbox(train, model_stage_1=model_stage_1, device=device)
+    test_bbox = get_liver_mask_bbox(test, model_stage_1=model_stage_1, device=device)
+
 
     if mode == "tumor":
-        train_dataset = Stage2Dataset(train, training=True, normalizations=normalizations, transformations=True, liver_masks_bbox = train_liver_masks_bbox)
-        test_dataset = Stage2Dataset(test, training=False, normalizations=normalizations, liver_masks_bbox = test_liver_masks_bbox)
+        train_dataset = Stage2Dataset(train, training=True, normalizations=normalizations, transformations=True, liver_masks_bbox = train_bbox)
+        test_dataset = Stage2Dataset(test, training=False, normalizations=normalizations, liver_masks_bbox = test_bbox)
     else:
         train_dataset = Lits(train, training=True, normalizations=normalizations, transformations=True, mode=mode)
         test_dataset = Lits(test, training=False, benchmarking=True, normalizations=normalizations, mode=mode)
 
     return train_dataset, test_dataset
 
-def get_full_dataset(source_folder, normalizations = "zscores"):
-    base_folder  = pathlib.Path(source_folder).resolve()
 
-    # Get the list of volume the files in the folder
-    volume_files = list(base_folder.glob('volume-*.nii')) 
-
-    patients = []
-    # Get the list of segmentation files in the folder, and match them with the volume files 
-    for vol in volume_files:
-        patient_id = vol.stem.split("-")[1]
-        seg_file = base_folder / vol.name.replace("volume", "segmentation")
-        patients.append({
-            "id": patient_id,
-            "volume": vol,
-            "segmentation": seg_file
-        })
-
-    dataset = Lits(patients, training=False, normalizations=normalizations, mode="all")
-
-    return dataset
-
-def get_liver_mask_bbox(source_folder, model_stage_1=None, device=None):
-    dataset = get_full_dataset(source_folder)
+def get_liver_mask_bbox(source, model_stage_1=None, device=None):
+    test_dataset = Lits(source, training=False, benchmarking=True, normalizations="zscores", mode="liver")
     liver_masks_bbox = []
 
     if model_stage_1 is None:
