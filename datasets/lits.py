@@ -150,7 +150,7 @@ class Stage2Dataset(Dataset):
         root_size = image.shape
         liver_mask_bbox = self.liver_masks_bbox[idx] if self.liver_masks_bbox is not None else None
 
-        image, seg, bbox, liver_mask = self.preprocessing(image, seg, self.training, self.normalizations, liver_masks_bbox=liver_masks_bbox) # shape: (1, 128, 128, 128)
+        image, seg, liver_mask = self.preprocessing(image, seg, self.training, self.normalizations, liver_mask_bbox=liver_mask_bbox) # shape: (1, 128, 128, 128)
 
         if self.training and seg.sum() == 0:
             return self.__getitem__((idx + 1) % self.__len__())
@@ -175,7 +175,6 @@ class Stage2Dataset(Dataset):
             liver_mask = liver_mask,
             supervised=True,
             root_size=root_size,
-            bbox = bbox
         )
 
     @staticmethod
@@ -185,20 +184,20 @@ class Stage2Dataset(Dataset):
         return sitk.GetArrayFromImage(sitk.ReadImage(str(path)))
     
     @staticmethod
-    def preprocessing(image, seg, training, normalizations, liver_masks_bbox):
+    def preprocessing(image, seg, training, normalizations, liver_mask_bbox):
         '''
         Args:
             image: np.ndarray, the image to preprocess
             seg: np.ndarray, the segmentation to preprocess
             training: bool, whether the dataset is for training or testing
             normalizations: str, the type of normalization to apply to the images, either "zscores" or "minmax"
-            liver_masks_bbox: bbox of full size mask liver predict
+            liver_mask_bbox: bbox of full size mask liver predict
         Returns:
             image: np.ndarray, the preprocessed image
             seg: np.ndarray, the preprocessed segmentation
         '''           
         # get liver ROI
-        image, seg = get_liver_roi(image, seg, liver_masks_bbox)
+        image, seg = get_liver_roi(image, seg, liver_mask_bbox)
 
         # clip HU values
         image = truncate_HU(image)
@@ -218,8 +217,8 @@ class Stage2Dataset(Dataset):
 
         # expand dims of image and segmentation and resize image
         image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
-        _, liver_mask = resize_image(None, liver_mask, target_size=(128, 128, 128))
-        return image, seg, bbox, liver_mask
+        _, liver_mask = resize_image(seg = liver_mask, target_size=(128, 128, 128))
+        return image, seg, liver_mask
     @staticmethod
     def augmentation(image, seg):
         '''
