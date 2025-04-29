@@ -68,9 +68,16 @@ def resize_image(image=None, seg=None, target_size=(128, 128, 128), device=None)
     device = device if device is not None else torch.device("cpu")
     def process_tensor(tensor, mode, new_size=target_size):
         if isinstance(tensor, torch.Tensor):
-            tensor = tensor.clone().detach().unsqueeze(0).float().to(device)
+            tensor = tensor.clone().detach().float().to(device)
         else:
-            tensor = torch.tensor(tensor, dtype=torch.float32, device=device).unsqueeze(0)
+            tensor = torch.tensor(tensor, dtype=torch.float32, device=device)
+
+        if tensor.dim() == 3:
+            tensor = tensor.unsqueeze(0).unsqueeze(0)  # [D, H, W] -> [1, 1, D, H, W]
+        elif tensor.dim() == 4:
+            tensor = tensor.unsqueeze(0)  # [C, D, H, W] -> [1, C, D, H, W]
+        elif tensor.dim() == 5:
+            pass  # Already [N, C, D, H, W]
 
         
         return F.interpolate(tensor, size=new_size, mode=mode, align_corners=(False if mode == "trilinear" else None)).squeeze(0).cpu().numpy()
