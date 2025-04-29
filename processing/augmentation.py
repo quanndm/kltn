@@ -22,7 +22,6 @@ def train_augmentations():
         RandShiftIntensityd: Randomly shift the intensity of the image
     """
     return Compose([
-        # RandRotate90d(keys=["image", "label"], prob=0.5, max_k=1),
         RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=2),
         RandZoomd(keys=["image", "label"], prob=0.4, min_zoom=0.9, max_zoom=1.1, mode=["trilinear", "nearest"]),  
         RandAffined(
@@ -50,25 +49,6 @@ def stage2_train_augmentation():
         RandGaussianNoised: Randomly add Gaussian noise to the image
     """
     return Compose([
-    
-        # RandFlipd(keys=["image", "label"], spatial_axis=[0, 1, 2], prob=0.4),
-
-        # RandAffined(
-        #     keys=["image", "label"],
-        #     rotate_range=(0.05, 0.05, 0.05),   # ±5 
-        #     scale_range=(0.05, 0.05, 0.05),      # ±5%
-        #     translate_range=(2, 2, 2),       # translate 2 voxel
-        #     mode=("bilinear", "nearest"),
-        #     padding_mode="border",
-        #     prob=0.4
-        # ),
-
-        # RandAdjustContrastd(keys=["image"], prob=0.2, gamma=(0.9, 1.2)),
-        # RandScaleIntensityd(keys=["image"], prob=0.2, factors=0.05),   # ±10%
-        # RandShiftIntensityd(keys=["image"], prob=0.2, offsets=0.05),  # ±5%
-
-        # RandGaussianNoised(keys=["image"], prob=0.1, mean=0.0, std=0.01),
-
         RandFlipd(keys=["image", "label"], prob=0.4, spatial_axis=2),
         RandZoomd(keys=["image", "label"], prob=0.3, min_zoom=0.9, max_zoom=1.1, mode=["trilinear", "nearest"]),  
         RandShiftIntensityd(keys=["image"], prob=0.3, offsets=0.1),

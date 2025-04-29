@@ -150,23 +150,26 @@ class Stage2Dataset(Dataset):
         root_size = image.shape
         liver_mask_bbox = self.liver_masks_bbox[idx] if self.liver_masks_bbox is not None else None
 
-        image, seg, liver_mask = self.preprocessing(image, seg, self.training, self.normalizations, liver_mask_bbox=liver_mask_bbox) # shape: (1, 128, 128, 128)
+        image, seg = self.preprocessing(image, seg, self.training, self.normalizations, liver_mask_bbox=liver_mask_bbox) # shape: (1, 128, 128, 128)
 
         if self.training and seg.sum() == 0:
             return self.__getitem__((idx + 1) % self.__len__())
 
         image, seg = image.astype(np.float32), seg.astype(np.uint8)
 
+
         if self.training and self.transformations:
             image, seg = self.augmentation(image, seg)
 
+        liver_mask = (seg == 1).astype(np.uint8)
+        seg = (seg == 2).astype(np.uint8)
         # convert to torch tensors
         if self.training:
             image, seg = torch.from_numpy(image.detach().cpu().numpy()), torch.from_numpy(seg.detach().cpu().numpy())
         else:
             image, seg = torch.from_numpy(image), torch.from_numpy(seg)
 
-        liver_mask = torch.from_numpy(liver_mask)
+        
         return dict(
             idx=idx,
             patient_id=_patient["id"],
@@ -202,24 +205,18 @@ class Stage2Dataset(Dataset):
         # clip HU values
         image = truncate_HU(image)
 
-        # # normalizations
-        # if normalizations == "zscores":
-        #     image = zscore_normalise(image)
-        # else:
-        #     image = normalize(image)
-
-        # get tumor mask
-        liver_mask = (seg == 1).astype(np.uint8)
-        seg = (seg == 2).astype(np.uint8)
-        
+        # normalizations
+        if normalizations == "zscores":
+            image = zscore_normalise(image)
+        else:
+            image = normalize(image)        
 
         # expand dims of image and segmentation and resize image
-        image, seg, liver_mask = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0), np.expand_dims(liver_mask, axis=0)
+        image, seg= np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0)
 
         # expand dims of image and segmentation and resize image
         image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
-        _, liver_mask = resize_image(seg = liver_mask, target_size=(128, 128, 128))
-        return image, seg, liver_mask
+        return image, seg, 
     @staticmethod
     def augmentation(image, seg):
         '''
