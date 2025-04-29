@@ -213,7 +213,7 @@ class Stage2Dataset(Dataset):
         liver_mask = (seg == 1).astype(np.uint8)
 
         # expand dims of image and segmentation and resize image
-        image, seg, liver_mask = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0), np.expand_dims(seg, axis=0)
+        image, seg, liver_mask = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0), np.expand_dims(liver_mask, axis=0)
 
         # expand dims of image and segmentation and resize image
         image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
