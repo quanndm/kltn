@@ -113,9 +113,9 @@ def truncate_HU(image, hu_min=-200, hu_max=250):
     return np.clip(image, hu_min, hu_max)
 
 def get_bbox_liver(liver_mask, margin):
-    liver_voxel = np.where(liver_mask > 0)
+    liver_voxels = np.where(liver_mask > 0)
 
-    if len(liver_voxel[0]) == 0:
+    if len(liver_voxels[0]) == 0:
         return (0, 0, 0, 0, 0, 0)
 
     z_min = max(0, np.min(liver_voxels[0]) - margin)
