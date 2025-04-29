@@ -159,13 +159,13 @@ def get_liver_roi(image, seg, liver_mask_bbox):
     z_min, z_max, y_min, y_max, x_min, x_max = liver_mask_bbox
     d, h, w = image.shape
 
-    if z_max <= z_min:
+    if z_max <= z_min or z_max == 0:
         z_max = z_min + 1
     
-    if y_max <= y_min:
+    if y_max <= y_min or y_max == 0:
         y_max = y_min + 1
 
-    if x_max <= x_min:
+    if x_max <= x_min or x_max == 0:
         x_max = x_min + 1
 
     image = image[z_min:z_max, y_min:y_max, x_min:x_max]
