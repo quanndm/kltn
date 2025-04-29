@@ -149,7 +149,7 @@ class Stage2Dataset(Dataset):
         _patient = self.patient_dirs[idx]
         _image = self.load_nii(_patient["volume"])
         _seg = self.load_nii(_patient["segmentation"])
-        root_size = image.shape
+        root_size = _image.shape
         liver_mask_bbox = self.liver_masks_bbox[idx] if self.liver_masks_bbox is not None else None
 
         image, seg = self.preprocessing(_image, _seg, self.training, self.normalizations, liver_mask_bbox=liver_mask_bbox) # shape: (1, 128, 128, 128)
