@@ -126,7 +126,7 @@ class Lits(Dataset):
         return augmented["image"], augmented["label"]
 
 class Stage2Dataset(Dataset):
-    def __init__(self, patient_dirs, training=True, normalizations="zscores", transformations=False, model_stage_1 = None, device=None):
+    def __init__(self, patient_dirs, training=True, normalizations="zscores", transformations=False, liver_masks_bbox=None):
         '''
         Args:
             patient_dirs: list of dict, each dict contains id and the paths to the patient's images/ segmentations
@@ -140,10 +140,7 @@ class Stage2Dataset(Dataset):
         self.normalizations = normalizations
         self.patient_dirs = patient_dirs
         self.transformations = transformations
-        self.model_stage_1 = model_stage_1
-    
-        self.model_stage_1.to(device)
-        self.model_stage_1.eval()
+        self.liver_masks_bbox = liver_masks_bbox
 
 
     def __len__(self):
@@ -154,21 +151,9 @@ class Stage2Dataset(Dataset):
         image = self.load_nii(_patient["volume"])
         seg = self.load_nii(_patient["segmentation"])
         root_size = image.shape
-        
-        # pred
-        image_tensor, _ = Lits.preprocessing(image, seg, False, self.normalizations)
-        image_tensor = torch.from_numpy(image_tensor).unsqueeze(0).to(self.device)
-
-    
-        with torch.no_grad():   
-            logits = inference(image_tensor, self.model_stage_1)
-            liver_mask = extract_liver_mask_binary(logits, threshold=0.4).squeeze(0).cpu().numpy()
-            _, liver_mask = resize_image(seg=liver_mask, target_size=root_size, device=self.device)
-            liver_mask_bbox = get_bbox_liver(np.squeeze(liver_mask, 0), margin = 10)
-
+        liver_mask_bbox = self.liver_masks_bbox[idx] if self.liver_masks_bbox is not None else None
 
         image, seg = self.preprocessing(image, seg, self.training, self.normalizations, liver_mask_bbox=liver_mask_bbox) # shape: (1, 128, 128, 128)
-
         image, seg = image.astype(np.float32), seg.astype(np.uint8)
 
 

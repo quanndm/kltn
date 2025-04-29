@@ -46,9 +46,12 @@ def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zs
     train = [patients[i] for i in train_idx]
     test = [patients[i] for i in test_idx]
 
+    bbox_train = get_liver_mask_bbox(train, model_stage_1, device)
+    bbox_test = get_liver_mask_bbox(test, model_stage_1, device)
+
     if mode == "tumor":
-        train_dataset = Stage2Dataset(train, training=True, normalizations=normalizations, transformations=True, model_stage_1 = model_stage_1, device= device)
-        test_dataset = Stage2Dataset(test, training=False, normalizations=normalizations, model_stage_1 = model_stage_1, device = device)
+        train_dataset = Stage2Dataset(train, training=True, normalizations=normalizations, transformations=True, liver_masks_bbox = bbox_train)
+        test_dataset = Stage2Dataset(test, training=False, normalizations=normalizations, liver_masks_bbox = bbox_train)
     else:
         train_dataset = Lits(train, training=True, normalizations=normalizations, transformations=True, mode=mode)
         test_dataset = Lits(test, training=False, benchmarking=True, normalizations=normalizations, mode=mode)
@@ -57,7 +60,7 @@ def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zs
 
 
 def get_liver_mask_bbox(source, model_stage_1=None, device=None):
-    dataset = Lits(source, training=False, benchmarking=True, normalizations="zscores", mode="liver")
+    dataset = Lits(source, training=False, benchmarking=True, normalizations="zscores", mode="all")
     liver_masks_bbox = []
 
     if model_stage_1 is None:
@@ -74,11 +77,10 @@ def get_liver_mask_bbox(source, model_stage_1=None, device=None):
             root_size = data["root_size"]
             image = image.unsqueeze(0)
             
-        
             logits = model_inferer(image, model_stage_1)
-            liver_mask = extract_liver_mask_binary(logits, threshold=0.5)
+            liver_mask = extract_liver_mask_binary(logits, threshold=0.4)
             _, liver_mask = resize_image(seg=liver_mask, target_size=root_size, device=device)
-            bbox_liver = get_bbox_liver(liver_mask, margin=10)
+            bbox_liver = get_bbox_liver(np.squeeze(liver_mask, 0), margin=10)
 
             liver_masks_bbox.append(bbox_liver) 
             torch.cuda.empty_cache()
