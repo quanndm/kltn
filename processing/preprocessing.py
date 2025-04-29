@@ -122,7 +122,7 @@ def get_bbox_liver(liver_mask, margin):
     liver_voxels = np.where(liver_mask > 0)
 
     if len(liver_voxels[0]) == 0:
-        return (0, 0, 0, 0, 0, 0)
+        return (0, liver_mask.shape[1], 0, liver_mask.shape[2], 0, liver_mask.shape[3])
 
     z_min = max(0, np.min(liver_voxels[0]) - margin)
     z_max = min(liver_mask.shape[1], np.max(liver_voxels[0]) + margin + 1)
