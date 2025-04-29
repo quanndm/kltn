@@ -109,4 +109,4 @@ def get_liver_mask_bbox(source_folder, model_stage_1=None, device=None):
             gc.collect()
             del data, image, logits, liver_mask, bbox_liver
 
-    return liver_masks
+    return liver_masks_bbox
