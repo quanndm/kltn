@@ -164,8 +164,8 @@ def get_liver_roi(image, seg, liver_mask_bbox):
     if x_max <= x_min:
         x_max = x_min + 1
 
-    image = image[z_min:z_max, y_min:y_max, x_min:x_max]
-    seg = seg[z_min:z_max, y_min:y_max, x_min:x_max]
+    image = image[:, z_min:z_max, y_min:y_max, x_min:x_max]
+    seg = seg[:, z_min:z_max, y_min:y_max, x_min:x_max]
 
     return image, seg
     
