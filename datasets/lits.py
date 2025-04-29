@@ -202,11 +202,11 @@ class Stage2Dataset(Dataset):
         # clip HU values
         image = truncate_HU(image)
 
-        # normalizations
-        if normalizations == "zscores":
-            image = zscore_normalise(image)
-        else:
-            image = normalize(image)
+        # # normalizations
+        # if normalizations == "zscores":
+        #     image = zscore_normalise(image)
+        # else:
+        #     image = normalize(image)
 
         # get tumor mask
         liver_mask = (seg == 1).astype(np.uint8)
