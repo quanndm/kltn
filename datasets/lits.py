@@ -157,7 +157,7 @@ class Stage2Dataset(Dataset):
         
         # pred
         image_tensor, _ = Lits.preprocessing(image, seg, False, self.normalizations)
-        image_tensor = torch.from_numpy(image_1).unsqueeze(0).to(self.device)
+        image_tensor = torch.from_numpy(image_tensor).unsqueeze(0).to(self.device)
 
     
         with torch.no_grad():   
