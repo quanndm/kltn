@@ -61,7 +61,7 @@ def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zs
 
 
 def get_liver_mask_bbox(source, model_stage_1=None, device=None):
-    test_dataset = Lits(source, training=False, benchmarking=True, normalizations="zscores", mode="liver")
+    dataset = Lits(source, training=False, benchmarking=True, normalizations="zscores", mode="liver")
     liver_masks_bbox = []
 
     if model_stage_1 is None:
