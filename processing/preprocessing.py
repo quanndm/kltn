@@ -53,8 +53,17 @@ def normalize(image):
 
 def zscore_normalise(img: np.ndarray):
     slices = (img != 0)
-    img[slices] = (img[slices] - np.mean(img[slices])) / np.std(img[slices])
+    if not np.any(slices):
+        return img
+
+    std = np.std(img[slices])
+    if std != 0:
+        img[slices] = (img[slices] - np.mean(img[slices])) / std
+    else:
+        img[slices] = 0
+
     return img
+
 
 
 def irm_min_max_preprocess(image, low_perc=1, high_perc=99):

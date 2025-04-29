@@ -203,7 +203,7 @@ class Stage2Dataset(Dataset):
         # clip HU values
         image = truncate_HU(image)
 
-        normalizations
+        # normalizations
         if normalizations == "zscores":
             image = zscore_normalise(image)
         else:
