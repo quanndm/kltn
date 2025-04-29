@@ -199,12 +199,8 @@ class Stage2Dataset(Dataset):
             image: np.ndarray, the preprocessed image
             seg: np.ndarray, the preprocessed segmentation
         '''           
-
-        liver_mask_resize = F.interpolate(liver_mask.unsqueeze(0), image.shape, mode='nearest')
-        liver_mask_resize = liver_mask_resize.squeeze(0).cpu().numpy()
-
         # get liver ROI
-        image, seg, bbox = get_liver_roi(image, seg, liver_mask_resize, margin=10)
+        image, seg, bbox = get_liver_roi(image, seg, np.squeeze(liver_mask, 0), margin=10)
 
         # clip HU values
         image = truncate_HU(image)
@@ -225,6 +221,7 @@ class Stage2Dataset(Dataset):
 
         # expand dims of image and segmentation and resize image
         image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
+        _, liver_mask = resize_image(None, liver_mask, target_size=(128, 128, 128))
         return image, seg, bbox, liver_mask
     @staticmethod
     def augmentation(image, seg):

@@ -91,22 +91,23 @@ def get_liver_mask(source_folder, model_stage_1=None, device=None):
         model_stage_1.eval()
         model_stage_1.to(device)
     
-
-    for i in range(len(dataset)):
-        data = dataset[i]
-        image = data["image"].to(device)
-        root_size = data["root_size"]
-        image = image.unsqueeze(0)
+    with torch.no_grad():
+        for i in range(len(dataset)):
+            data = dataset[i]
+            image = data["image"].to(device)
+            root_size = data["root_size"]
+            image = image.unsqueeze(0)
+            
         
-        with torch.no_grad():
             logits = model_inferer(image, model_stage_1)
             liver_mask = extract_liver_mask_binary(logits, threshold=0.5)
-        liver_masks.append(liver_mask.squeeze(0))
+            _, liver_mask = resize_image(None, liver_mask, root_size, device=device) # numpy array, 1,D,H,W
+            liver_masks.append(liver_mask)
 
-        torch.cuda.empty_cache()
-        gc.collect()
-        del image
-        del logits
-        del liver_mask
+            torch.cuda.empty_cache()
+            gc.collect()
+            del image
+            del logits
+            del liver_mask
 
     return liver_masks
