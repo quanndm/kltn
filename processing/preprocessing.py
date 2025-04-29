@@ -127,6 +127,13 @@ def get_bbox_liver(liver_mask, margin):
     x_min = max(0, np.min(liver_voxels[2]) - margin)
     x_max = min(liver_mask.shape[2], np.max(liver_voxels[2]) + margin + 1)
 
+    if z_max <= z_min:
+        z_max = z_min + 1
+    if y_max <= y_min:
+        y_max = y_min + 1
+    if x_max <= x_min:
+        x_max = x_min + 1
+
     bbox = (z_min, z_max, y_min, y_max, x_min, x_max)
     return bbox
 
@@ -142,6 +149,7 @@ def get_liver_roi(image, seg, liver_mask_bbox):
         seg: np.ndarray, the segmentation with the liver ROI
     """
     z_min, z_max, y_min, y_max, x_min, x_max = liver_mask_bbox
+    d, h, w = image.shape
 
     image = image[z_min:z_max, y_min:y_max, x_min:x_max]
     seg = seg[z_min:z_max, y_min:y_max, x_min:x_max]
