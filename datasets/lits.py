@@ -11,9 +11,7 @@ from ..processing.preprocessing import (
     truncate_HU,
     get_liver_roi,
     extract_liver_mask_binary,
-    mask_input_with_liver,
-    crop_patch_around_tumor,
-    normalize
+    normalize,
 )
 from ..processing.augmentation import train_augmentations, stage2_train_augmentation
 import os
@@ -127,7 +125,7 @@ class Lits(Dataset):
         return augmented["image"], augmented["label"]
 
 class Stage2Dataset(Dataset):
-    def __init__(self, patient_dirs, training=True, normalizations="zscores", transformations=False, liver_masks=None):
+    def __init__(self, patient_dirs, training=True, normalizations="zscores", transformations=False, liver_masks_bbox=None):
         '''
         Args:
             patient_dirs: list of dict, each dict contains id and the paths to the patient's images/ segmentations
@@ -140,7 +138,7 @@ class Stage2Dataset(Dataset):
         self.normalizations = normalizations
         self.patient_dirs = patient_dirs
         self.transformations = transformations
-        self.liver_masks = liver_masks
+        self.liver_masks_bbox = liver_masks_bbox
 
     def __len__(self):
         return len(self.patient_dirs)
@@ -150,9 +148,9 @@ class Stage2Dataset(Dataset):
         image = self.load_nii(_patient["volume"])
         seg = self.load_nii(_patient["segmentation"])
         root_size = image.shape
-        liver_mask = self.liver_masks[idx] if self.liver_masks is not None else None
+        liver_mask_bbox = self.liver_masks_bbox[idx] if self.liver_masks_bbox is not None else None
 
-        image, seg, bbox, liver_mask = self.preprocessing(image, seg, self.training, self.normalizations, liver_mask=liver_mask) # shape: (1, 128, 128, 128)
+        image, seg, bbox, liver_mask = self.preprocessing(image, seg, self.training, self.normalizations, liver_masks_bbox=liver_masks_bbox) # shape: (1, 128, 128, 128)
 
         if self.training and seg.sum() == 0:
             return self.__getitem__((idx + 1) % self.__len__())
@@ -187,20 +185,20 @@ class Stage2Dataset(Dataset):
         return sitk.GetArrayFromImage(sitk.ReadImage(str(path)))
     
     @staticmethod
-    def preprocessing(image, seg, training, normalizations, liver_mask):
+    def preprocessing(image, seg, training, normalizations, liver_masks_bbox):
         '''
         Args:
             image: np.ndarray, the image to preprocess
             seg: np.ndarray, the segmentation to preprocess
             training: bool, whether the dataset is for training or testing
             normalizations: str, the type of normalization to apply to the images, either "zscores" or "minmax"
-            liver_mask: np.ndarray, the liver mask predicted from the model stage 1, shape (1, D, H, W)
+            liver_masks_bbox: bbox of full size mask liver predict
         Returns:
             image: np.ndarray, the preprocessed image
             seg: np.ndarray, the preprocessed segmentation
         '''           
         # get liver ROI
-        image, seg, bbox = get_liver_roi(image, seg, np.squeeze(liver_mask, 0), margin=10)
+        image, seg = get_liver_roi(image, seg, liver_masks_bbox)
 
         # clip HU values
         image = truncate_HU(image)
@@ -213,11 +211,10 @@ class Stage2Dataset(Dataset):
 
         # get tumor mask
         seg = (seg == 2).astype(np.uint8)
-    
+        liver_mask = (seg == 1).astype(np.uint8)
 
         # expand dims of image and segmentation and resize image
-        image, seg = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0)
-        liver_mask = np.expand_dims(liver_mask.cpu().numpy(), axis=0)
+        image, seg, liver_mask = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0), np.expand_dims(seg, axis=0)
 
         # expand dims of image and segmentation and resize image
         image, seg = resize_image(image, seg, target_size=(128, 128, 128))  

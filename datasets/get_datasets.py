@@ -1,7 +1,7 @@
 from sklearn.model_selection import KFold
 import pathlib
 from .lits import Lits, Stage2Dataset
-from ..processing.preprocessing  import extract_liver_mask_binary, resize_image
+from ..processing.preprocessing  import extract_liver_mask_binary, resize_image, get_bbox_liver
 from ..processing.postprocessing import keep_largest_connected_component, smooth_mask
 import torch
 import numpy as np
@@ -10,7 +10,7 @@ import torch
 import torch.nn.functional as F
 import gc
 
-def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores", mode = "all", liver_masks = None):
+def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores", mode = "all", liver_masks_bbox = None):
     """
     Get the datasets for the LiTS dataset.
     The function will return the training and testing datasets based on the fold number.
@@ -46,13 +46,13 @@ def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zs
     train = [patients[i] for i in train_idx]
     test = [patients[i] for i in test_idx]
 
-    if liver_masks is not None:
-        train_liver_masks = [liver_masks[i] for i in train_idx] 
-        test_liver_masks = [liver_masks[i] for i in test_idx]
+    if liver_masks_bbox is not None:
+        train_liver_masks_bbox = [liver_masks_bbox[i] for i in train_idx] 
+        test_liver_masks_bbox = [liver_masks_bbox[i] for i in test_idx]
 
     if mode == "tumor":
-        train_dataset = Stage2Dataset(train, training=True, normalizations=normalizations, transformations=True, liver_masks = train_liver_masks)
-        test_dataset = Stage2Dataset(test, training=False, normalizations=normalizations, liver_masks = test_liver_masks)
+        train_dataset = Stage2Dataset(train, training=True, normalizations=normalizations, transformations=True, liver_masks_bbox = train_liver_masks_bbox)
+        test_dataset = Stage2Dataset(test, training=False, normalizations=normalizations, liver_masks_bbox = test_liver_masks_bbox)
     else:
         train_dataset = Lits(train, training=True, normalizations=normalizations, transformations=True, mode=mode)
         test_dataset = Lits(test, training=False, benchmarking=True, normalizations=normalizations, mode=mode)
@@ -80,9 +80,9 @@ def get_full_dataset(source_folder, normalizations = "zscores"):
 
     return dataset
 
-def get_liver_mask(source_folder, model_stage_1=None, device=None):
+def get_liver_mask_bbox(source_folder, model_stage_1=None, device=None):
     dataset = get_full_dataset(source_folder)
-    liver_masks = []
+    liver_masks_bbox = []
 
     if model_stage_1 is None:
         return None
@@ -101,15 +101,12 @@ def get_liver_mask(source_folder, model_stage_1=None, device=None):
         
             logits = model_inferer(image, model_stage_1)
             liver_mask = extract_liver_mask_binary(logits, threshold=0.5)
-            liver_masks.append({
-                "mask": liver_mask.squeeze(0).cpu().numpy(),
-                "root_size": root_size, 
-            })
+            _, liver_mask = resize_image(seg=liver_mask, target_size=root_size, device=device)
+            bbox_liver = get_bbox_liver(liver_mask, margin=10)
 
+            liver_masks_bbox.append(bbox_liver) 
             torch.cuda.empty_cache()
             gc.collect()
-            del image
-            del logits
-            del liver_mask
+            del data, image, logits, liver_mask, bbox_liver
 
     return liver_masks

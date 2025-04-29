@@ -112,21 +112,11 @@ def truncate_HU(image, hu_min=-200, hu_max=250):
     """
     return np.clip(image, hu_min, hu_max)
 
-def get_liver_roi(image, seg, liver_mask, margin=5):
-    """
-    Get the liver ROI (Region of Interest) from the image and segmentation.
-    Args:
-        image: np.ndarray, the image to get the ROI from, shape (D, H, W)
-        seg: np.ndarray, the segmentation to get the ROI from, shape (D, H, W)
-    Returns:
-        image: np.ndarray, the image with the liver ROI
-        seg: np.ndarray, the segmentation with the liver ROI
-    """
-    # get liver ROI
-    liver_voxels = np.where(liver_mask > 0)
-    
-    if len(liver_voxels[0]) == 0:
-        return image, seg, (0, image.shape[0], 0, image.shape[1], 0, image.shape[2])
+def get_bbox_liver(liver_mask, margin):
+    liver_voxel = np.where(liver_mask > 0)
+
+    if len(liver_voxel[0]) == 0:
+        return (0, 0, 0, 0, 0, 0)
 
     z_min = max(0, np.min(liver_voxels[0]) - margin)
     z_max = min(image.shape[0], np.max(liver_voxels[0]) + margin + 1)
@@ -137,24 +127,27 @@ def get_liver_roi(image, seg, liver_mask, margin=5):
     x_min = max(0, np.min(liver_voxels[2]) - margin)
     x_max = min(image.shape[2], np.max(liver_voxels[2]) + margin + 1)
 
+    bbox = (z_min, z_max, y_min, y_max, x_min, x_max)
+    return bbox
+
+
+def get_liver_roi(image, seg, liver_mask_bbox):
+    """
+    Get the liver ROI (Region of Interest) from the image and segmentation.
+    Args:
+        image: np.ndarray, the image to get the ROI from, shape (D, H, W)
+        seg: np.ndarray, the segmentation to get the ROI from, shape (D, H, W)
+    Returns:
+        image: np.ndarray, the image with the liver ROI
+        seg: np.ndarray, the segmentation with the liver ROI
+    """
+    z_min, z_max, y_min, y_max, x_min, x_max = liver_mask_bbox
+
     image = image[z_min:z_max, y_min:y_max, x_min:x_max]
     seg = seg[z_min:z_max, y_min:y_max, x_min:x_max]
 
-    bbox = (z_min, z_max, y_min, y_max, x_min, x_max)
-    return image, seg, bbox
+    return image, seg
     
-def extract_liver_mask(pred_logits):
-    """
-    Extract the liver mask from the predicted logits.
-    Args:
-        pred_logits: tensor, output of the model, shape (B, 3, D, H, W)
-    Returns:
-        liver_mask: tensor, the liver mask, shape (B,1, D, H, W)
-    """
-    out = torch.softmax(pred_logits, dim=1)
-    liver_mask = (out.argmax(dim=1) == 1).float().unsqueeze(1)
-
-    return liver_mask
 
 def extract_liver_mask_binary(logits, threshold=0.5):
     """
@@ -168,74 +161,6 @@ def extract_liver_mask_binary(logits, threshold=0.5):
     probs = torch.sigmoid(logits)  # shape: (1, 1, D, H, W)
     liver_mask = (probs > threshold).float()
     return liver_mask
-
-def mask_input_with_liver(img, liver_mask):
-    """
-    Input: inputs (1, D, H, W), mask liver ( 1, D, H, W)
-    Output: masked inputs (1, D, H, W) only liver region
-    """
-    return img * liver_mask
-
-
-def pad_image(image, mask, pad_width):
-    """
-    Pad ảnh và mask nếu cần, để tránh mất dữ liệu khi crop gần biên
-    Args:
-        pad_width: int, số voxel cần pad mỗi phía (z, y, x)
-    Returns:
-        padded image, padded mask
-    """
-    return np.pad(image, ((pad_width, pad_width), (pad_width, pad_width), (pad_width, pad_width)), mode='constant'), np.pad(mask, ((pad_width, pad_width), (pad_width, pad_width), (pad_width, pad_width)), mode='constant')
-
-def crop_patch_around_tumor(image, tumor_mask, patch_size=(96, 96, 96), margin=10):
-    pad_width = (patch_size[0] // 2) + margin
-    image, tumor_mask = pad_image(image, tumor_mask, pad_width)
-
-    coords = np.argwhere(tumor_mask > 0)
-    if coords.shape[0] == 0:
-        # no tumor → fallback random crop
-        D, H, W = image.shape
-        center_z = D // 2
-        center_y = H // 2
-        center_x = W // 2
-    else:
-        # Tìm bounding box tumor mở rộng thêm margin
-        min_z, min_y, min_x = coords.min(0) - margin
-        max_z, max_y, max_x = coords.max(0) + margin 
-
-        # Clamp về trong ảnh
-        min_z = max(0, min_z)
-        min_y = max(0, min_y)
-        min_x = max(0, min_x)
-        max_z = min(image.shape[0], max_z)
-        max_y = min(image.shape[1], max_y)
-        max_x = min(image.shape[2], max_x)
-
-        # Tính center của vùng tumor mở rộng
-        center_z = (min_z + max_z) // 2
-        center_y = (min_y + max_y) // 2
-        center_x = (min_x + max_x) // 2
-
-    # Tính tọa độ bắt đầu crop
-    start_z = max(0, center_z - patch_size[0] // 2)
-    start_y = max(0, center_y - patch_size[1] // 2)
-    start_x = max(0, center_x - patch_size[2] // 2)
-
-    # Giới hạn không vượt quá shape
-    start_z = min(start_z, image.shape[0] - patch_size[0])
-    start_y = min(start_y, image.shape[1] - patch_size[1])
-    start_x = min(start_x, image.shape[2] - patch_size[2])
-
-    # Crop patch
-    end_z = start_z + patch_size[0]
-    end_y = start_y + patch_size[1]
-    end_x = start_x + patch_size[2]
-
-    img_patch = image[start_z:end_z, start_y:end_y, start_x:end_x]
-    mask_patch = tumor_mask[start_z:end_z, start_y:end_y, start_x:end_x]
-
-    return img_patch, mask_patch
-
 
 def resize_crop_to_bbox_size(tensor_crop, bbox):
     """
