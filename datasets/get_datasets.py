@@ -101,7 +101,7 @@ def get_liver_mask(source_folder, model_stage_1=None, device=None):
         
             logits = model_inferer(image, model_stage_1)
             liver_mask = extract_liver_mask_binary(logits, threshold=0.5)
-            _, liver_mask = resize_image(None, liver_mask.unsqueeze(0), root_size, device=device) # numpy array, 1,D,H,W
+            _, liver_mask = resize_image(seg = liver_mask,target_size =  root_size, device=device) # numpy array, 1,D,H,W
             liver_masks.append(liver_mask)
 
             torch.cuda.empty_cache()

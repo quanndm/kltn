@@ -71,6 +71,8 @@ def resize_image(image=None, seg=None, target_size=(128, 128, 128), device=None)
             tensor = tensor.clone().detach().unsqueeze(0).float().to(device)
         else:
             tensor = torch.tensor(tensor, dtype=torch.float32, device=device).unsqueeze(0)
+
+        
         return F.interpolate(tensor, size=new_size, mode=mode, align_corners=(False if mode == "trilinear" else None)).squeeze(0).cpu().numpy()
 
     image_resized = process_tensor(image, "trilinear", new_size=target_size) if image is not None else None
