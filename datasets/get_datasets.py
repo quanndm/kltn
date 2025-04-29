@@ -46,13 +46,9 @@ def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zs
     train = [patients[i] for i in train_idx]
     test = [patients[i] for i in test_idx]
 
-    train_bbox = get_liver_mask_bbox(train, model_stage_1=model_stage_1, device=device)
-    test_bbox = get_liver_mask_bbox(test, model_stage_1=model_stage_1, device=device)
-
-
     if mode == "tumor":
-        train_dataset = Stage2Dataset(train, training=True, normalizations=normalizations, transformations=True, liver_masks_bbox = train_bbox)
-        test_dataset = Stage2Dataset(test, training=False, normalizations=normalizations, liver_masks_bbox = test_bbox)
+        train_dataset = Stage2Dataset(train, training=True, normalizations=normalizations, transformations=True, model_stage_1 = model_stage_1, device= device)
+        test_dataset = Stage2Dataset(test, training=False, normalizations=normalizations, liver_mask_full = model_stage_1, device = device)
     else:
         train_dataset = Lits(train, training=True, normalizations=normalizations, transformations=True, mode=mode)
         test_dataset = Lits(test, training=False, benchmarking=True, normalizations=normalizations, mode=mode)
