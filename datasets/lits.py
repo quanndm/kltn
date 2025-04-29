@@ -152,9 +152,6 @@ class Stage2Dataset(Dataset):
 
         image, seg = self.preprocessing(image, seg, self.training, self.normalizations, liver_mask_bbox=liver_mask_bbox) # shape: (1, 128, 128, 128)
 
-        if self.training and seg.sum() == 0:
-            return self.__getitem__((idx + 1) % self.__len__())
-
         image, seg = image.astype(np.float32), seg.astype(np.uint8)
 
 
