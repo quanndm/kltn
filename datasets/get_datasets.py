@@ -10,7 +10,7 @@ import torch
 import torch.nn.functional as F
 import gc
 
-def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores", mode = "all"):
+def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores", mode = "all", model_stage_1=None, device=None):
     """
     Get the datasets for the LiTS dataset.
     The function will return the training and testing datasets based on the fold number.
