@@ -142,7 +142,7 @@ def get_bbox_liver(liver_mask, margin):
     if x_max <= x_min:
         x_max = x_min + 1
 
-    bbox = (z_min.detach().cpu().numpy(), z_max.detach().cpu().numpy(), y_min.detach().cpu().numpy(), y_max.detach().cpu().numpy(), x_min.detach().cpu().numpy(), x_max.detach().cpu().numpy())
+    bbox = (z_min, z_max, y_min, y_max, x_min, x_max)
     return bbox
 
 
