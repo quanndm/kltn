@@ -156,7 +156,10 @@ class Stage2Dataset(Dataset):
         root_size = image.shape
         
         # pred
-        image_tensor = torch.from_numpy(image).unsqueeze(0).unsqueeze(0).to(self.device) # shape: (1, 1, D, H, W)
+        image_tensor, _ = Lits.preprocessing(image, seg, False, self.normalizations)
+        image_tensor = torch.from_numpy(image_1).unsqueeze(0).to(self.device)
+
+    
         with torch.no_grad():   
             logits = inference(image_tensor, self.model_stage_1)
             liver_mask = extract_liver_mask_binary(logits, threshold=0.4).squeeze(0).cpu().numpy()
