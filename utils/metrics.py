@@ -194,8 +194,8 @@ class IoUMetric:
             # Binary segmentation
             if y_pred.max() > 1 or y_pred.min() < 0:
                 y_pred = torch.sigmoid(y_pred)
-            y_pred = (y_pred > self.threshold).long().squeeze(1)
-            y_true = y_true.squeeze(1)
+            y_pred = (y_pred > self.threshold).bool().squeeze(1)
+            y_true = y_true.bool().squeeze(1)
 
             intersection = (y_pred & y_true).sum().float()
             union = ((y_pred + y_true) > 0).sum().float()
@@ -236,11 +236,11 @@ class PrecisionMetric:
         if y_pred.shape[1] == 1:
             if y_pred.max() > 1 or y_pred.min() < 0:
                 y_pred = torch.sigmoid(y_pred)
-            y_pred = (y_pred > self.threshold).long().squeeze(1)
-            y_true = y_true.squeeze(1)
+            y_pred = (y_pred > self.threshold).bool().squeeze(1)
+            y_true = y_true.bool().squeeze(1)
 
             tp = (y_pred & y_true).sum().float()
-            fp = (y_pred & (1 - y_true)).sum().float()
+            fp = (y_pred & (~y_true)).sum().float()
 
             precision = (tp + self.eps) / (tp + fp + self.eps)
             return [precision.item()]
@@ -278,11 +278,11 @@ class RecallMetric:
         if y_pred.shape[1] == 1:
             if y_pred.max() > 1 or y_pred.min() < 0:
                 y_pred = torch.sigmoid(y_pred)
-            y_pred = (y_pred > self.threshold).long().squeeze(1)
-            y_true = y_true.squeeze(1)
+            y_pred = (y_pred > self.threshold).bool().squeeze(1)
+            y_true = y_true.bool().squeeze(1)
 
             tp = (y_pred & y_true).sum().float()
-            fn = ((1 - y_pred) & y_true).sum().float()
+            fn = ((~y_pred) & y_true).sum().float()
 
             recall = (tp + self.eps) / (tp + fn + self.eps)
             return [recall.item()]
