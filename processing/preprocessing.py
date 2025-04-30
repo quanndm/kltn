@@ -56,12 +56,9 @@ def zscore_normalise(img: np.ndarray):
     if not np.any(slices):
         return img
 
-    std = np.std(img[slices])
-    if std != 0:
-        img[slices] = (img[slices] - np.mean(img[slices])) / std
-    else:
-        img[slices] = 0
-
+    values = img[mask]
+    mean, std = values.mean(), values.std()
+    img[mask] = (values - mean) / std if std != 0 else 0
     return img
 
 
@@ -73,13 +70,12 @@ def irm_min_max_preprocess(image, low_perc=1, high_perc=99):
     image = normalize(image)
     return image
 
-def resize_image(image=None, seg=None, target_size=(128, 128, 128), device=None):
-    device = device if device is not None else torch.device("cpu")
+def resize_image(image=None, seg=None, target_size=(128, 128, 128)):
     def process_tensor(tensor, mode, new_size=target_size):
         if isinstance(tensor, torch.Tensor):
-            tensor = tensor.clone().detach().float().to(device)
+            tensor = tensor.detach().cpu().float()
         else:
-            tensor = torch.tensor(tensor, dtype=torch.float32, device=device)
+            tensor = torch.tensor(tensor, dtype=torch.float32)
 
         if tensor.dim() == 3:
             tensor = tensor.unsqueeze(0).unsqueeze(0)  # [D, H, W] -> [1, 1, D, H, W]
@@ -89,7 +85,8 @@ def resize_image(image=None, seg=None, target_size=(128, 128, 128), device=None)
             pass  # Already [N, C, D, H, W]
 
         
-        return F.interpolate(tensor, size=new_size, mode=mode, align_corners=(False if mode == "trilinear" else None)).squeeze(0).cpu().numpy()
+        out = F.interpolate(tensor, size=new_size, mode=mode, align_corners=(False if mode == "trilinear" else None))
+        return out.squeeze(0).numpy()
 
     image_resized = process_tensor(image, "trilinear", new_size=target_size) if image is not None else None
     seg_resized = process_tensor(seg, "nearest", new_size=target_size) if seg is not None else None

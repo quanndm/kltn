@@ -17,6 +17,7 @@ from ..processing.preprocessing import (
 from ..processing.augmentation import train_augmentations, stage2_train_augmentation
 import os
 import torch.nn.functional as F
+import nibabel as nib
 
 class Lits(Dataset):
     def __init__(self, patient_dirs, benchmarking = False, training=True, normalizations="zscores", transformations=False, mode="all"):
@@ -182,10 +183,17 @@ class Stage2Dataset(Dataset):
         )
 
     @staticmethod
-    def load_nii(path):
+    def load_nii(path, mode="image"):
+        """ 
+        mode: image | segmentation
+        """
         if not os.path.exists(path):
             raise FileNotFoundError(f"File {path} not found!")
-        return sitk.GetArrayFromImage(sitk.ReadImage(str(path)))
+        # return sitk.GetArrayFromImage(sitk.ReadImage(str(path)))
+        img = nib.load(str(path))
+        img = img.get_fdata(dtype=np.float32 if mode == "image" else np.uint8)
+        img = np.transpose(img, (2, 0, 1))  # Change to (D, H, W) format
+        return img
     
     @staticmethod
     def preprocessing(image, seg, training, normalizations, liver_mask_bbox):
@@ -210,7 +218,7 @@ class Stage2Dataset(Dataset):
         if normalizations == "zscores":
             image = zscore_normalise(image)
         else:
-            image = normalize(image)        
+            image = irm_min_max_preprocess(image)        
 
         # expand dims of image and segmentation and resize image
         image, seg= np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0)

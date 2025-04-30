@@ -8,3 +8,4 @@ medpy
 PyYAML
 scipy
 scikit-image
+nibabel
