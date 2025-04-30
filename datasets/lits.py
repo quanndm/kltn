@@ -74,8 +74,11 @@ class Lits(Dataset):
     def load_nii(path):
         if not os.path.exists(path):
             raise FileNotFoundError(f"File {path} not found!")
-        return sitk.GetArrayFromImage(sitk.ReadImage(str(path)))
-
+        img = nib.load(str(path))
+        img = img.get_fdata(dtype=np.float32)
+        img = np.transpose(img, (2, 0, 1))  # Change to (D, H, W) format
+        return img
+    
 
     @staticmethod
     def preprocessing(image, seg, training, normalizations):
