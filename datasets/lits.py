@@ -149,7 +149,7 @@ class Stage2Dataset(Dataset):
     def __getitem__(self, idx):
         _patient = self.patient_dirs[idx]
         _image = self.load_nii(_patient["volume"])
-        _seg = self.load_nii(_patient["segmentation"], mode="segmentation")
+        _seg = self.load_nii(_patient["segmentation"])
         root_size = _image.shape
         liver_mask_bbox = self.liver_masks_bbox[idx] if self.liver_masks_bbox is not None else None
 
@@ -191,7 +191,7 @@ class Stage2Dataset(Dataset):
             raise FileNotFoundError(f"File {path} not found!")
         # return sitk.GetArrayFromImage(sitk.ReadImage(str(path)))
         img = nib.load(str(path))
-        img = img.get_fdata(dtype=np.float32 if mode == "image" else np.uint8)
+        img = img.get_fdata(dtype=np.float32)
         img = np.transpose(img, (2, 0, 1))  # Change to (D, H, W) format
         return img
     
