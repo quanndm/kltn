@@ -149,7 +149,7 @@ class Stage2Dataset(Dataset):
     def __getitem__(self, idx):
         _patient = self.patient_dirs[idx]
         _image = self.load_nii(_patient["volume"])
-        _seg = self.load_nii(_patient["segmentation"])
+        _seg = self.load_nii(_patient["segmentation"], mode="segmentation")
         root_size = _image.shape
         liver_mask_bbox = self.liver_masks_bbox[idx] if self.liver_masks_bbox is not None else None
 
