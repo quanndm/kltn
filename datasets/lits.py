@@ -67,7 +67,6 @@ class Lits(Dataset):
             image=image,
             label=seg,
             root_size=root_size,
-            supervised=True,
         )
 
     @staticmethod
@@ -101,12 +100,8 @@ class Lits(Dataset):
         else:
             image = irm_min_max_preprocess(image)
 
-        # expand dims of image and segmentation
-        image = np.expand_dims(image, axis=0)
-        seg = np.expand_dims(seg, axis=0)
-        
-        # resize image
-        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
+        # expand dims of image and segmentation - resize image
+        image, seg = resize_image(np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0), target_size=(128, 128, 128))  
 
         return image, seg
 
@@ -164,7 +159,7 @@ class Stage2Dataset(Dataset):
         seg = (seg == 2).astype(np.uint8)
         # convert to torch tensors
         if self.training:
-            image, seg = torch.from_numpy(image.detach().cpu().numpy()), torch.from_numpy(seg)
+            image, seg = torch.from_numpy(image.cpu().numpy()), torch.from_numpy(seg)
         else:
             image, seg = torch.from_numpy(image), torch.from_numpy(seg)
 
@@ -175,18 +170,10 @@ class Stage2Dataset(Dataset):
             image=image,
             label=seg,
             liver_mask = liver_mask,
-            supervised=True,
-            root_size=root_size,
-            root_image=_image,
-            root_seg = _seg,
-            bbox = liver_mask_bbox
         )
 
     @staticmethod
-    def load_nii(path, mode="image"):
-        """ 
-        mode: image | segmentation
-        """
+    def load_nii(path):
         if not os.path.exists(path):
             raise FileNotFoundError(f"File {path} not found!")
         return sitk.GetArrayFromImage(sitk.ReadImage(str(path)))
@@ -217,10 +204,7 @@ class Stage2Dataset(Dataset):
             image = irm_min_max_preprocess(image)        
 
         # expand dims of image and segmentation and resize image
-        image, seg= np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0)
-
-        # expand dims of image and segmentation and resize image
-        image, seg = resize_image(image, seg, target_size=(128, 128, 128))  
+        image, seg = resize_image(np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0), target_size=(128, 128, 128))  
         return image, seg
     @staticmethod
     def augmentation(image, seg):
