@@ -163,10 +163,10 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
             val_outputs_list = decollate_batch(logits)
             val_labels_list = decollate_batch(val_labels)
 
-            val_output_convert = [post_processing_stage2(val_pred_tensor) for val_pred_tensor in val_outputs_list]
+            val_output_convert = [post_processing_stage2(val_pred_tensor).to(device) for val_pred_tensor in val_outputs_list]
             val_output_convert = [t.float() for t in val_output_convert]
 
-            val_labels_list = [t.float() for t in val_labels_list]
+            val_labels_list = [t.to(device).float() for t in val_labels_list]
             
             acc_func.reset()
             acc_func(y_pred=val_output_convert, y=val_labels_list)
