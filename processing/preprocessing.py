@@ -56,9 +56,9 @@ def zscore_normalise(img: np.ndarray):
     if not np.any(slices):
         return img
 
-    values = img[mask]
+    values = img[slices]
     mean, std = values.mean(), values.std()
-    img[mask] = (values - mean) / std if std != 0 else 0
+    img[slices] = (values - mean) / std if std != 0 else 0
     return img
 
 
