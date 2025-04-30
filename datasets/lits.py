@@ -74,11 +74,8 @@ class Lits(Dataset):
     def load_nii(path):
         if not os.path.exists(path):
             raise FileNotFoundError(f"File {path} not found!")
-        img = nib.load(str(path))
-        img = img.get_fdata(dtype=np.float32)
-        img = np.transpose(img, (2, 0, 1))  # Change to (D, H, W) format
-        return img
-    
+        return sitk.GetArrayFromImage(sitk.ReadImage(str(path)))
+
 
     @staticmethod
     def preprocessing(image, seg, training, normalizations):
@@ -192,11 +189,7 @@ class Stage2Dataset(Dataset):
         """
         if not os.path.exists(path):
             raise FileNotFoundError(f"File {path} not found!")
-        # return sitk.GetArrayFromImage(sitk.ReadImage(str(path)))
-        img = nib.load(str(path))
-        img = img.get_fdata(dtype=np.float32)
-        img = np.transpose(img, (2, 0, 1))  # Change to (D, H, W) format
-        return img
+        return sitk.GetArrayFromImage(sitk.ReadImage(str(path)))
     
     @staticmethod
     def preprocessing(image, seg, training, normalizations, liver_mask_bbox):
