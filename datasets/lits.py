@@ -172,6 +172,7 @@ class Stage2Dataset(Dataset):
             image=image,
             label=seg,
             liver_mask = liver_mask,
+            bbox=liver_mask_bbox
         )
 
     @staticmethod
@@ -197,7 +198,7 @@ class Stage2Dataset(Dataset):
         image, seg = get_liver_roi(image, seg, liver_mask_bbox)
 
         # clip HU values
-        image = truncate_HU(image)
+        image = truncate_HU(image, 0, 200)
 
         # normalizations
         if normalizations == "zscores":
