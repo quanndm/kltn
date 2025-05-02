@@ -129,7 +129,7 @@ class TverskyLossWSigmoid(nn.Module):
             focal_loss = self.fc_loss(inputs, targets)
             final_loss = self.weight_tversky * tversky_loss + self.weight_bce_or_fc * focal_loss
         else:
-            bce_loss = self.bce_loss(inputs, targets)
+            bce_loss = self.bce_loss(inputs, targets.float())
             final_loss = self.weight_tversky * tversky_loss + self.weight_bce_or_fc * bce_loss
         return final_loss
         
