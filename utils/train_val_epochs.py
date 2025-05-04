@@ -34,7 +34,7 @@ def train_epoch(model, loader, optimizer, epoch, loss_func, batch_size, max_epoc
         loss.backward()
         optimizer.step()
 
-        run_loss.update(loss.item(), n=batch_size)
+        run_loss.update(loss.item(), n=data.size(0))
         print(
             "Epoch {}/{} {}/{}".format(epoch, max_epochs, idx+1, len(loader)),
             "loss: {:.4f}".format(run_loss.avg),
@@ -163,27 +163,26 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
             val_outputs_list = decollate_batch(logits)
             val_labels_list = decollate_batch(val_labels)
 
-            val_output_convert = [post_processing_stage2(val_pred_tensor).to(device) for val_pred_tensor in val_outputs_list]
-            val_output_convert = [t.float() for t in val_output_convert]
-
+            val_output_convert = [post_processing_stage2(val_pred_tensor).to(device).float() for val_pred_tensor in val_outputs_list]
             val_labels_list = [t.to(device).float() for t in val_labels_list]
             
             acc_func.reset()
             acc_func(y_pred=val_output_convert, y=val_labels_list)
-
             acc, _ = acc_func.aggregate()
-
             dice_tumor = acc[0]
             dice_list.append(dice_tumor.detach().cpu().numpy())
 
-            ious = iou_metric(val_output_convert[0].unsqueeze(0).to(device), val_labels_list[0].unsqueeze(0).to(device))
-            iou_list.append(ious[0])
+            for pred, label in zip(val_output_convert, val_labels_list):
+                pred = pred.unsqueeze(0).to(device) # shape(1, C, H, W)
+                label = label.unsqueeze(0).to(device) # shape(1, C, H, W)
+                ious = iou_metric(pred, label)
+                iou_list.append(ious[0])
 
-            precisions = precision_metric(val_output_convert[0].unsqueeze(0).to(device), val_labels_list[0].unsqueeze(0).to(device))
-            precision_list.append(precisions[0])
+                precisions = precision_metric(pred, label)
+                precision_list.append(precisions[0])
 
-            recalls = recall_metric(val_output_convert[0].unsqueeze(0).to(device), val_labels_list[0].unsqueeze(0).to(device))
-            recall_list.append(recalls[0])
+                recalls = recall_metric(pred, label)    
+                recall_list.append(recalls[0])
 
             logger.info(f"Val {epoch}/{max_epochs} {idx+1}/{len(loader)}, Dice_Tumor: {dice_tumor:.6f}, time {time.time() - start_time:.2f}s")
 

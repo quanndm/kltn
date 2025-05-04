@@ -56,35 +56,3 @@ def post_processing_stage2(logits, threshold=0.5, device=None):
     tumor_mask = torch.from_numpy(tumor_mask).to(device) # shape(1, D, H, W)
 
     return tumor_mask
-
-def keep_largest_connected_component(predicted_mask):
-    """
-        predicted_mask: tensor, shape ( 1, D, H, W)
-        Returns:
-            largest_component: tensor, shape (1, 1, D, H, W)
-    """
-    predicted_mask = predicted_mask.squeeze().detach().cpu().numpy()  # shape (1, D, H, W) -> (D, H, W)
-    labeled_mask, num_features = label(predicted_mask)
-
-    if num_features == 0:
-        return predicted_mask
-    
-    sizes = np.bincount(labeled_mask.ravel())
-    sizes[0] = 0  # Ignore the background label
-
-    largest_label = np.argmax(sizes)
-    largest_component = np.where(labeled_mask == largest_label, 1, 0)
-
-    return torch.from_numpy(largest_component).unsqueeze(0)  # shape (1, D, H, W)
-
-
-def smooth_mask(mask, kernel_size=3):
-    """
-    mask: numpy array (binary 0-1), shape (D, H, W) hoặc (H, W)
-    kernel_size: kích thước kernel (odd number)
-    """
-    mask = mask.squeeze().detach().cpu().numpy() # (1, D, H, W) -> (D, H, W)
-    structure = np.ones((kernel_size, kernel_size, kernel_size))
-    mask = ndi.binary_closing(mask, structure=structure).astype(np.uint8)
-    mask = ndi.binary_opening(mask, structure=structure).astype(np.uint8)
-    return torch.from_numpy(mask).unsqueeze(0)  # shape (1, 1, D, H, W)

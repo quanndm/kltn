@@ -12,4 +12,5 @@ eta_min: 1e-6
 # path
 log_path: /content/gdrive/MyDrive/KLTN/logs
 source_folder_lits: /content/LITS17
+path_save_dataset_2D: /content/2D_dataset
 path_save_model_state: /content/gdrive/MyDrive/KLTN/code/weight

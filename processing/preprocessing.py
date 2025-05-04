@@ -70,26 +70,40 @@ def irm_min_max_preprocess(image, low_perc=1, high_perc=99):
     image = normalize(image)
     return image
 
-def resize_image(image=None, seg=None, target_size=(128, 128, 128)):
+def resize_image(image=None, seg=None, mode=None, target_size=(128, 128, 128), target_size_seg = None):
     def process_tensor(tensor, mode, new_size=target_size):
         if isinstance(tensor, torch.Tensor):
             tensor = tensor.detach().cpu().float()
         else:
             tensor = torch.tensor(tensor, dtype=torch.float32)
 
-        if tensor.dim() == 3:
-            tensor = tensor.unsqueeze(0).unsqueeze(0)  # [D, H, W] -> [1, 1, D, H, W]
-        elif tensor.dim() == 4:
-            tensor = tensor.unsqueeze(0)  # [C, D, H, W] -> [1, C, D, H, W]
-        elif tensor.dim() == 5:
-            pass  # Already [N, C, D, H, W]
 
-        
-        out = F.interpolate(tensor, size=new_size, mode=mode, align_corners=(False if mode == "trilinear" else None))
+        original_dim = tensor.dim()
+
+        # Determine the appropriate mode and reshape tensor based on its dimensions
+
+        if original_dim == 3:  # (D, H, W) or (C=slides, H, W)
+            if tensor.shape[0] <= 5:  # Example: <= 5 slices → 2.5D
+                tensor = tensor.unsqueeze(0)  # (C, H, W) → (1, C, H, W)
+                mode = "bilinear" if mode is None else mode
+            elif tensor.shape[0] == 1:  # mask 2.5D
+                tensor = tensor.unsqueeze(0)
+                mode = "nearest" if mode is None else mode
+            else:
+            tensor = tensor.unsqueeze(0).unsqueeze(0)  # (D, H, W) → (1, 1, D, H, W)
+            mode = "trilinear" if mode is None else mode
+        elif original_dim == 4:  # (C, D, H, W)
+            tensor = tensor.unsqueeze(0)  # (C, D, H, W) → (1, C, D, H, W)
+            mode = "trilinear" if mode is None else mode
+        elif original_dim == 5:  # Already in (1, C, D, H, W)
+            mode = "trilinear" if mode is None else mode
+
+        align = False if mode in ["bilinear", "trilinear"] else None
+        out = F.interpolate(tensor, size=new_size, mode=mode, align_corners=align)
         return out.squeeze(0).numpy()
 
-    image_resized = process_tensor(image, "trilinear", new_size=target_size) if image is not None else None
-    seg_resized = process_tensor(seg, "nearest", new_size=target_size) if seg is not None else None
+    image_resized = process_tensor(tensor= image, new_size=target_size) if image is not None else None
+    seg_resized = process_tensor(seg, "nearest", new_size=target_size if target_size_seg is not None else target_size_seg) if seg is not None else None
 
     return image_resized, seg_resized
 
@@ -123,8 +137,10 @@ def get_bbox_liver(liver_mask, margin):
     if len(liver_voxels[0]) == 0:
         return (0, liver_mask.shape[0], 0, liver_mask.shape[1], 0, liver_mask.shape[2])
 
-    z_min = max(0, np.min(liver_voxels[0]) - margin)
-    z_max = min(liver_mask.shape[0], np.max(liver_voxels[0]) + margin + 1)
+    # z_min = max(0, np.min(liver_voxels[0]) - margin)
+    # z_max = min(liver_mask.shape[0], np.max(liver_voxels[0]) + margin + 1)
+    z_min = 0
+    z_max = liver_mask.shape[0]
 
     y_min = max(0, np.min(liver_voxels[1]) - margin)
     y_max = min(liver_mask.shape[1], np.max(liver_voxels[1]) + margin + 1)
@@ -132,8 +148,8 @@ def get_bbox_liver(liver_mask, margin):
     x_min = max(0, np.min(liver_voxels[2]) - margin)
     x_max = min(liver_mask.shape[2], np.max(liver_voxels[2]) + margin + 1)
 
-    if z_max <= z_min:
-        z_max = z_min + 1
+    # if z_max <= z_min:
+    #     z_max = z_min + 1
     if y_max <= y_min:
         y_max = y_min + 1
     if x_max <= x_min:

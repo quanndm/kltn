@@ -86,7 +86,6 @@ class CoTAttention2D(nn.Module):
         self.key_embed=nn.Sequential(
             nn.Conv2d(dim,dim,kernel_size=kernel_size,padding=kernel_size//2,groups=4,bias=False),
             nn.BatchNorm2d(dim),
-            # nn.ReLU()
             nn.SiLU(),
         )
         self.value_embed=nn.Sequential(
@@ -98,7 +97,6 @@ class CoTAttention2D(nn.Module):
         self.attention_embed=nn.Sequential(
             nn.Conv2d(2*dim,2*dim//factor,1,bias=False),
             nn.BatchNorm2d(2*dim//factor),
-            # nn.ReLU(),
             nn.SiLU(),
             nn.Conv2d(2*dim//factor,kernel_size*kernel_size*dim,1)
         )
@@ -159,6 +157,14 @@ class OutConv(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.conv = nn.Conv3d(in_channels, out_channels, kernel_size = 1)
+
+    def forward(self, x):
+        return self.conv(x)
+
+class OutConv2D(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size = 1)
 
     def forward(self, x):
         return self.conv(x)
@@ -263,3 +269,54 @@ class ResNeXtCoTBlock(nn.Module):
 
         return out
 
+
+class ResNeXtCoTBlock2D(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(ResNeXtCoTBlock2D, self).__init__()
+        self.relu = nn.SiLU(inplace=True)
+        inner_channels = out_channels // 2
+
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(in_channels, inner_channels, kernel_size=1, bias=False),
+            nn.GroupNorm(num_groups=4, num_channels=inner_channels),
+            nn.SiLU(inplace=True),
+        )
+
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1, groups=4, bias=False),
+            nn.GroupNorm(num_groups=4, num_channels=inner_channels),
+            nn.SiLU(inplace=True),
+        )
+
+        self.conv3 = nn.Sequential(
+            CoTAttention2D(inner_channels, 3),
+            nn.GroupNorm(num_groups=4, num_channels=inner_channels),
+            nn.SiLU(inplace=True),
+        )
+
+        self.conv4 = nn.Sequential(
+            nn.Conv2d(inner_channels, out_channels, kernel_size=1, bias=False),
+            nn.GroupNorm(num_groups=4, num_channels=out_channels)
+        )
+
+        self.residual = None
+        if in_channels != out_channels:
+            self.residual = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False),
+                nn.GroupNorm(num_groups=4, num_channels=out_channels)
+            )
+        
+    def forward(self, x):
+        identity = x    
+        if self.residual is not None:
+            identity = self.residual(x)
+
+        out = self.conv1(x)
+        out = self.conv2(out)
+        out = self.conv3(out)
+        out = self.conv4(out)
+
+        out += identity
+        out = self.relu(out)
+
+        return out

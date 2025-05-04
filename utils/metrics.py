@@ -187,7 +187,7 @@ class IoUMetric:
         self.threshold = threshold
 
     def __call__(self, y_pred, y_true):
-        if y_true.ndim == 4:
+        if y_true.ndim == 4 and y_true.shape[1] != 1:
             y_true = y_true.unsqueeze(1)
 
         if y_pred.shape[1] == 1:
@@ -230,7 +230,7 @@ class PrecisionMetric:
         self.threshold = threshold
 
     def __call__(self, y_pred, y_true):
-        if y_true.ndim == 4:
+        if y_true.ndim == 4 and y_true.shape[1] != 1:
             y_true = y_true.unsqueeze(1)
 
         if y_pred.shape[1] == 1:
@@ -272,7 +272,7 @@ class RecallMetric:
         self.threshold = threshold
 
     def __call__(self, y_pred, y_true):
-        if y_true.ndim == 4:
+        if y_true.ndim == 4 and y_true.shape[1] != 1:
             y_true = y_true.unsqueeze(1)
 
         if y_pred.shape[1] == 1:
