@@ -105,14 +105,14 @@ def get_liver_mask_bbox(source, model_stage_1=None, device=None):
             gc.collect()
             del data, image, logits, liver_mask, bbox_liver
 
-    return liver_masks_bbox
+    return patient_id, liver_masks_bbox # (patient_id, bbox_liver)
 
 def convert_to_2D_dataset(source, bbox, slides = 3, save_dir = "/content/2D_dataset"):
     """
     Convert the 3D dataset to 2.5D dataset.
     Arguments:
     source: str, the path to the folder containing the LiTS dataset.
-    bbox: list of tuples, the bounding boxes of the liver ROI crops - full datasets.
+    bbox: the bounding boxes of the liver ROI crops - full datasets. [ {patient_id: int, bbox: list[int]},]
     slides: int, the number of slides to be extracted from each volume.
     save_dir: str, the path to the folder where to save the converted dataset.
     """
@@ -129,7 +129,8 @@ def convert_to_2D_dataset(source, bbox, slides = 3, save_dir = "/content/2D_data
         seg = Lits.load_nii(seg_file)
 
         # Get the liver ROI from the image and segmentation
-        image, seg = get_liver_roi(image, seg, bbox[i])
+        bb = next((item["bbox"] for item in bbox if item["patient_id"] == patient_id), None)
+        image, seg = get_liver_roi(image, seg, bb)
         
         # Save the image and segmentation as 2D slices
         D, H, W = image.shape
@@ -139,7 +140,7 @@ def convert_to_2D_dataset(source, bbox, slides = 3, save_dir = "/content/2D_data
             seg_slice = (np.any(seg[z - radius: z + radius + 1, :, :] > 0, axis=0)).astype(np.uint8)  # shape (1, H, W)
 
             # Save the slices
-            np.savez_compressed(f"{save_dir}/patient_{patient_id}_slice_{z:03d}.npz", image=image_slice, seg=seg_slice, bbox=np.array(bbox[i]))
+            np.savez_compressed(f"{save_dir}/patient_{patient_id}_slice_{z:03d}.npz", image=image_slice, seg=seg_slice, bbox=np.array(bb))
 
 def get_datasets_lits_2d(source_folder, seed, fold_number=5, normalizations="zscores"):
     """
