@@ -90,7 +90,7 @@ def resize_image(image=None, seg=None, mode=None, target_size=(128, 128, 128), t
                 mode = "trilinear"
 
         if original_dim == 3:  # (D, H, W) or (C=slides, H, W)
-            if mode in {"bilinear", "nearest"} and tensor.shape[0] <= 3:
+            if mode in {"bilinear", "nearest"} :
                 # (D, H, W) → (1, C=slides, H, W) or (C=slides, H, W) → (1, C=slides, H, W)
                 tensor = tensor.unsqueeze(0)
             else:
