@@ -301,7 +301,7 @@ class Stage2Dataset2D(Dataset):
             image = irm_min_max_preprocess(image)
 
         # resize image
-        if seg.size = 2:
+        if seg.size == 2:
             seg = np.expand_dims(seg, axis=0)
         image, seg = resize_image(image, seg, mode=None, target_size=(256, 256), target_size_seg=(256, 256))
         return image, seg
