@@ -247,7 +247,7 @@ class Stage2Dataset2D(Dataset):
         _patient = self.patient_dirs[idx]
         data = self.load_npz(_patient["file"])
         image = data["image"]
-        seg = data["segmentation"]
+        seg = data["seg"]
         bbox = data["bbox"]
 
         # preprocessing
