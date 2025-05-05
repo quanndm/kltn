@@ -80,7 +80,7 @@ def get_full_dataset_lits(source_folder, normalizations = "zscores", mode = "all
 def get_liver_mask_bbox(source, model_stage_1=None, device=None):
     dataset = get_full_dataset_lits(source, normalizations="zscores", mode="all", device=device)
     liver_masks_bbox = []
-
+    patients_id = []
     if model_stage_1 is None:
         return None
 
@@ -94,6 +94,7 @@ def get_liver_mask_bbox(source, model_stage_1=None, device=None):
             image = data["image"].to(device)
             root_size = data["root_size"]
             image = image.unsqueeze(0)
+            patients_id.append(data["patient_id"])
             
             logits = model_inferer(image, model_stage_1)
             liver_mask = extract_liver_mask_binary(logits, threshold=0.4)
@@ -105,7 +106,7 @@ def get_liver_mask_bbox(source, model_stage_1=None, device=None):
             gc.collect()
             del data, image, logits, liver_mask, bbox_liver
 
-    return patient_id, liver_masks_bbox # (patient_id, bbox_liver)
+    return patients_id, liver_masks_bbox # (patients_id, bbox_liver)
 
 def convert_to_2D_dataset(source, bbox, slides = 3, save_dir = "/content/2D_dataset"):
     """
