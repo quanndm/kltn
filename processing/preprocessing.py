@@ -84,14 +84,12 @@ def resize_image(image=None, seg=None, mode=None, target_size=(128, 128, 128), t
 
         if original_dim == 3:  # (D, H, W) or (C=slides, H, W)
             if tensor.shape[0] <= 5:  # Example: <= 5 slices → 2.5D
-                tensor = tensor.unsqueeze(0)  # (C, H, W) → (1, C, H, W)
                 mode = "bilinear" if mode is None else mode
             elif tensor.shape[0] == 1:  # mask 2.5D
-                tensor = tensor.unsqueeze(0)
                 mode = "nearest" if mode is None else mode
             else:
-                tensor = tensor.unsqueeze(0).unsqueeze(0)  # (D, H, W) → (1, 1, D, H, W)
                 mode = "trilinear" if mode is None else mode
+            tensor = tensor.unsqueeze(0).unsqueeze(0)  # (C, H, W) → (1, 1, C, H, W) or (D, H, W) → (1, 1, D, H, W)
         elif original_dim == 4:  # (C, D, H, W)
             tensor = tensor.unsqueeze(0)  # (C, D, H, W) → (1, C, D, H, W)
             mode = "trilinear" if mode is None else mode
