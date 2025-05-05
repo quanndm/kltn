@@ -302,7 +302,7 @@ class Stage2Dataset2D(Dataset):
 
         # resize image
         
-        image, seg = resize_image(image, seg, mode=None, target_size=(256, 256), target_size_seg=(256, 256))
+        # image, seg = resize_image(image, seg, mode=None, target_size=(256, 256), target_size_seg=(256, 256))
         return image, seg
 
     @staticmethod
