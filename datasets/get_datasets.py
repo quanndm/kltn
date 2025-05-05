@@ -8,6 +8,7 @@ from ..utils.utils import model_inferer
 import torch
 import torch.nn.functional as F
 import gc
+import os
 
 def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zscores", mode = "all", device=None, liver_masks_bbox = None):
     """
