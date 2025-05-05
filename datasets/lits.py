@@ -255,9 +255,8 @@ class Stage2Dataset2D(Dataset):
 
         # augmentation
         if self.training and self.transformations:
-            print(image.shape, seg.shape)
-            # image, seg = self.augmentation(image, seg)
-            # image = image.cpu().numpy()
+            image, seg = self.augmentation(image, seg)
+            image = image.cpu().numpy()
 
         liver_mask = (seg == 1).astype(np.uint8)
         image, seg = image.astype(np.float32), (seg == 2).astype(np.uint8)
