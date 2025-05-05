@@ -71,7 +71,7 @@ def irm_min_max_preprocess(image, low_perc=1, high_perc=99):
     return image
 
 def resize_image(image=None, seg=None, mode=None, target_size=(128, 128, 128), target_size_seg = None):
-    def process_tensor(tensor, mode=None, new_size=target_size):
+    def process_tensor(tensor, mode=None, new_size=None):
         if isinstance(tensor, torch.Tensor):
             tensor = tensor.detach().cpu().float()
         else:
@@ -103,7 +103,7 @@ def resize_image(image=None, seg=None, mode=None, target_size=(128, 128, 128), t
         return out.squeeze(0).numpy()
 
     image_resized = process_tensor(tensor= image, new_size=target_size) if image is not None else None
-    seg_resized = process_tensor(seg, "nearest", new_size=target_size if target_size_seg is not None else target_size_seg) if seg is not None else None
+    seg_resized = process_tensor(seg, "nearest", new_size=target_size_seg if target_size_seg is not None else target_size) if seg is not None else None
 
     return image_resized, seg_resized
 
