@@ -96,7 +96,7 @@ def get_liver_mask_bbox(source, model_stage_1=None, device=None):
             
             logits = model_inferer(image, model_stage_1)
             liver_mask = extract_liver_mask_binary(logits, threshold=0.4)
-            _, liver_mask = resize_image(seg=liver_mask, target_size=root_size)
+            _, liver_mask = resize_image(seg=liver_mask, target_size_seg=root_size)
             bbox_liver = get_bbox_liver(np.squeeze(liver_mask, 0), margin=10)
 
             liver_masks_bbox.append(bbox_liver) 
