@@ -254,9 +254,9 @@ class Stage2Dataset2D(Dataset):
         image, seg = self.preprocessing(image, seg, self.training, self.normalizations)
 
         # augmentation
-        # if self.training and self.transformations:
-        #     image, seg = self.augmentation(image, seg)
-        #     image = image.cpu().numpy()
+        if self.training and self.transformations:
+            image, seg = self.augmentation(image, seg)
+            image = image.cpu().numpy()
 
         liver_mask = (seg == 1).astype(np.uint8)
         image, seg = image.astype(np.float32), (seg == 2).astype(np.uint8)
@@ -301,9 +301,7 @@ class Stage2Dataset2D(Dataset):
             image = irm_min_max_preprocess(image)
 
         # resize image
-        if seg.size == 2:
-            seg = np.expand_dims(seg, axis=0)
-        image, seg = resize_image(image, seg, mode=None, target_size=(256, 256), target_size_seg=(256, 256))
+        image, seg = resize_image(image, np.expand_dims(seg, axis=0), mode=None, target_size=(256, 256), target_size_seg=(256, 256))
         return image, seg
 
     @staticmethod

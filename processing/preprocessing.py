@@ -101,10 +101,8 @@ def resize_image(image=None, seg=None, mode=None, target_size=(128, 128, 128), t
             pass
 
         align = False if mode in ["bilinear", "trilinear"] else None
-        # out = F.interpolate(tensor, size=new_size, mode=mode, align_corners=align)
-        # return out.squeeze(0).numpy()
-        print(tensor.shape)
-        return tensor.cpu().numpy()
+        out = F.interpolate(tensor, size=new_size, mode=mode, align_corners=align)
+        return out.squeeze(0).numpy()
 
     image_resized = process_tensor(tensor= image, new_size=target_size) if image is not None else None
     seg_resized = process_tensor(tensor = seg, mode = "nearest", new_size=target_size_seg if target_size_seg is not None else target_size) if seg is not None else None
