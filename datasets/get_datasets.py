@@ -72,7 +72,7 @@ def get_full_dataset_lits(source_folder, normalizations = "zscores", mode = "all
             "segmentation": seg_file
         })
 
-    dataset = Lits(patients, training=False, normalizations=normalizations, mode=mode, device=device)
+    dataset = Lits(patients, training=False, normalizations=normalizations, mode=mode)
 
     return dataset
 
