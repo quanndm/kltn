@@ -82,19 +82,19 @@ def resize_image(image=None, seg=None, mode=None, target_size=(128, 128, 128), t
 
         # Determine the appropriate mode and reshape tensor based on its dimensions
 
+        # Default mode if not provided
+        if mode is None:
+            if original_dim == 3:
+                mode = "bilinear" if tensor.shape[0] <= 3 else "trilinear"
+            elif original_dim in {4, 5}:
+                mode = "trilinear"
+
         if original_dim == 3:  # (D, H, W) or (C=slides, H, W)
-            if tensor.shape[0] <= 5:  # Example: <= 5 slices → 2.5D
-                mode = "bilinear" if mode is None else mode
-            elif tensor.shape[0] == 1:  # mask 2.5D
-                mode = "nearest" if mode is None else mode
-            else:
-                mode = "trilinear" if mode is None else mode
             tensor = tensor.unsqueeze(0).unsqueeze(0)  # (C, H, W) → (1, 1, C, H, W) or (D, H, W) → (1, 1, D, H, W)
         elif original_dim == 4:  # (C, D, H, W)
             tensor = tensor.unsqueeze(0)  # (C, D, H, W) → (1, C, D, H, W)
-            mode = "trilinear" if mode is None else mode
         elif original_dim == 5:  # Already in (1, C, D, H, W)
-            mode = "trilinear" if mode is None else mode
+            pass
 
         align = False if mode in ["bilinear", "trilinear"] else None
         out = F.interpolate(tensor, size=new_size, mode=mode, align_corners=align)
