@@ -138,7 +138,7 @@ def convert_to_2D_dataset(source, bbox, slides = 3, save_dir = "/content/2D_data
         for z in range(radius, D - radius):
             # Extract image slices and segmentation slices
             image_slice = image[z - radius: z + radius + 1, :, :]  # shape (slides, H, W)
-            seg_slice = (np.any(seg[z - radius: z + radius + 1, :, :] > 0, axis=0)).astype(np.uint8)  # shape (1, H, W)
+            seg_slice = seg[z - radius: z + radius + 1, :, :] .astype(np.uint8)  # shape (3, H, W)
 
             # Save the slices
             np.savez_compressed(f"{save_dir}/patient_{patient_id}_slice_{z:03d}.npz", image=image_slice, seg=seg_slice, bbox=np.array(bb))

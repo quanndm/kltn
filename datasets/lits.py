@@ -261,6 +261,9 @@ class Stage2Dataset2D(Dataset):
 
         liver_mask = (seg == 1).astype(np.uint8)
         image, seg = image.astype(np.float32), (seg == 2).astype(np.uint8)
+
+        liver_mask = np.max(liver_mask, axis=0)  # (3, H, W) -> (H, W)
+        seg = np.max(seg, axis=0)  # (3, H, W) -> (H, W)
         # convert to torch tensors
         image, seg = torch.from_numpy(image), torch.from_numpy(seg)
 
@@ -268,8 +271,8 @@ class Stage2Dataset2D(Dataset):
             idx=idx,
             patient_id=_patient["id"],
             image=image,
-            label=seg,
-            liver_mask=liver_mask,
+            label=seg.unsqueeze(0),
+            liver_mask=liver_mask.unsqueeze(0),
             bbox=bbox,
             slide=_patient["slide"]
         )
@@ -302,7 +305,7 @@ class Stage2Dataset2D(Dataset):
             image = irm_min_max_preprocess(image)
 
         # resize image
-        image, seg = resize_image(image, np.expand_dims(seg, axis=0), mode=None, target_size=(256, 256), target_size_seg=(256, 256))
+        image, seg = resize_image(image, mode=None, target_size=(256, 256), target_size_seg=(256, 256))
         return image, seg
 
     @staticmethod
