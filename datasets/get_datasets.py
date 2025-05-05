@@ -130,7 +130,7 @@ def convert_to_2D_dataset(source, bbox, slides = 3, save_dir = "/content/2D_data
         seg = Lits.load_nii(seg_file)
 
         # Get the liver ROI from the image and segmentation
-        bb = next((item["bbox"] for item in bbox if item["patient_id"] == patient_id), None)
+        bb = next((item["bbox"] for item in bbox if item["patient_id"] == int(patient_id)), None)
         image, seg = get_liver_roi(image, seg, bb)
         
         # Save the image and segmentation as 2D slices
