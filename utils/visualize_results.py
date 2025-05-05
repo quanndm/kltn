@@ -70,7 +70,7 @@ def visualize_results_stage_1(model, val_loader, weight_path, num_images, device
             pred_np = (val_output > 0.5).int().detach().cpu().numpy()[0]  # [D, H, W]
 
             # Combine all slices into one 2D image using max projection (any voxel > 0 will appear)
-            image_2d = np.max(image_np, axis=0)
+            image_2d = image_np[image_np.shape[0] // 2]  # middle slice
             label_2d = np.max(label_np, axis=0)
             pred_2d = np.max(pred_np, axis=0)
 
@@ -111,31 +111,29 @@ def visualize_results_stage_2(model, val_loader, weight_path, num_images, device
             val_output = inference(val_input, model)             # raw logits
 
             # Apply sigmoid + thresholding + post-processing
-            pred_mask = post_trans_stage2(val_output, threshold=threshold, device=device)  # [1, 1, D, H, W]
+            pred_mask = post_trans_stage2(val_output, threshold=threshold, device=device)  # [1, 1, H, W]
 
             # Get data to numpy
-            image_np = val_input.detach().cpu().numpy()[0, 0]            # [D, H, W]
-            label_np = val_data["label"].detach().cpu().numpy()[0, 0]    # [D, H, W]
-            pred_np = pred_mask.detach().cpu().numpy()[0, 0]             # [D, H, W]
+            image_np = val_input.detach().cpu().numpy()[0]            # [C, H, W]
+            label_np = val_data["label"].detach().cpu().numpy()[0, 0]    # [ H, W]
+            pred_np = pred_mask.detach().cpu().numpy()[0, 0]             # [H, W]
 
-            # Max projection
-            image_2d = np.max(image_np, axis=0)
-            label_2d = np.max(label_np, axis=0)
-            pred_2d = np.max(pred_np, axis=0)
-
+            # middle slice
+            mid_slice = image_np.shape[0] // 2
+            image_2d = image_np[mid_slice]  
 
             # Show GT and prediction
             fig, ax = plt.subplots(1, 3, figsize=(18, 6))
             # Show image
-            ax[1].title("Input Image (Liver ROI - Max Projection)")
-            ax[1].imshow(image_2d, cmap="gray")
-            ax[1].axis("off")
+            ax[0].set_title("Input Image (Liver ROI - Max Projection)")
+            ax[0].imshow(image_2d, cmap="gray")
+            ax[0].axis("off")
 
-            ax[1].imshow(label_2d, cmap=cmap, vmin=0, vmax=1)
+            ax[1].imshow(label_np, cmap=cmap, vmin=0, vmax=1)
             ax[1].set_title("Ground Truth (Tumor)")
             ax[1].axis("off")
 
-            ax[2].imshow(pred_2d, cmap=cmap, vmin=0, vmax=1)
+            ax[2].imshow(pred_np, cmap=cmap, vmin=0, vmax=1)
             ax[2].set_title("Prediction (Tumor)")
             ax[2].axis("off")
 
