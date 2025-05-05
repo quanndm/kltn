@@ -142,6 +142,8 @@ def convert_to_2D_dataset(source, bbox, slides = 3, save_dir = "/content/2D_data
 
             # Save the slices
             np.savez_compressed(f"{save_dir}/patient_{patient_id}_slice_{z:03d}.npz", image=image_slice, seg=seg_slice, bbox=np.array(bb))
+        print(f"Patient {patient_id} processed.")
+
 
 def get_datasets_lits_2d(source_folder, seed, fold_number=5, normalizations="zscores"):
     """
