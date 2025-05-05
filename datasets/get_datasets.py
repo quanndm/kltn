@@ -1,7 +1,7 @@
 from sklearn.model_selection import KFold
 import pathlib
 from .lits import Lits, Stage2Dataset, Stage2Dataset2D
-from ..processing.preprocessing  import extract_liver_mask_binary, resize_image, get_bbox_liver
+from ..processing.preprocessing  import extract_liver_mask_binary, resize_image, get_bbox_liver, get_liver_roi
 import torch
 import numpy as np
 from ..utils.utils import model_inferer
