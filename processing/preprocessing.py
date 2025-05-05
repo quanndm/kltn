@@ -105,7 +105,7 @@ def resize_image(image=None, seg=None, mode=None, target_size=(128, 128, 128), t
         return out.squeeze(0).numpy()
 
     image_resized = process_tensor(tensor= image, new_size=target_size) if image is not None else None
-    seg_resized = process_tensor(seg, "nearest", new_size=target_size_seg if target_size_seg is not None else target_size) if seg is not None else None
+    seg_resized = process_tensor(tensor = seg, mode = "nearest", new_size=target_size_seg if target_size_seg is not None else target_size) if seg is not None else None
 
     return image_resized, seg_resized
 
