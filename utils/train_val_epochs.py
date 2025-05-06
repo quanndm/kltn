@@ -163,8 +163,8 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
             val_outputs_list = decollate_batch(logits)
             val_labels_list = decollate_batch(val_labels)
 
-            val_output_convert = [post_processing_stage2(val_pred_tensor).to(device).float() for val_pred_tensor in val_outputs_list]
-            val_labels_list = [t.to(device).float() for t in val_labels_list]
+            val_output_convert = [post_processing_stage2(val_pred_tensor).to(device).float().unsqueeze(0) for val_pred_tensor in val_outputs_list] # list of tensors shape(1,1, H, W)
+            val_labels_list = [t.to(device).float().unsqueeze(0) for t in val_labels_list] # list of tensors shape(1,1, H, W)
             
             acc_func.reset()
             acc_func(y_pred=val_output_convert, y=val_labels_list)
@@ -173,8 +173,7 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
             dice_list.append(dice_tumor.detach().cpu().numpy())
 
             for pred, label in zip(val_output_convert, val_labels_list):
-                pred = pred.unsqueeze(0).to(device) # shape(1, C, H, W)
-                label = label.unsqueeze(0).to(device) # shape(1, C, H, W)
+                # pred: shape (1, 1, H, W), label: shape (1, 1, H, W)
                 ious = iou_metric(pred, label)
                 iou_list.append(ious[0])
 

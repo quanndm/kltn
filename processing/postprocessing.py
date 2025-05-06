@@ -52,7 +52,7 @@ def post_processing_stage2(logits, threshold=0.5, device=None):
     # fill holes
     tumor_mask = ndi.binary_fill_holes(tumor_mask)
 
-    tumor_mask = np.expand_dims(tumor_mask, axis=0) # shape(D, H, W) -> (1, D, H, W)
-    tumor_mask = torch.from_numpy(tumor_mask).to(device) # shape(1, D, H, W)
+    tumor_mask = np.expand_dims(tumor_mask, axis=0) # shape( H, W) -> (1, H, W)
+    tumor_mask = torch.from_numpy(tumor_mask).to(device) # shape(1, H, W)
 
     return tumor_mask
