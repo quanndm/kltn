@@ -271,7 +271,7 @@ class Stage2Dataset2D(Dataset):
         return dict(
             idx=idx,
             patient_id=_patient["id"],
-            slide=_patient["slide"]
+            slide=_patient["slide"],
             image=image,
             label=seg,
             # liver_mask=liver_mask.unsqueeze(0),
