@@ -266,8 +266,10 @@ class Stage2Dataset2D(Dataset):
         # liver_mask = np.max(liver_mask, axis=0)  # (3, H, W) -> (H, W)
         # seg = np.max(seg, axis=0)  # (3, H, W) -> (H, W)
         # # convert to torch tensors
+        image, seg = image.astype(np.float32), seg.astype(np.uint8)
         image, seg = torch.from_numpy(image), torch.from_numpy(seg)
-
+        image, seg = image.unsqueeze(0), seg.unsqueeze(0)   
+        
         return dict(
             idx=idx,
             patient_id=_patient["id"],
