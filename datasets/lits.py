@@ -276,7 +276,7 @@ class Stage2Dataset2D(Dataset):
             slide=_patient["slide"],
             image=image,
             label=seg,
-            liver_mask=liver_mask.unsqueeze(0),
+            liver_mask=liver_mask,
             bbox=bbox,
         )
 
