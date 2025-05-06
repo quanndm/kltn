@@ -251,7 +251,7 @@ class Stage2Dataset2D(Dataset):
         bbox = data["bbox"]
 
         # preprocessing
-        image, seg = self.preprocessing(image, seg, self.training, self.normalizations)
+        # image, seg = self.preprocessing(image, seg, self.training, self.normalizations)
 
 
         # augmentation
@@ -271,11 +271,11 @@ class Stage2Dataset2D(Dataset):
         return dict(
             idx=idx,
             patient_id=_patient["id"],
+            slide=_patient["slide"]
             image=image,
             label=seg,
             # liver_mask=liver_mask.unsqueeze(0),
             bbox=bbox,
-            slide=_patient["slide"]
         )
 
     @staticmethod
