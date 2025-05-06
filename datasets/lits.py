@@ -253,26 +253,27 @@ class Stage2Dataset2D(Dataset):
         # preprocessing
         image, seg = self.preprocessing(image, seg, self.training, self.normalizations)
 
+
         # augmentation
-        if self.training and self.transformations:
-            image, seg = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0)
-            image, seg = self.augmentation(image, seg)
-            image, seg = image.cpu().numpy().squeeze(0), seg.squeeze(0)
+        # if self.training and self.transformations:
+        #     image, seg = np.expand_dims(image, axis=0), np.expand_dims(seg, axis=0)
+        #     image, seg = self.augmentation(image, seg)
+        #     image, seg = image.cpu().numpy().squeeze(0), seg.squeeze(0)
 
-        liver_mask = (seg == 1).astype(np.uint8)
-        image, seg = image.astype(np.float32), (seg == 2).astype(np.uint8)
+        # liver_mask = (seg == 1).astype(np.uint8)
+        # image, seg = image.astype(np.float32), (seg == 2).astype(np.uint8)
 
-        liver_mask = np.max(liver_mask, axis=0)  # (3, H, W) -> (H, W)
-        seg = np.max(seg, axis=0)  # (3, H, W) -> (H, W)
-        # convert to torch tensors
-        image, seg = torch.from_numpy(image), torch.from_numpy(seg)
+        # liver_mask = np.max(liver_mask, axis=0)  # (3, H, W) -> (H, W)
+        # seg = np.max(seg, axis=0)  # (3, H, W) -> (H, W)
+        # # convert to torch tensors
+        # image, seg = torch.from_numpy(image), torch.from_numpy(seg)
 
         return dict(
             idx=idx,
             patient_id=_patient["id"],
             image=image,
-            label=seg.unsqueeze(0),
-            liver_mask=liver_mask.unsqueeze(0),
+            label=seg,
+            # liver_mask=liver_mask.unsqueeze(0),
             bbox=bbox,
             slide=_patient["slide"]
         )
