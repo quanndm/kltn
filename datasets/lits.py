@@ -251,7 +251,7 @@ class Stage2Dataset2D(Dataset):
         bbox = data["bbox"]
 
         # preprocessing
-        # image, seg = self.preprocessing(image, seg, self.training, self.normalizations)
+        image, seg = self.preprocessing(image, seg, self.training, self.normalizations)
 
 
         # augmentation
@@ -260,16 +260,16 @@ class Stage2Dataset2D(Dataset):
         #     image, seg = self.augmentation(image, seg)
         #     image, seg = image.cpu().numpy().squeeze(0), seg.squeeze(0)
 
-        # liver_mask = (seg == 1).astype(np.uint8)
-        # image, seg = image.astype(np.float32), (seg == 2).astype(np.uint8)
+        liver_mask = (seg == 1).astype(np.uint8)
+        image, seg = image.astype(np.float32), (seg == 2).astype(np.uint8)
 
-        # liver_mask = np.max(liver_mask, axis=0)  # (3, H, W) -> (H, W)
-        # seg = np.max(seg, axis=0)  # (3, H, W) -> (H, W)
+        liver_mask = np.max(liver_mask, axis=0)  # (3, H, W) -> (H, W)
+        seg = np.max(seg, axis=0)  # (3, H, W) -> (H, W)
         # # convert to torch tensors
-        image, seg = image.astype(np.float32), seg.astype(np.uint8)
+        liver_mask, seg = np.expand_dims(liver_mask, axis=0), np.expand_dims(seg, axis=0)
+        liverr_mask = torch.from_numpy(liver_mask)
         image, seg = torch.from_numpy(image), torch.from_numpy(seg)
-        image, seg = image.unsqueeze(0), seg.unsqueeze(0)   
-        
+
         return dict(
             idx=idx,
             patient_id=_patient["id"],
@@ -308,7 +308,7 @@ class Stage2Dataset2D(Dataset):
             image = irm_min_max_preprocess(image)
 
         # resize image
-        image, seg = resize_image(image, mode=None, target_size=(256, 256), target_size_seg=(256, 256))
+        image, seg = resize_image(image, seg, mode=None, target_size=(256, 256), target_size_seg=(256, 256))
         return image, seg
 
     @staticmethod
