@@ -266,7 +266,7 @@ class Stage2Dataset2D(Dataset):
         # liver_mask = np.max(liver_mask, axis=0)  # (3, H, W) -> (H, W)
         # seg = np.max(seg, axis=0)  # (3, H, W) -> (H, W)
         # # convert to torch tensors
-        # image, seg = torch.from_numpy(image), torch.from_numpy(seg)
+        image, seg = torch.from_numpy(image), torch.from_numpy(seg)
 
         return dict(
             idx=idx,
