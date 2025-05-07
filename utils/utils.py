@@ -43,34 +43,3 @@ def inference(input, model):
         return _compute(input)
 
         
-def model_inferer_2d(input, model):
-    def _compute(input):
-        return sliding_window_inference(
-            inputs=input,
-            roi_size= roi_2d,
-            sw_batch_size=sw_batch_size,
-            predictor=model,
-            overlap=overlap,
-        )
-
-    if VAL_AMP:
-        with torch.autocast(device):
-            return _compute(input)
-    else:
-        return _compute(input)
-
-
-def inference_2d(input, model):
-    def _compute(input):
-        return sliding_window_inference(
-            inputs=input,
-            roi_size=roi_2d,
-            sw_batch_size=sw_batch_size,
-            predictor=model,
-            overlap=overlap,
-        )
-    if VAL_AMP:
-        with torch.autocast(device):
-            return _compute(input)
-    else:
-        return _compute(input)
