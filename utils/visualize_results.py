@@ -108,7 +108,7 @@ def visualize_results_stage_2(model, val_loader, weight_path, num_images, device
         stop += 1
         with torch.no_grad():
             val_input = val_data["image"].to(device)  # input đã crop liver ROI
-            val_output = inference(val_input, model)             # raw logits
+            val_output = model(val_input )             # raw logits
 
             # Apply sigmoid + thresholding + post-processing
             pred_mask = post_trans_stage2(val_output, threshold=threshold, device=device)  # [1, 1, H, W]
