@@ -5,7 +5,7 @@ import os
 
 from ..processing.postprocessing import post_trans, post_trans_stage2, post_trans_stage1, post_processing_stage2
 from ..processing.preprocessing import resize_crop_to_bbox_size, uncrop_to_full_image
-from ..utils.utils import model_inferer
+from ..utils.utils import model_inferer, model_inferer_2d
 from ..utils.metrics import AverageMeter, IoUMetric, PrecisionMetric, RecallMetric
 from monai.data import decollate_batch
 from monai.inferers import sliding_window_inference
@@ -158,7 +158,7 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
     with torch.no_grad():
         for idx, batch_data in enumerate(loader):
             val_inputs, val_labels = batch_data["image"].to(device), batch_data["label"].to(device)
-            logits = model_inferer(val_inputs, model)
+            logits = model_inferer_2d(val_inputs, model)
 
             val_outputs_list = decollate_batch(logits)
             val_labels_list = decollate_batch(val_labels)
