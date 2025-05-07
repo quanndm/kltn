@@ -169,20 +169,24 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
             acc_func.reset()
             acc_func(y_pred=val_output_convert, y=val_labels_list)
             acc, _ = acc_func.aggregate()
-            dice_tumor = acc[0]
-            dice_list.append(dice_tumor.detach().cpu().numpy())
+            dice_tumor = acc.item()
+            dice_list.append(dice_tumor)
 
+            iou_list_batch, precision_list_batch, recall_list_batch = [], [], []
             for pred, label in zip(val_output_convert, val_labels_list):
                 # pred: shape (1, 1, H, W), label: shape (1, 1, H, W)
                 ious = iou_metric(pred, label)
-                iou_list.append(ious[0])
+                iou_list_batch.append(ious[0])
 
                 precisions = precision_metric(pred, label)
-                precision_list.append(precisions[0])
+                precision_list_batch.append(precisions[0])
 
                 recalls = recall_metric(pred, label)    
-                recall_list.append(recalls[0])
+                recall_list_batch.append(recalls[0])
 
+            iou_list.append(np.mean(iou_list_batch))
+            precision_list.append(np.mean(precision_list_batch))
+            recall_list.append(np.mean(recall_list_batch))
             logger.info(f"Val {epoch}/{max_epochs} {idx+1}/{len(loader)}, Dice_Tumor: {dice_tumor:.6f}, time {time.time() - start_time:.2f}s")
 
             start_time = time.time()
