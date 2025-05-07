@@ -31,7 +31,7 @@ def inference(input, model):
     def _compute(input):
         return sliding_window_inference(
             inputs=input,
-            roi_size=roi
+            roi_size=roi,
             sw_batch_size=sw_batch_size,
             predictor=model,
             overlap=overlap,
