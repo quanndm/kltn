@@ -108,7 +108,7 @@ def get_liver_mask_bbox(source, model_stage_1=None, device=None):
 
     return patients_id, liver_masks_bbox # (patients_id, bbox_liver)
 
-def convert_to_2D_dataset(source, bbox, slides = 3, save_dir = "/content/2D_dataset"):
+def convert_to_2D_dataset(source, bbox, slides = 3, stride = 2, save_dir = "/content/2D_dataset"):
     """
     Convert the 3D dataset to 2.5D dataset.
     Arguments:
@@ -121,6 +121,7 @@ def convert_to_2D_dataset(source, bbox, slides = 3, save_dir = "/content/2D_data
     volume_files = list(base_folder.glob('volume-*.nii')) 
     radius = slides // 2
     os.makedirs(save_dir, exist_ok=True)
+    stride = stride
 
     for i in range(len(volume_files)):
         vol = volume_files[i]
@@ -135,7 +136,7 @@ def convert_to_2D_dataset(source, bbox, slides = 3, save_dir = "/content/2D_data
         
         # Save the image and segmentation as 2D slices
         D, H, W = image.shape
-        for z in range(radius, D - radius):
+        for z in range(radius, D - radius, stride):
             # Extract image slices and segmentation slices
             image_slice = image[z - radius: z + radius + 1, :, :]  # shape (slides, H, W)
             seg_slice = seg[z - radius: z + radius + 1, :, :] .astype(np.uint8)  # shape (slides, H, W)
