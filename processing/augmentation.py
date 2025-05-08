@@ -79,6 +79,7 @@ def stage2_train_augmentation_2d():
             prob=0.3,
             rotate_range=0.05, 
             mode=["bilinear", "nearest"],
+            padding_mode="border"  
         ),
         RandShiftIntensityd(keys=["image"], prob=0.3, offsets=0.1),
 
