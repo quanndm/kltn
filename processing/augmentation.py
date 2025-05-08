@@ -77,9 +77,8 @@ def stage2_train_augmentation_2d():
         RandAffined(
             keys=["image", "label"], 
             prob=0.3,
-            rotate_range=[-0.05, 0.05], 
+            rotate_range=0.05, 
             mode=["bilinear", "nearest"],
-            spatial_dims=[2, 3]
         ),
         RandShiftIntensityd(keys=["image"], prob=0.3, offsets=0.1),
 
