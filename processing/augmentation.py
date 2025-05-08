@@ -72,8 +72,8 @@ def stage2_train_augmentation_2d():
         RandGaussianNoised: Randomly add Gaussian noise to the image
     """
     return Compose([
-        RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=[2, 3]),
-        RandZoomd(keys=["image", "label"], prob=0.3, min_zoom=0.9, max_zoom=1.1, mode=["bilinear", "nearest"], spatial_dims=[2, 3]),  
+        RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=[1, 2]),
+        RandZoomd(keys=["image", "label"], prob=0.3, min_zoom=0.9, max_zoom=1.1, mode=["bilinear", "nearest"], spatial_dims=[1, 2]),  
         RandAffined(
             keys=["image", "label"], 
             prob=0.3,
