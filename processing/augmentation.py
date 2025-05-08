@@ -60,6 +60,8 @@ def stage2_train_augmentation():
 
 def stage2_train_augmentation_2d():
     """
+    image: [1,C, H,W]
+    label: [1, 1, H, W]
     Returns a list of augmentations to apply to the training data for stage 2
     Augmentations:
         RandFlipd: Randomly flip the image along the specified axis
@@ -70,8 +72,15 @@ def stage2_train_augmentation_2d():
         RandGaussianNoised: Randomly add Gaussian noise to the image
     """
     return Compose([
-        RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=[1, 2]),
-        RandZoomd(keys=["image", "label"], prob=0.3, min_zoom=0.9, max_zoom=1.1, mode=["bilinear", "nearest"], spatial_dims=[1, 2]),  
+        RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=[2, 3]),
+        RandZoomd(keys=["image", "label"], prob=0.3, min_zoom=0.9, max_zoom=1.1, mode=["bilinear", "nearest"], spatial_dims=[2, 3]),  
+        RandAffined(
+            keys=["image", "label"], 
+            prob=0.3,
+            rotate_range=[-0.05, 0.05], 
+            mode=["bilinear", "nearest"],
+            spatial_dims=[2, 3]
+        ),
         RandShiftIntensityd(keys=["image"], prob=0.3, offsets=0.1),
 
         RandGaussianNoised(keys=["image"], prob=0.1, mean=0.0, std=0.01),
