@@ -76,7 +76,7 @@ def visualize_results_stage_1(model, val_loader, weight_path, num_images, device
 
             # Show the image
             plt.figure(figsize=(6, 6))
-            plt.title("Input Image (max projection)")
+            plt.title("Input Image")
             plt.imshow(image_2d, cmap="gray")
             plt.axis("off")
             plt.show()
@@ -125,7 +125,7 @@ def visualize_results_stage_2(model, val_loader, weight_path, num_images, device
             # Show GT and prediction
             fig, ax = plt.subplots(1, 3, figsize=(18, 6))
             # Show image
-            ax[0].set_title("Input Image (Liver ROI - Max Projection)")
+            ax[0].set_title("Input Image (Liver ROI)")
             ax[0].imshow(image_2d, cmap="gray")
             ax[0].axis("off")
 
