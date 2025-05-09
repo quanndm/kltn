@@ -3,6 +3,7 @@ from torch import optim
 import torch.nn as nn
 from monai.losses import  FocalLoss, TverskyLoss
 from monai.metrics import DiceMetric
+import torch.nn.functional as F
 
 class DiceLossWSigmoid(nn.Module):
     def __init__(self):
@@ -116,7 +117,7 @@ class TverskyLossWSigmoid(nn.Module):
         super(TverskyLossWSigmoid, self).__init__()
         self.alpha = alpha
         self.beta = beta
-        self.bce_loss = nn.BCEWithLogitsLoss()
+        # self.bce_loss = nn.BCEWithLogitsLoss()
         self.tversky_loss = TverskyLoss( alpha=self.alpha, beta=self.beta, sigmoid=True)
         self.fc_loss = FocalLoss(gamma=gamma, alpha=alpha_fc)
         self.use_fc = use_fc    
@@ -129,7 +130,8 @@ class TverskyLossWSigmoid(nn.Module):
             focal_loss = self.fc_loss(inputs, targets)
             final_loss = self.weight_tversky * tversky_loss + self.weight_bce_or_fc * focal_loss
         else:
-            bce_loss = self.bce_loss(inputs, targets.float())
+            # bce_loss = self.bce_loss(inputs, targets.float())
+            bce_loss = F.binary_cross_entropy_with_logits(inputs, targets.float())
             final_loss = self.weight_tversky * tversky_loss + self.weight_bce_or_fc * bce_loss
         return final_loss
         

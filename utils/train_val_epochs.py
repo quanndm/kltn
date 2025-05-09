@@ -157,8 +157,9 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
     iou_list, precision_list, recall_list = [], [], []
     with torch.no_grad():
         for idx, batch_data in enumerate(loader):
-            val_inputs, val_labels = batch_data["image"].to(device), batch_data["label"].to(device)
-            logits = model(val_inputs)
+            with torch.autocast(device):
+                val_inputs, val_labels = batch_data["image"].to(device), batch_data["label"].to(device)
+                logits = model(val_inputs)
 
             val_outputs_list = decollate_batch(logits)
             val_labels_list = decollate_batch(val_labels)
