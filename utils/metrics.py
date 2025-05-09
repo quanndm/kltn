@@ -203,7 +203,10 @@ class IoUMetric:
             y_true = y_true.bool().squeeze()
 
 
-            dims = tuple(range(1, y_pred.ndim))
+            if y_pred.shape[0] == y_pred.shape[1] == y_pred.shape[2]: # 3D
+                dims = tuple(range( y_pred.ndim))
+            else: 
+                dims = tuple(range(1, y_pred.ndim))
             intersection = (y_pred & y_true).sum(dim = dims).float()
             union = ((y_pred + y_true) > 0).sum(dim=dims).float()
             iou = (intersection + self.eps) / (union + self.eps)
@@ -251,7 +254,10 @@ class PrecisionMetric:
             y_pred = y_pred.bool().squeeze()
             y_true = y_true.bool().squeeze()
 
-            dims = tuple(range(1, y_pred.ndim))
+            if y_pred.shape[0] == y_pred.shape[1] == y_pred.shape[2]: # 3D
+                dims = tuple(range( y_pred.ndim))
+            else: # 2D
+                dims = tuple(range(1, y_pred.ndim))
             tp = (y_pred & y_true).sum(dim=dims).float()
             fp = (y_pred & (~y_true)).sum(dim=dims).float()
 
@@ -300,7 +306,10 @@ class RecallMetric:
             y_pred = y_pred.bool().squeeze()
             y_true = y_true.bool().squeeze()
 
-            dims = tuple(range(1, y_pred.ndim))
+            if y_pred.shape[0] == y_pred.shape[1] == y_pred.shape[2]: # 3D
+                dims = tuple(range( y_pred.ndim))
+            else: # 2D
+                dims = tuple(range(1, y_pred.ndim))
             tp = (y_pred & y_true).sum(dim = dims).float()
             fn = ((~y_pred) & y_true).sum(dim = dims).float()
 
