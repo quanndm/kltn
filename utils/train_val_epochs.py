@@ -173,21 +173,31 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
             dice_tumor = acc.item()
             dice_list.append(dice_tumor)
 
-            iou_list_batch, precision_list_batch, recall_list_batch = [], [], []
-            for pred, label in zip(val_output_convert, val_labels_list):
-                # pred: shape (1, 1, H, W), label: shape (1, 1, H, W)
-                ious = iou_metric(pred, label)
-                iou_list_batch.append(ious[0])
+            # convert list of tensors to a single tensor
+            val_outputs = torch.cat(val_output_convert, dim=0) # shape (N, 1, H, W)
+            val_labels = torch.cat(val_labels_list, dim=0) # shape (N, 1, H, W)
 
-                precisions = precision_metric(pred, label)
-                precision_list_batch.append(precisions[0])
+            # calculate metrics for each batch
+            # iou_list_batch, precision_list_batch, recall_list_batch = [], [], []
+            # for pred, label in zip(val_output_convert, val_labels_list):
+            #     # pred: shape (1, 1, H, W), label: shape (1, 1, H, W)
+            #     ious = iou_metric(pred, label)
+            #     iou_list_batch.append(ious[0])
 
-                recalls = recall_metric(pred, label)    
-                recall_list_batch.append(recalls[0])
+            #     precisions = precision_metric(pred, label)
+            #     precision_list_batch.append(precisions[0])
 
-            iou_list.append(np.mean(iou_list_batch))
-            precision_list.append(np.mean(precision_list_batch))
-            recall_list.append(np.mean(recall_list_batch))
+            #     recalls = recall_metric(pred, label)    
+            #     recall_list_batch.append(recalls[0])
+
+            iou = iou_metric(val_outputs, val_labels)
+            iou_list.append(iou[0].cpu().numpy())
+
+            precisions = precision_metric(val_outputs, val_labels)
+            precision_list.append(precisions[0].cpu().numpy())
+
+            recall = recall_metric(val_outputs, val_labels)
+            recall_list.append(recall[0].cpu().numpy())
             logger.info(f"Val {epoch}/{max_epochs} {idx+1}/{len(loader)}, Dice_Tumor: {dice_tumor:.6f}, time {time.time() - start_time:.2f}s")
 
             start_time = time.time()

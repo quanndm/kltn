@@ -196,13 +196,22 @@ class IoUMetric:
             # Binary segmentation
             if y_pred.max() > 1 or y_pred.min() < 0:
                 y_pred = torch.sigmoid(y_pred)
-            y_pred = (y_pred > self.threshold).bool().squeeze(1)
-            y_true = y_true.bool().squeeze(1)
+                # Apply threshold to get binary predictions
+                y_pred = (y_pred > self.threshold).float()
+            
+            y_pred = y_pred.bool().squeeze()
+            y_true = y_true.bool().squeeze()
 
-            intersection = (y_pred & y_true).sum().float()
-            union = ((y_pred + y_true) > 0).sum().float()
+
+            dims = tuple(range(1, y_pred.ndim))
+            intersection = (y_pred & y_true).sum(dim = dims).float()
+            union = ((y_pred + y_true) > 0).sum(dim=dims).float()
             iou = (intersection + self.eps) / (union + self.eps)
-            return [iou.item()]
+            if iou.numel() == 1:
+                return [iou.item()]
+            else:
+                # If there are multiple classes, return the mean IoU
+                return [iou.mean().item()]
         else:
             # Multi-class segmentation
             y_pred = torch.argmax(y_pred, dim=1)
@@ -238,14 +247,20 @@ class PrecisionMetric:
         if y_pred.shape[1] == 1:
             if y_pred.max() > 1 or y_pred.min() < 0:
                 y_pred = torch.sigmoid(y_pred)
-            y_pred = (y_pred > self.threshold).bool().squeeze(1)
-            y_true = y_true.bool().squeeze(1)
+                y_pred = (y_pred > self.threshold).float()
+            y_pred = y_pred.bool().squeeze()
+            y_true = y_true.bool().squeeze()
 
-            tp = (y_pred & y_true).sum().float()
-            fp = (y_pred & (~y_true)).sum().float()
+            dims = tuple(range(1, y_pred.ndim))
+            tp = (y_pred & y_true).sum(dim=dims).float()
+            fp = (y_pred & (~y_true)).sum(dim=dims).float()
 
             precision = (tp + self.eps) / (tp + fp + self.eps)
-            return [precision.item()]
+            if precision.numel() == 1:
+                return [precision.item()]
+            else:
+                # If there are multiple classes, return the mean precision
+                return [precision.mean().item()]
         else:
             y_pred = torch.argmax(y_pred, dim=1)
             y_true = y_true.squeeze(1)
@@ -280,14 +295,21 @@ class RecallMetric:
         if y_pred.shape[1] == 1:
             if y_pred.max() > 1 or y_pred.min() < 0:
                 y_pred = torch.sigmoid(y_pred)
-            y_pred = (y_pred > self.threshold).bool().squeeze(1)
-            y_true = y_true.bool().squeeze(1)
+                y_pred = (y_pred > self.threshold).float()
 
-            tp = (y_pred & y_true).sum().float()
-            fn = ((~y_pred) & y_true).sum().float()
+            y_pred = y_pred.bool().squeeze()
+            y_true = y_true.bool().squeeze()
+
+            dims = tuple(range(1, y_pred.ndim))
+            tp = (y_pred & y_true).sum(dim = dims).float()
+            fn = ((~y_pred) & y_true).sum(dim = dims).float()
 
             recall = (tp + self.eps) / (tp + fn + self.eps)
-            return [recall.item()]
+            if recall.numel() == 1:
+                return [recall.item()]
+            else:
+                # If there are multiple classes, return the mean recall
+                return [recall.mean().item()]
         else:
             y_pred = torch.argmax(y_pred, dim=1)
             y_true = y_true.squeeze(1)
