@@ -73,11 +73,11 @@ def stage2_train_augmentation_2d():
     """
     return Compose([
         RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=[1, 2]),
-        RandZoomd(keys=["image", "label"], prob=0.3, min_zoom=0.9, max_zoom=1.1, mode=["bilinear", "nearest"], spatial_dims=[1, 2]),  
+        RandZoomd(keys=["image", "label"], prob=0.35, min_zoom=0.85, max_zoom=1.15, mode=["bilinear", "nearest"], spatial_dims=[1, 2]),  
         RandAffined(
             keys=["image", "label"], 
             prob=0.3,
-            rotate_range=0.05, 
+            rotate_range=0.075, 
             mode=["bilinear", "nearest"],
             padding_mode="border"  
         ),
