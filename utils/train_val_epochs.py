@@ -191,13 +191,13 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
             #     recall_list_batch.append(recalls[0])
 
             iou = iou_metric(val_outputs, val_labels)
-            iou_list.append(iou[0].cpu().numpy())
+            iou_list.append(iou[0])
 
             precisions = precision_metric(val_outputs, val_labels)
-            precision_list.append(precisions[0].cpu().numpy())
+            precision_list.append(precisions[0])
 
             recall = recall_metric(val_outputs, val_labels)
-            recall_list.append(recall[0].cpu().numpy())
+            recall_list.append(recall[0])
             logger.info(f"Val {epoch}/{max_epochs} {idx+1}/{len(loader)}, Dice_Tumor: {dice_tumor:.6f}, time {time.time() - start_time:.2f}s")
 
             start_time = time.time()
