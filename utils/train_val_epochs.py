@@ -157,7 +157,7 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
     iou_list, precision_list, recall_list = [], [], []
     with torch.no_grad():
         for idx, batch_data in enumerate(loader):
-            with torch.autocast(device):
+            with torch.autocast("cuda" if torch.cuda.is_available() else "cpu"):
                 val_inputs, val_labels = batch_data["image"].to(device), batch_data["label"].to(device)
                 logits = model(val_inputs)
 
