@@ -190,23 +190,24 @@ def val_epoch_stage2(model, loader, epoch, acc_func, max_epochs, logger):
             #     recalls = recall_metric(pred, label)    
             #     recall_list_batch.append(recalls[0])
 
-            iou = iou_metric(val_outputs, val_labels)
-            iou_list.append(iou[0])
+            # iou = iou_metric(val_outputs, val_labels)
+            # iou_list.append(iou[0])
 
-            precisions = precision_metric(val_outputs, val_labels)
-            precision_list.append(precisions[0])
+            # precisions = precision_metric(val_outputs, val_labels)
+            # precision_list.append(precisions[0])
 
-            recall = recall_metric(val_outputs, val_labels)
-            recall_list.append(recall[0])
+            # recall = recall_metric(val_outputs, val_labels)
+            # recall_list.append(recall[0])
             logger.info(f"Val {epoch}/{max_epochs} {idx+1}/{len(loader)}, Dice_Tumor: {dice_tumor:.6f}, time {time.time() - start_time:.2f}s")
 
             start_time = time.time()
 
     acc = np.mean(dice_list)
-    ious = np.mean(iou_list)
-    precisions = np.mean(precision_list)
-    recalls = np.mean(recall_list)
-    return acc, ious, precisions, recalls
+    # ious = np.mean(iou_list)
+    # precisions = np.mean(precision_list)
+    # recalls = np.mean(recall_list)
+    # return acc, ious, precisions, recalls
+    return acc
 
 
 def trainer(model, train_loader, val_loader, optimizer, loss_func, acc_func, scheduler, batch_size, max_epochs, start_epoch=1, val_every = 1, logger=None, path_save_model=None, save_model=True, post_fix=None):
@@ -396,25 +397,26 @@ def trainer_stage2(model, train_loader, val_loader, optimizer, loss_func, acc_fu
             trains_epoch.append(epoch)
             epoch_time = time.time()
             logger.info(f"\n{'*' * 20}Epoch {epoch} Validation{'*' * 20}")
-            val_acc , val_ious, val_precisions, val_recalls= val_epoch_stage2(model, val_loader, epoch, acc_func, max_epochs, logger)
+            # val_acc , val_ious, val_precisions, val_recalls= val_epoch_stage2(model, val_loader, epoch, acc_func, max_epochs, logger)
+            val_acc = val_epoch_stage2(model, val_loader, epoch, acc_func, max_epochs, logger)
 
             val_dice_tumor = val_acc
 
-            val_iou_tumor = val_ious
+            # val_iou_tumor = val_ious
 
-            val_precision_tumor = val_precisions
+            # val_precision_tumor = val_precisions
 
-            val_recall_tumor = val_recalls
+            # val_recall_tumor = val_recalls
             logger.info(f"\n{'*' * 20}Epoch Summary{'*' * 20}")
             logger.info(f"Final validation stats {epoch}/{max_epochs},   Dice_Tumor: {val_dice_tumor:.6f} , time {time.time() - epoch_time:.2f}s")
             
             dices_tumor.append(val_dice_tumor)
 
-            ious_tumor.append(val_iou_tumor)
+            # ious_tumor.append(val_iou_tumor)
 
-            precisions_tumor.append(val_precision_tumor)
+            # precisions_tumor.append(val_precision_tumor)
 
-            recalls_tumor.append(val_recall_tumor)
+            # recalls_tumor.append(val_recall_tumor)
             if val_dice_tumor > val_acc_max:
                 print("New best ({:.6f} --> {:.6f}). At epoch {}".format(val_acc_max, val_dice_tumor, epoch))
                 logger.info(f"New best ({val_acc_max:.6f} --> {val_dice_tumor:.6f}). At epoch {epoch}. Time consuming: {time.time()-total_time:.2f}")
