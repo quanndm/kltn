@@ -99,31 +99,6 @@ def prepare_dataset_LiTS(dir_name):
     print("LiTS dataset prepared successfully.")
 
 
-def download_and_prepare_msd(dir_name):
-    """
-    Download and prepare the MSD dataset
-    """
-    file_tar = "Task03_Liver.tar"
-    url = f"https://msd-for-monai.s3-us-west-2.amazonaws.com/{file_tar}"
-    tar_path = os.path.join(dir_name, file_tar)
-    extract_path = "Task03_Liver"
-    response = requests.get(url)
-    
-    with open(filename, 'wb') as file:
-        file.write(response.content)
-
-    with tarfile.open(tar_path, "r") as tar:
-        tar.extractall(path=dir_name)
-
-    test_dir = os.path.join(dir_name, extract_path, "imagesTs")
-    if os.path.exists(test_dir):
-        shutil.rmtree(test_dir)
-        print(f"Deleted {test_dir}")
-
-    # remove the tar file
-    os.remove(tar_path)
-    print("Successfully downloaded and extracted the MSD dataset.")
-
 
 def merge_lits_and_msd(lits_dir, msd_dir, output_dir):
     """
