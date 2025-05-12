@@ -95,7 +95,7 @@ def prepare_dataset_LiTS(dir_name):
     download_dataset_LiTS()
     delete_ircad_files(dir_name)
     unzip_dataset_LiTS(dir_name)
-    compress_nii_to_gz(dir_name)
+    # compress_nii_to_gz(dir_name)
     print("LiTS dataset prepared successfully.")
 
 
