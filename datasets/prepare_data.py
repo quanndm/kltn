@@ -77,25 +77,11 @@ def delete_ircad_files(dir_name):
                 os.remove(file_path)
                 print(f"Deleted {file_path}")
                 
-def compress_nii_to_gz(dir_name):
-    """
-    Compress the .nii files to .gz files
-    """
-    print("Compressing .nii files to .gz")
-    nii_files = [f for f in os.listdir(dir_name) if f.endswith('.nii')]
-    for nii_file in nii_files:
-        nii_path = os.path.join(dir_name, nii_file)
-        gz_path = os.path.join(dir_name, nii_file + '.gz')
-        with open(nii_path, 'rb') as f_in:
-            with gzip.open(gz_path, 'wb') as f_out:
-                shutil.copyfileobj(f_in, f_out)
-        os.remove(nii_path)
 
 def prepare_dataset_LiTS(dir_name):
     download_dataset_LiTS()
     delete_ircad_files(dir_name)
     unzip_dataset_LiTS(dir_name)
-    # compress_nii_to_gz(dir_name)
     print("LiTS dataset prepared successfully.")
 
 
