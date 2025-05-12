@@ -202,7 +202,7 @@ def get_datasets_stage_1(source_folder, seed, fold_number=5, normalizations="zsc
     base_folder  = pathlib.Path(source_folder).resolve()
 
     # Get the list of volume the files in the folder
-    volume_files = list(base_folder.glob('*-volume-*.nii')) 
+    volume_files = list(base_folder.glob('*volume*.nii*')) 
 
     patients = []
     # Get the list of segmentation files in the folder, and match them with the volume files 
