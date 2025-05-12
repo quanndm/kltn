@@ -81,7 +81,7 @@ class CustomDatasetLiver(Dataset):
         return sitk.GetArrayFromImage(sitk.ReadImage(str(path)))
 
     @staticmethod
-    def preprocess_image(image, normalizations="zscores"):
+    def preprocess_image(image, seg, normalizations="zscores"):
         """
         Preprocess the image based on the specified normalization method.
         Args:
