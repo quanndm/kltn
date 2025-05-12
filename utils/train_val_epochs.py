@@ -123,7 +123,8 @@ def val_epoch_stage1(model, loader, epoch, acc_func, max_epochs, logger):
             acc_func(y_pred=val_output_convert, y=val_labels_list_float)
 
             acc, not_nans = acc_func.aggregate()
-            dice_list.append(acc.item())
+            dice_liver = acc.item()
+            dice_list.append(dice_liver)
 
             ious = iou_metric(val_output_convert[0].unsqueeze(0), val_labels_list[0].unsqueeze(0))
             iou_list.append(ious[0])
