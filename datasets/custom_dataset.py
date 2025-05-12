@@ -19,7 +19,6 @@ class CustomDatasetLiver(Dataset):
     def __init__(self,patient_dirs,  training=True, normalizations="zscores", transformations=True):
         """
         Args:
-            image_paths (list): List of paths to the images.
             label_paths (list): List of paths to the labels. Default is None.
             training (bool): Whether the dataset is for training or testing. Default is True.
             normalizations (str): Normalization method to be applied. Default is "zscores".
@@ -34,7 +33,7 @@ class CustomDatasetLiver(Dataset):
         
 
     def __len__(self):
-        return len(self.image_paths)
+        return len(self.patient_dirs)
 
     def __getitem__(self, idx):
         """
