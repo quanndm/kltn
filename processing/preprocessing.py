@@ -48,7 +48,7 @@ def normalize(image):
     min_ = np.min(image)
     max_ = np.max(image)
     scale = max_ - min_
-    image = (image - min_) / scale
+    image = 2 * (image - min_) / scale -1
     return image
 
 def zscore_normalise(img: np.ndarray):

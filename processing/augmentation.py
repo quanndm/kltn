@@ -24,13 +24,14 @@ def train_augmentations():
     """
     return Compose([
         RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=2),
-        RandZoomd(keys=["image", "label"], prob=0.4, min_zoom=0.9, max_zoom=1.1, mode=["trilinear", "nearest"]),  
+        RandZoomd(keys=["image", "label"], prob=0.4, min_zoom=0.8, max_zoom=1.2, mode=["trilinear", "nearest"]),  
         RandAffined(
             keys=["image", "label"], 
             prob=0.3,
             rotate_range=(0.05, 0.05, 0.05),  
             scale_range=(0.05, 0.05, 0.05),
-            mode=["trilinear", "nearest"]
+            mode=["trilinear", "nearest"],
+            padding_mode="border"
         ),
         RandShiftIntensityd(keys=["image"], prob=0.3, offsets=0.1),
 
