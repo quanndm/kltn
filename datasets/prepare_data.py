@@ -114,3 +114,7 @@ def merge_lits_and_msd(lits_dir, msd_dir, output_dir):
     msd_label_files = os.listdir(os.path.join(msd_dir, "labelsTr"))
     copy_and_prefix_files(msd_dir, msd_image_files, "msd", output_dir, subfolder="imagesTr")
     copy_and_prefix_files(msd_dir, msd_label_files, "msd", output_dir, subfolder="labelsTr")
+
+    # delete the original directories
+    shutil.rmtree(lits_dir)
+    shutil.rmtree(msd_dir)
