@@ -63,7 +63,6 @@ class CustomDatasetLiver(Dataset):
 
         image, seg = image.astype(np.float32), seg.astype(np.uint8)
         image, seg = torch.from_numpy(image), torch.from_numpy(seg)
-        image, seg = image.unsqueeze(0), seg.unsqueeze(0)  # Add channel dimension
         
         return dict(
             image=image,
