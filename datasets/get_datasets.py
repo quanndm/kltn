@@ -221,9 +221,15 @@ def convert_to_2D_dataset(source, bbox, slides = 3, stride = 2, save_dir = "/con
 
     for i in range(len(volume_files)):
         vol = volume_files[i]
+        filename = vol.name
+        if filename.endswith('.nii.gz'):
+            name = filename[:-7]  # bỏ '.nii.gz'
+        else:
+            name = filename.rsplit('.', 1)[0]  # bỏ '.nii'
+        parts = name.split('-')
+        source = parts[0]  # lấy phần đầu tiên
+        patient_id = parts[2]
 
-        source = vol.stem.split("-")[0]
-        patient_id = vol.stem.split("-")[2]
         seg_file = base_folder / vol.name.replace("volume", "segmentation")
         image = Lits.load_nii(vol)
         seg = Lits.load_nii(seg_file)
