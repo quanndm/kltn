@@ -161,6 +161,7 @@ def get_liver_mask_bbox(source, model_stage_1=None, device=None):
     dataset = get_full_datasets(source, normalizations="minmax")
     liver_masks_bbox = []
     patients_id = []
+    sources = []
     if model_stage_1 is None:
         return None
 
@@ -171,6 +172,7 @@ def get_liver_mask_bbox(source, model_stage_1=None, device=None):
     with torch.no_grad():
         for i in range(len(dataset)):
             data = dataset[i]
+            source = data["source"]
             image = data["image"].to(device)
             root_size = data["root_size"]
             image = image.unsqueeze(0)
@@ -181,19 +183,20 @@ def get_liver_mask_bbox(source, model_stage_1=None, device=None):
             _, liver_mask = resize_image(seg=liver_mask, target_size_seg=root_size)
             bbox_liver = get_bbox_liver(np.squeeze(liver_mask, 0), margin=12)
 
+            sources.append(source)
             liver_masks_bbox.append(bbox_liver) 
             torch.cuda.empty_cache()
             gc.collect()
             del data, image, logits, liver_mask, bbox_liver
 
-    return patients_id, liver_masks_bbox # (patients_id, bbox_liver)
+    return sources, patients_id, liver_masks_bbox # (patients_id, bbox_liver)
 
 def convert_to_2D_dataset(source, bbox, slides = 3, stride = 2, save_dir = "/content/2D_dataset"):
     """
     Convert the 3D dataset to 2.5D dataset.
     Arguments:
     source: str, the path to the folder containing the LiTS dataset.
-    bbox: the bounding boxes of the liver ROI crops - full datasets. [ {patient_id: int, bbox: list[int]},]
+    bbox: the bounding boxes of the liver ROI crops - full datasets. [ {sources: str, patient_id: int, bbox: list[int]},]
     slides: int, the number of slides to be extracted from each volume.
     save_dir: str, the path to the folder where to save the converted dataset.
     type: str, the type of dataset to be converted, lits | all. Default is "lits".
