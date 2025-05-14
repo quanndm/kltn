@@ -97,9 +97,15 @@ def get_full_datasets(source_folder, normalizations="zscores"):
     patients = []
     # Get the list of segmentation files in the folder, and match them with the volume files 
     for vol in volume_files:
-        # lits-volume-1.nii.gz | msd-volume-1.nii.gz
-        source = vol.stem.split("-")[0]
-        patient_id = vol.stem.split("-")[2]
+        # lits-volume-1.nii | msd-volume-1.nii.gz 
+        filename = vol.name
+        if filename.endswith('.nii.gz'):
+            name = filename[:-7]  # bỏ '.nii.gz'
+        else:
+            name = filename.rsplit('.', 1)[0]  # bỏ '.nii'
+        parts = name.split('-')
+        source = parts[0]  # lấy phần đầu tiên
+        patient_id = parts[2]
         seg_file = base_folder / vol.name.replace("volume", "segmentation")
         patients.append({
             "source": source,
@@ -132,8 +138,14 @@ def get_datasets_stage_1(source_folder, seed, fold_number=5, normalizations="zsc
     # Get the list of segmentation files in the folder, and match them with the volume files 
     for vol in volume_files:
         # lits-volume-1.nii.gz | msd-volume-1.nii.gz
-        source = vol.stem.split("-")[0]
-        patient_id = vol.stem.split("-")[2]
+        filename = vol.name
+        if filename.endswith('.nii.gz'):
+            name = filename[:-7]  # bỏ '.nii.gz'
+        else:
+            name = filename.rsplit('.', 1)[0]  # bỏ '.nii'
+        parts = name.split('-')
+        source = parts[0]  # lấy phần đầu tiên
+        patient_id = parts[2]
         seg_file = base_folder / vol.name.replace("volume", "segmentation")
         patients.append({
             "source": source,
