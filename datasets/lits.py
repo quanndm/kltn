@@ -272,6 +272,7 @@ class Stage2Dataset2D(Dataset):
 
         return dict(
             idx=idx,
+            source=_patient["source"],
             patient_id=_patient["id"],
             slide=_patient["slide"],
             image=image,
