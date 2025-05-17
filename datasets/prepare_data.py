@@ -115,13 +115,11 @@ def merge_lits_and_msd(lits_dir, msd_dir, output_dir):
     # Copy and prefix LiTS files
     lits_files = os.listdir(lits_dir)
     copy_and_prefix_files(lits_dir, lits_files, "lits", output_dir)
+    shutil.rmtree(lits_dir)
 
     # Copy and prefix MSD image and label files
     msd_image_files = [f for f in os.listdir(os.path.join(msd_dir, "imagesTr")) if f.endswith(".nii.gz") and not f.startswith("._")]
     msd_label_files = [f for f in os.listdir(os.path.join(msd_dir, "labelsTr")) if f.endswith(".nii.gz") and not f.startswith("._")]
     copy_and_prefix_files(msd_dir, msd_image_files, "msd", output_dir, subfolder="imagesTr")
     copy_and_prefix_files(msd_dir, msd_label_files, "msd", output_dir, subfolder="labelsTr")
-
-    # delete the original directories
-    shutil.rmtree(lits_dir)
     shutil.rmtree(msd_dir)
