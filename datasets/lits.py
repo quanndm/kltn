@@ -306,7 +306,7 @@ class Stage2Dataset2D(Dataset):
         if normalizations == "zscores":
             image = zscore_normalise(image)
         else:
-            image = irm_min_max_preprocess(image)
+            image = normalize(image)
 
         # resize image
         image, seg = resize_image(image, seg, mode=None, target_size=(256, 256), target_size_seg=(256, 256))

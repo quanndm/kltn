@@ -85,7 +85,7 @@ def resize_image(image=None, seg=None, mode=None, target_size=(128, 128, 128), t
         # Default mode if not provided
         if mode is None:
             if original_dim == 3:
-                mode = "bilinear" if tensor.shape[0] <= 3 else "trilinear"
+                mode = "bilinear" if tensor.shape[0] <= 5 else "trilinear"
             elif original_dim in {4, 5}:
                 mode = "trilinear"
 
