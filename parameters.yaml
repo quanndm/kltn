@@ -11,6 +11,7 @@ eta_min: 1e-6
 
 # path
 log_path: /content/gdrive/MyDrive/KLTN/logs
+source_folder_dataset_2D: /content/gdrive/MyDrive/KLTN/datasets/
 source_folder_lits: /content/LITS17
 source_folder_msd: /content/Task03_Liver
 source_folder_custom_dataset: /content/custom_datasets
