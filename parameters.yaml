@@ -8,6 +8,7 @@ learning_rate_train: 1e-4
 learning_rate_pretrained: 1e-5
 weight_decay: 1e-5
 eta_min: 1e-6
+eta_min_2: 5e-4
 
 # path
 log_path: /content/gdrive/MyDrive/KLTN/logs
