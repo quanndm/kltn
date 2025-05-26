@@ -370,3 +370,124 @@ class BottleneckAttentionBlock3D(nn.Module):
         res = self.sa(res) * res
         out = x + res
         return self.relu(out)
+
+
+# Simplified ScaleDotProduct (no einsum, no generality)
+class ScaleDotProduct(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.softmax = nn.Softmax(dim=-1)
+
+    def forward(self, q, k, v, scale):
+        attn = torch.matmul(q, k.transpose(-2, -1)) * scale  # [B, H, N, N]
+        attn = self.softmax(attn)
+        out = torch.matmul(attn, v)  # [B, H, N, C]
+        return out
+
+# Simplified DepthwiseProjection for (B, N, C) tensors using Conv3D
+class DepthwiseProjection(nn.Module):
+    def __init__(self, in_features, out_features, groups):
+        super().__init__()
+        self.proj = nn.Conv3d(in_features, out_features, kernel_size=3, padding=1, groups=groups)
+
+    def forward(self, x):
+        B, N, C = x.shape
+        D = int(N ** (1/3))
+        x = x.transpose(1, 2).view(B, C, D, D, D)  # [B, C, D, H, W]
+        x = self.proj(x)
+        x = x.flatten(2).transpose(1, 2)  # [B, N, C]
+        return x
+
+# Cross-Channel Attention for 3D
+class CrossChannelAttention3D(nn.Module):
+    def __init__(self, in_features, out_features, n_heads=1):
+        super().__init__()
+        self.n_heads = n_heads
+        self.q_map = DepthwiseProjection(out_features, out_features, groups=out_features)
+        self.k_map = DepthwiseProjection(in_features, in_features, groups=in_features)
+        self.v_map = DepthwiseProjection(in_features, in_features, groups=in_features)
+        self.projection = DepthwiseProjection(out_features, out_features, groups=out_features)
+        self.sdp = ScaleDotProduct()
+
+    def forward(self, x_dec, x_enc):
+        q = self.q_map(x_dec)
+        k = self.k_map(x_enc)
+        v = self.v_map(x_enc)
+        B, N, Cq = q.shape
+        C = k.shape[2]
+        scale = C ** -0.5
+        q = q.reshape(B, N, self.n_heads, Cq // self.n_heads).permute(0, 2, 1, 3)
+        k = k.reshape(B, N, self.n_heads, C // self.n_heads).permute(0, 2, 1, 3)
+        v = v.reshape(B, N, self.n_heads, C // self.n_heads).permute(0, 2, 1, 3)
+        att = self.sdp(q, k, v, scale).permute(0, 2, 1, 3).flatten(2)
+        att = self.projection(att)
+        D = int(att.shape[1] ** (1/3))
+        return att.transpose(1, 2).view(B, -1, D, D, D)  # [B, C, D, H, W]
+
+# Cross-Spatial Attention for 3D
+class CrossSpatialAttention3D(nn.Module):
+    def __init__(self, in_features, out_features, n_heads=4):
+        super().__init__()
+        self.n_heads = n_heads
+        self.q_map = DepthwiseProjection(in_features, in_features, groups=in_features)
+        self.k_map = DepthwiseProjection(in_features, in_features, groups=in_features)
+        self.v_map = DepthwiseProjection(out_features, out_features, groups=out_features)
+        self.projection = DepthwiseProjection(out_features, out_features, groups=out_features)
+        self.sdp = ScaleDotProduct()
+
+    def forward(self, x_dec, x_enc):
+        q = self.q_map(x_dec)
+        k = self.k_map(x_enc)
+        v = self.v_map(x_enc)
+        B, N, C = q.shape
+        Cv = v.shape[2]
+        scale = (C // self.n_heads) ** -0.5
+        q = q.reshape(B, N, self.n_heads, C // self.n_heads).permute(0, 2, 1, 3)
+        k = k.reshape(B, N, self.n_heads, C // self.n_heads).permute(0, 2, 1, 3)
+        v = v.reshape(B, N, self.n_heads, Cv // self.n_heads).permute(0, 2, 1, 3)
+        att = self.sdp(q, k, v, scale).transpose(1, 2).flatten(2)
+        att = self.projection(att)
+        D = int(att.shape[1] ** (1/3))
+        return att.transpose(1, 2).view(B, -1, D, D, D)  # [B, C, D, H, W]
+
+class DualCrossAttention3D(nn.Module):
+    def __init__(self, 
+                 in_features, 
+                 out_features, 
+                 channel_heads=4, 
+                 spatial_heads=4, 
+                 use_spatial=True, 
+                 use_channel=True):
+        super().__init__()
+        self.use_channel = use_channel
+        self.use_spatial = use_spatial
+
+        if self.use_channel:
+            self.channel_norm = nn.LayerNorm(in_features, eps=1e-6)
+            self.channel_attn = CrossChannelAttention3D(
+                in_features=in_features,
+                out_features=out_features,
+                n_heads=channel_heads
+            )
+
+        if self.use_spatial:
+            self.spatial_norm = nn.LayerNorm(in_features, eps=1e-6)
+            self.spatial_attn = CrossSpatialAttention3D(
+                in_features=in_features,
+                out_features=out_features,
+                n_heads=spatial_heads
+            )
+
+    def forward(self, x):  # x: [B, C, D, H, W]
+        B, C, D, H, W = x.shape
+        N = D * H * W
+        x_flat = x.view(B, C, N).transpose(1, 2)  # [B, N, C]
+
+        if self.use_channel:
+            x_norm = self.channel_norm(x_flat)
+            x_flat = x_flat + self.channel_attn(x_norm, x_norm)
+        if self.use_spatial:
+            x_norm = self.spatial_norm(x_flat)
+            x_flat = x_flat + self.spatial_attn(x_norm, x_norm)
+        x_out = x_flat.transpose(1, 2).view(B, C, D, H, W)  # [B, C, D, H, W]
+        return x_out
