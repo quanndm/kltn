@@ -320,3 +320,53 @@ class ResNeXtCoTBlock2D(nn.Module):
         out = self.relu(out)
 
         return out
+
+class ChannelAttention3D(nn.Module):
+    def __init__(self, in_planes, reduction=16):
+        super(ChannelAttention3D, self).__init__()
+        self.avg_pool = nn.AdaptiveAvgPool3d(1)
+        self.fc = nn.Sequential(
+            nn.Conv3d(in_planes, in_planes // reduction, 1, bias=False),
+            nn.SiLU(inplace=True),
+            nn.Conv3d(in_planes // reduction, in_planes, 1, bias=False)
+        )
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        avg_out = self.fc(self.avg_pool(x))
+        return self.sigmoid(avg_out)
+
+class SpatialAttention3D(nn.Module):
+    def __init__(self, kernel_size=7):
+        super(SpatialAttention3D, self).__init__()
+        padding = (kernel_size - 1) // 2
+        self.conv = nn.Conv3d(2, 1, kernel_size=kernel_size, padding=padding, bias=False)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        avg_out = torch.mean(x, dim=1, keepdim=True)
+        max_out, _ = torch.max(x, dim=1, keepdim=True)
+        x_cat = torch.cat([avg_out, max_out], dim=1)
+        return self.sigmoid(self.conv(x_cat))
+
+class BottleneckAttentionBlock3D(nn.Module):
+    def __init__(self, channels):
+        super(BottleneckAttentionBlock3D, self).__init__()
+        self.residual_conv = nn.Sequential(
+            nn.Conv3d(channels, channels, kernel_size=3, padding=1, bias=False),
+            nn.GroupNorm(num_groups=8, num_channels=channels),
+            nn.SiLU(inplace=True),
+            nn.Conv3d(channels, channels, kernel_size=3, padding=1, bias=False),
+            nn.GroupNorm(num_groups=8, num_channels=channels)
+        )
+        self.relu = nn.ReLU(inplace=True)
+
+        self.ca = ChannelAttention3D(channels)
+        self.sa = SpatialAttention3D()
+
+    def forward(self, x):
+        res = self.residual_conv(x)
+        res = self.ca(res) * res
+        res = self.sa(res) * res
+        out = x + res
+        return self.relu(out)
