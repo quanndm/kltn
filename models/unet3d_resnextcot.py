@@ -35,7 +35,7 @@ class Up(nn.Module):
         x = torch.cat([skips, inputs], dim=1)
         return self.conv(x)
 
-class UNet3DWResNeXtCoT(nn.Module):
+class CoTNeXtUNet(nn.Module):
     def __init__(self, in_channels, n_classes, n_channels):
         super().__init__()
         self.in_channels = in_channels

@@ -1,23 +1,19 @@
 from .unet3d  import UNet3D, UNet3DPretrained
 from .unet3d_cot import UNet3DWCoT, UNet3DWCoTPretrained
 from .unet3d_cot_da import UNet3DWCoTDA, UNet3DWCoTDAPretrained
-from .unet3d_resnextcot import UNet3DWResNeXtCoT, UNet3DWResNeXtCoTPretrained
+from .unet3d_resnextcot import CoTNeXtUNet, UNet3DWResNeXtCoTPretrained
 from .unet3d_resnextcot_da import UNet3DWResNeXtCoTDA, UNet3DWResNeXtCoTDAPretrained
 from .unet2d_resnextcot import UNet2DWResNeXtCoT
-from .unet3d_resnextcot_attn import UNet3DWResNeXtCoT_Attn
-from .unet3d_resnextcot_mcb import UNet3DWResNeXtCoT_MCB
-from .unet3d_resnextcot_dca_attn import UNet3DWResNeXtCoT_DCA_Attn
+from .unet3d_resnextcot_mcb import MSC_CoTNeXtUNet
 class ModelFactory:
     _model = {
         "unet3d": UNet3D,
         "unet3d_cot": UNet3DWCoT,
-        "unet3d_resnextcot": UNet3DWResNeXtCoT,
+        "unet3d_resnextcot": CoTNeXtUNet,
         "unet3d_cot_da": UNet3DWCoTDA,
         "unet3d_resnextcot_da": UNet3DWResNeXtCoTDA,
         "unet2d_resnextcot": UNet2DWResNeXtCoT,
-        "unet3d_resnextcot_attn":UNet3DWResNeXtCoT_Attn,
-        "unet3d_resnextcot_mcb":UNet3DWResNeXtCoT_MCB,
-        "unet3d_resnextcot_dca_attn": UNet3DWResNeXtCoT_DCA_Attn
+        "unet3d_resnextcot_mcb":MSC_CoTNeXtUNet,
     }
 
     _model_pretrained ={

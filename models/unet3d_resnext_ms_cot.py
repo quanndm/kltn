@@ -1,31 +1,28 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .layers.layers import DoubleConv, OutConv, ResNeXtCoTBlock, BottleneckAttentionBlock3D, DualCrossAttention3D
-from monai.networks.nets import resnet50
+from .layers.layers import DoubleConv, OutConv, ResNeXtCoTBlock, ResNeXtCoT_MCB_Block
 
 class Down(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.encoder = nn.Sequential(
             nn.MaxPool3d(kernel_size=2, stride=2),
-            ResNeXtCoTBlock(in_channels, out_channels)
+            ResNeXtCoT_MCB_Block(in_channels, out_channels)
         )
 
     def forward(self, x):
         return self.encoder(x)
 
 class Up(nn.Module):
-    def __init__(self, in_channels, out_channels, skip_channel, trilinear=True):
+    def __init__(self, in_channels, out_channels, trilinear=True):
         super().__init__()
         if trilinear:
             self.up = nn.Upsample(scale_factor=2, mode='trilinear', align_corners=True)
         else:
             self.up = nn.ConvTranspose3d(in_channels // 2, in_channels // 2, kernel_size=2, stride=2)
 
-        self.conv = ResNeXtCoTBlock(in_channels, out_channels)
-        self.dca = DualCrossAttention3D(in_features=skip_channels, out_features=skip_channels)
-
+        self.conv = ResNeXtCoT_MCB_Block(in_channels, out_channels)
     def forward(self, inputs, skips):
         inputs = self.up(inputs)
 
@@ -33,13 +30,11 @@ class Up(nn.Module):
         diffY = skips.size()[3] - inputs.size()[3]
         diffX = skips.size()[4] - inputs.size()[4]
         inputs = F.pad(inputs, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2, diffZ // 2, diffZ - diffZ // 2])
-        
-        skips = self.dca(skips)
 
         x = torch.cat([skips, inputs], dim=1)
         return self.conv(x)
 
-class UNet3DWResNeXtCoT_DCA_Attn(nn.Module):
+class MSCoTNeXtUNet(nn.Module):
     def __init__(self, in_channels, n_classes, n_channels):
         super().__init__()
         self.in_channels = in_channels
@@ -52,12 +47,10 @@ class UNet3DWResNeXtCoT_DCA_Attn(nn.Module):
         self.enc3 = Down(4 * n_channels, 8 * n_channels)
         self.enc4 = Down(8 * n_channels, 8 * n_channels)
 
-        self.bottleneck = BottleneckAttentionBlock3D(8 * n_channels)
-
-        self.dec1 = Up(16 * n_channels, 4 * n_channels, 8 * n_channels)
-        self.dec2 = Up(8 * n_channels, 2 * n_channels), 8 * n_channels
-        self.dec3 = Up(4 * n_channels, n_channels, 4 * n_channels)
-        self.dec4 = Up(2 * n_channels, n_channels, 2 * n_channels)
+        self.dec1 = Up(16 * n_channels, 4 * n_channels)
+        self.dec2 = Up(8 * n_channels, 2 * n_channels)
+        self.dec3 = Up(4 * n_channels, n_channels)
+        self.dec4 = Up(2 * n_channels, n_channels)
         self.out = OutConv(n_channels, n_classes)
 
     def forward(self, x):
@@ -66,8 +59,6 @@ class UNet3DWResNeXtCoT_DCA_Attn(nn.Module):
         x3 = self.enc2(x2)
         x4 = self.enc3(x3)
         x5 = self.enc4(x4)
-
-        x5 = self.bottleneck(x5)
 
         mask = self.dec1(x5, x4)
         mask = self.dec2(mask, x3)
