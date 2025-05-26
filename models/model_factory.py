@@ -3,7 +3,7 @@ from .unet3d_cot import UNet3DWCoT, UNet3DWCoTPretrained
 from .unet3d_resnextcot import CoTNeXtUNet, UNet3DWResNeXtCoTPretrained
 from .unet2d_resnextcot import UNet2DWResNeXtCoT
 from .unet3d_resnextcot_mcb import MSC_CoTNeXtUNet
-from .unet2d_resnext_ms_cot import MSCoTNeXtUNet
+from .unet3d_resnext_ms_cot import MSCoTNeXtUNet
 class ModelFactory:
     _model = {
         "unet3d": UNet3D,
