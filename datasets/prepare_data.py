@@ -78,9 +78,10 @@ def delete_ircad_files(dir_name):
                 print(f"Deleted {file_path}")
                 
 
-def prepare_dataset_LiTS(dir_name):
+def prepare_dataset_LiTS(dir_name, delete_ircad=False):
     download_dataset_LiTS()
-    delete_ircad_files(dir_name)
+    if delete_ircad:
+        delete_ircad_files(dir_name)
     unzip_dataset_LiTS(dir_name)
     print("LiTS dataset prepared successfully.")
 
