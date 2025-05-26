@@ -241,7 +241,7 @@ class MultiScaleCoTAttentionBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.attn_3x3 = CoTAttention(in_channels, kernel_size=3)
-        self.attn_5x5 = CoTAttention(in_channels, kernel_size=5)  # hoặc dilation=2
+        self.attn_5x5 = CoTAttention(in_channels, kernel_size=5)  
         self.attn_global = nn.Sequential(
             nn.AdaptiveAvgPool3d(1),
             nn.Conv3d(in_channels, in_channels, 1),
@@ -368,6 +368,63 @@ class ResNeXtCoT_MCB_Block(nn.Module):
 
         return out
 
+class ResNeXt_MS_CoT_Block(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(ResNeXt_MS_CoT_Block, self).__init__()
+        # self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.SiLU(inplace=True)
+        inner_channels = out_channels // 2
+
+        self.conv1 = nn.Sequential(
+
+            nn.Conv3d(in_channels, inner_channels, kernel_size=1, bias=False),
+            nn.GroupNorm(num_groups=4, num_channels=inner_channels),
+            # nn.ReLU(inplace=True)
+            nn.SiLU(inplace=True),
+        )
+        self.conv2 = nn.Sequential(
+            nn.Conv3d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1, groups=4, bias=False),
+            nn.GroupNorm(num_groups=4, num_channels=inner_channels),
+            # nn.ReLU(inplace=True)
+            nn.SiLU(inplace=True),
+        )
+
+        self.mcb =nn.Sequential(
+            MultiScaleCoTAttentionBlock(
+                in_channels=inner_channels,
+                out_channels=inner_channels,
+            ),
+            nn.GroupNorm(num_groups=4, num_channels=inner_channels),
+            # nn.ReLU(inplace=True)
+            nn.SiLU(inplace=True),
+        )
+
+        self.conv4 = nn.Sequential(
+            nn.Conv3d(inner_channels, out_channels, kernel_size=1, bias=False),
+            nn.GroupNorm(num_groups=4, num_channels=out_channels)
+        )
+
+        self.residual = None
+        if in_channels != out_channels:
+            self.residual = nn.Sequential(
+                nn.Conv3d(in_channels, out_channels, kernel_size=1, bias=False),
+                nn.GroupNorm(num_groups=4, num_channels=out_channels)
+            )
+
+    def forward(self, x):
+        identity = x    
+        if self.residual is not None:
+            identity = self.residual(x)
+
+        out = self.conv1(x)
+        out = self.conv2(out)
+        out = self.mcb(out)
+        out = self.conv4(out)
+
+        out += identity
+        out = self.relu(out)
+
+        return out
 
 class ResNeXtCoTBlock2D(nn.Module):
     def __init__(self, in_channels, out_channels):

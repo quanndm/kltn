@@ -5,6 +5,7 @@ from .unet3d_resnextcot import CoTNeXtUNet, UNet3DWResNeXtCoTPretrained
 from .unet3d_resnextcot_da import UNet3DWResNeXtCoTDA, UNet3DWResNeXtCoTDAPretrained
 from .unet2d_resnextcot import UNet2DWResNeXtCoT
 from .unet3d_resnextcot_mcb import MSC_CoTNeXtUNet
+from .unet2d_resnext_ms_cot import MSCoTNeXtUNet
 class ModelFactory:
     _model = {
         "unet3d": UNet3D,
@@ -13,6 +14,7 @@ class ModelFactory:
         "unet3d_cot_da": UNet3DWCoTDA,
         "unet3d_resnextcot_da": UNet3DWResNeXtCoTDA,
         "unet2d_resnextcot": UNet2DWResNeXtCoT,
+        "unet2d_resnext_ms_cot": MSCoTNeXtUNet,
         "unet3d_resnextcot_mcb":MSC_CoTNeXtUNet,
     }
 

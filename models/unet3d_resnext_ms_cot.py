@@ -1,14 +1,14 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .layers.layers import DoubleConv, OutConv, ResNeXtCoTBlock, ResNeXtCoT_MCB_Block
+from .layers.layers import DoubleConv, OutConv, ResNeXtCoTBlock, ResNeXt_MS_CoT_Block
 
 class Down(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.encoder = nn.Sequential(
             nn.MaxPool3d(kernel_size=2, stride=2),
-            ResNeXtCoT_MCB_Block(in_channels, out_channels)
+            ResNeXt_MS_CoT_Block(in_channels, out_channels)
         )
 
     def forward(self, x):
@@ -22,7 +22,7 @@ class Up(nn.Module):
         else:
             self.up = nn.ConvTranspose3d(in_channels // 2, in_channels // 2, kernel_size=2, stride=2)
 
-        self.conv = ResNeXtCoT_MCB_Block(in_channels, out_channels)
+        self.conv = ResNeXt_MS_CoT_Block(in_channels, out_channels)
     def forward(self, inputs, skips):
         inputs = self.up(inputs)
 
