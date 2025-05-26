@@ -359,7 +359,7 @@ class BottleneckAttentionBlock3D(nn.Module):
             nn.Conv3d(channels, channels, kernel_size=3, padding=1, bias=False),
             nn.GroupNorm(num_groups=8, num_channels=channels)
         )
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.SiLU(inplace=True)
 
         self.ca = ChannelAttention3D(channels)
         self.sa = SpatialAttention3D()
