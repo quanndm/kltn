@@ -251,11 +251,12 @@ class MultiScaleCoTAttentionBlock(nn.Module):
         self.fuse = nn.Conv3d(in_channels * 2, out_channels, kernel_size=1)
 
     def forward(self, x):
-        x3 = self.attn_3x3(x)
-        x5 = self.attn_5x5(x)
+        x_global = self.attn_global(x)
+        x3 = self.attn_3x3(x) * x_global
+        x5 = self.attn_5x5(x) * x_global
         x_cat = torch.cat([x3, x5], dim=1)
         out = self.fuse(x_cat)
-        return out * self.attn_global(x)
+        return out
 
 class ResNeXtCoTBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
