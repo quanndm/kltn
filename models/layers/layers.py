@@ -328,6 +328,12 @@ class ResNeXtCoT_MCB_Block(nn.Module):
             # nn.ReLU(inplace=True)
             nn.SiLU(inplace=True),
         )
+        self.conv2 = nn.Sequential(
+            nn.Conv3d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1, groups=4, bias=False),
+            nn.GroupNorm(num_groups=4, num_channels=inner_channels),
+            # nn.ReLU(inplace=True)
+            nn.SiLU(inplace=True),
+        )
 
         self.mcb = MultiScaleConvBlock3D(
             in_channels=inner_channels,
@@ -360,6 +366,7 @@ class ResNeXtCoT_MCB_Block(nn.Module):
             identity = self.residual(x)
 
         out = self.conv1(x)
+        out = self.conv2(out)
         out = self.mcb(out)
         out = self.conv3(out)
         out = self.conv4(out)
