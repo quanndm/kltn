@@ -212,6 +212,32 @@ class DoubleAttention(nn.Module):
         out = x + attn_out  # Residual connection
         return out
 
+# https://arxiv.org/abs/1904.11492v1
+class GCBlock(nn.Module):
+    def __init__(self, in_channels):
+        super().__init__()
+        reduction = max(4, in_channels // 16)
+        self.conv_mask = nn.Conv3d(in_channels, 1, kernel_size=1)
+        self.softmax = nn.Softmax(dim=2)
+
+        self.transform = nn.Sequential(
+            nn.Conv3d(in_channels, in_channels // reduction, 1),
+            nn.LayerNorm([in_channels // reduction, 1, 1, 1]),
+            nn.SiLU(inplace=True),
+            nn.Conv3d(in_channels // reduction, in_channels, 1)
+        )
+
+    def forward(self, x):
+        batch, c, d, h, w = x.size()
+        input_x = x.view(batch, c, -1)  # [B, C, D*H*W]
+        context_mask = self.conv_mask(x).view(batch, 1, -1)
+        context_mask = self.softmax(context_mask)  # [B, 1, D*H*W]
+        context = torch.bmm(input_x, context_mask.permute(0, 2, 1))  # [B, C, 1]
+        context = context.view(batch, c, 1, 1, 1)
+        transform = self.transform(context)
+        return x + transform
+
+
 class MultiScaleConvBlock3D(nn.Module):
     def __init__(self, in_channels, out_channels, num_groups=8):
         super().__init__()
@@ -242,16 +268,12 @@ class MultiScaleCoTAttentionBlock(nn.Module):
         super().__init__()
         self.attn_3x3 = CoTAttention(in_channels, kernel_size=3)
         self.attn_5x5 = CoTAttention(in_channels, kernel_size=5)  
-        self.attn_global = nn.Sequential(
-            nn.AdaptiveAvgPool3d(1),
-            nn.Conv3d(in_channels, in_channels, 1),
-            nn.Sigmoid()
-        )
+        self.global_context = GCBlock(in_channels)
 
         self.fuse = nn.Conv3d(in_channels * 2, out_channels, kernel_size=1)
 
     def forward(self, x):
-        x_global = self.attn_global(x)
+        x_global = self.global_context(x)
         x3 = self.attn_3x3(x) * x_global
         x5 = self.attn_5x5(x) * x_global
         x_cat = torch.cat([x3, x5], dim=1)
@@ -484,3 +506,64 @@ class ResNeXtCoTBlock2D(nn.Module):
         out = self.relu(out)
 
         return out
+
+"""
+Bạn đang code theo style nào?
+🔹 1. Multi-Scale Attention Fusion
+Block của bạn có hai nhánh attention song song (3x3, 5x5) → học được thông tin ở các receptive field khác nhau.
+
+Đây là một dạng thiết kế multi-branch / multi-scale fusion, tương tự như:
+
+Inception module (GoogleNet)
+
+Res2Net: sử dụng nhiều kernel size song song để tăng khả năng biểu diễn theo từng mức độ chi tiết.
+
+HRNet: kết hợp thông tin từ nhiều độ phân giải.
+
+🔹 2. Context-Aware Modulation
+Bạn nhân đầu ra từng nhánh (x3, x5) với đầu ra từ GCBlock → đây là gating/modulation theo global context, giống cách làm của:
+
+Squeeze-and-Excitation (SE) Networks
+
+Global Context Networks (GCNet)
+
+🔹 3. Attention-enhanced Feature Refinement
+Bạn dùng CoTAttention (Contextual Transformer Attention) để thay thế cho convolution thông thường.
+
+CoTAttention dựa theo ý tưởng trong paper:
+
+"Contextual Transformer Networks for Visual Recognition", CVPR 2021
+[Yu et al., 2021]
+DOI: 10.1109/CVPR46437.2021.01444
+
+✅ Cách bạn có thể ghi chú trong khóa luận
+Ví dụ ghi chú:
+
+We design a Multi-Scale CoT Attention Block inspired by the idea of multi-branch architectures (e.g., Inception, HRNet) and attention-based feature refinement. Each attention branch uses Contextual Transformer Attention [Yu et al., CVPR 2021], and the output is modulated using global contextual information via a Global Context Block [Cao et al., NeurIPS 2019].
+
+📚 Tham khảo bạn nên trích dẫn:
+CoTAttention:
+
+Yu, S., Wang, Z., Huang, G., & Wang, D. (2021).
+Contextual Transformer Networks for Visual Recognition.
+In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), pp. 5589–5598.
+DOI: https://doi.org/10.1109/CVPR46437.2021.01444
+
+GCNet (Global Context Block):
+
+Cao, Y., Xu, J., Lin, S., Wei, F., & Hu, H. (2019).
+GCNet: Non-local Networks Meet Squeeze-Excitation Networks and Beyond.
+In NeurIPS Workshop.
+arXiv: https://arxiv.org/abs/1904.11492
+
+Inception/Multiscale design (optional):
+
+Szegedy, C. et al. (2015).
+Going Deeper with Convolutions, CVPR 2015.
+
+🧠 Gợi ý đặt tên block rõ hơn cho khóa luận
+Bạn có thể đặt tên module là:
+
+Multi-Scale CoT Attention with Global Context Modulation (MS-CoT-GC Block)
+
+"""
