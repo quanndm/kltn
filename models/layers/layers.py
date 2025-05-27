@@ -248,7 +248,7 @@ class MultiScaleConvBlock3D(nn.Module):
         self.fuse = nn.Conv3d(in_channels * 3, out_channels, kernel_size=1)
 
         self.norm = nn.GroupNorm(
-            num_groups=min(num_groups, out_channels),  # để không bị lỗi nếu out_channels nhỏ hơn num_groups
+            num_groups=min(num_groups, out_channels),  
             num_channels=out_channels
         )
         self.relu = nn.SiLU(inplace=True)
@@ -291,21 +291,18 @@ class ResNeXtCoTBlock(nn.Module):
 
             nn.Conv3d(in_channels, inner_channels, kernel_size=1, bias=False),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
-            # nn.ReLU(inplace=True)
             nn.SiLU(inplace=True),
         )
 
         self.conv2 = nn.Sequential(
             nn.Conv3d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1, groups=4, bias=False),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
-            # nn.ReLU(inplace=True)
             nn.SiLU(inplace=True),
         )
 
         self.conv3 = nn.Sequential(
             CoTAttention(inner_channels, 3),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
-            # nn.ReLU(inplace=True)
             nn.SiLU(inplace=True),
         )
 
@@ -339,7 +336,6 @@ class ResNeXtCoTBlock(nn.Module):
 class ResNeXtCoT_MCB_Block(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(ResNeXtCoT_MCB_Block, self).__init__()
-        # self.relu = nn.ReLU(inplace=True)
         self.relu = nn.SiLU(inplace=True)
         inner_channels = out_channels // 2
 
@@ -347,13 +343,11 @@ class ResNeXtCoT_MCB_Block(nn.Module):
 
             nn.Conv3d(in_channels, inner_channels, kernel_size=1, bias=False),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
-            # nn.ReLU(inplace=True)
             nn.SiLU(inplace=True),
         )
         self.conv2 = nn.Sequential(
             nn.Conv3d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1, groups=4, bias=False),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
-            # nn.ReLU(inplace=True)
             nn.SiLU(inplace=True),
         )
 
@@ -366,7 +360,6 @@ class ResNeXtCoT_MCB_Block(nn.Module):
         self.conv3 = nn.Sequential(
             CoTAttention(inner_channels, 3),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
-            # nn.ReLU(inplace=True)
             nn.SiLU(inplace=True),
         )
 
@@ -401,7 +394,6 @@ class ResNeXtCoT_MCB_Block(nn.Module):
 class ResNeXt_MS_CoT_Block(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(ResNeXt_MS_CoT_Block, self).__init__()
-        # self.relu = nn.ReLU(inplace=True)
         self.relu = nn.SiLU(inplace=True)
         inner_channels = out_channels // 2
 
@@ -409,13 +401,11 @@ class ResNeXt_MS_CoT_Block(nn.Module):
 
             nn.Conv3d(in_channels, inner_channels, kernel_size=1, bias=False),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
-            # nn.ReLU(inplace=True)
             nn.SiLU(inplace=True),
         )
         self.conv2 = nn.Sequential(
             nn.Conv3d(inner_channels, inner_channels, kernel_size=3, stride=1, padding=1, groups=4, bias=False),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
-            # nn.ReLU(inplace=True)
             nn.SiLU(inplace=True),
         )
 
@@ -425,7 +415,6 @@ class ResNeXt_MS_CoT_Block(nn.Module):
                 out_channels=inner_channels,
             ),
             nn.GroupNorm(num_groups=4, num_channels=inner_channels),
-            # nn.ReLU(inplace=True)
             nn.SiLU(inplace=True),
         )
 
@@ -506,64 +495,3 @@ class ResNeXtCoTBlock2D(nn.Module):
         out = self.relu(out)
 
         return out
-
-"""
-Bạn đang code theo style nào?
-🔹 1. Multi-Scale Attention Fusion
-Block của bạn có hai nhánh attention song song (3x3, 5x5) → học được thông tin ở các receptive field khác nhau.
-
-Đây là một dạng thiết kế multi-branch / multi-scale fusion, tương tự như:
-
-Inception module (GoogleNet)
-
-Res2Net: sử dụng nhiều kernel size song song để tăng khả năng biểu diễn theo từng mức độ chi tiết.
-
-HRNet: kết hợp thông tin từ nhiều độ phân giải.
-
-🔹 2. Context-Aware Modulation
-Bạn nhân đầu ra từng nhánh (x3, x5) với đầu ra từ GCBlock → đây là gating/modulation theo global context, giống cách làm của:
-
-Squeeze-and-Excitation (SE) Networks
-
-Global Context Networks (GCNet)
-
-🔹 3. Attention-enhanced Feature Refinement
-Bạn dùng CoTAttention (Contextual Transformer Attention) để thay thế cho convolution thông thường.
-
-CoTAttention dựa theo ý tưởng trong paper:
-
-"Contextual Transformer Networks for Visual Recognition", CVPR 2021
-[Yu et al., 2021]
-DOI: 10.1109/CVPR46437.2021.01444
-
-✅ Cách bạn có thể ghi chú trong khóa luận
-Ví dụ ghi chú:
-
-We design a Multi-Scale CoT Attention Block inspired by the idea of multi-branch architectures (e.g., Inception, HRNet) and attention-based feature refinement. Each attention branch uses Contextual Transformer Attention [Yu et al., CVPR 2021], and the output is modulated using global contextual information via a Global Context Block [Cao et al., NeurIPS 2019].
-
-📚 Tham khảo bạn nên trích dẫn:
-CoTAttention:
-
-Yu, S., Wang, Z., Huang, G., & Wang, D. (2021).
-Contextual Transformer Networks for Visual Recognition.
-In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), pp. 5589–5598.
-DOI: https://doi.org/10.1109/CVPR46437.2021.01444
-
-GCNet (Global Context Block):
-
-Cao, Y., Xu, J., Lin, S., Wei, F., & Hu, H. (2019).
-GCNet: Non-local Networks Meet Squeeze-Excitation Networks and Beyond.
-In NeurIPS Workshop.
-arXiv: https://arxiv.org/abs/1904.11492
-
-Inception/Multiscale design (optional):
-
-Szegedy, C. et al. (2015).
-Going Deeper with Convolutions, CVPR 2015.
-
-🧠 Gợi ý đặt tên block rõ hơn cho khóa luận
-Bạn có thể đặt tên module là:
-
-Multi-Scale CoT Attention with Global Context Modulation (MS-CoT-GC Block)
-
-"""
