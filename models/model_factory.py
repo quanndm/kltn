@@ -10,7 +10,7 @@ class ModelFactory:
         "unet3d_cot": UNet3DWCoT,
         "unet3d_resnextcot": CoTNeXtUNet,
         "unet2d_resnextcot": UNet2DWResNeXtCoT,
-        "unet2d_resnext_ms_cot": MSCoTNeXtUNet,
+        "unet3d_resnext_ms_cot": MSCoTNeXtUNet,
         "unet3d_resnextcot_mcb":MSC_CoTNeXtUNet,
     }
 
