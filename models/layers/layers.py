@@ -268,15 +268,17 @@ class MultiScaleCoTAttentionBlock(nn.Module):
         super().__init__()
         self.attn_3x3 = CoTAttention(in_channels, kernel_size=3)
         self.attn_5x5 = CoTAttention(in_channels, kernel_size=5)  
+        self.attn_7x7 = CoTAttention(in_channels, kernel_size=7)  
         # self.global_context = GCBlock(in_channels)
 
-        self.fuse = nn.Conv3d(in_channels * 2, out_channels, kernel_size=1)
+        self.fuse = nn.Conv3d(in_channels * 3, out_channels, kernel_size=1)
 
     def forward(self, x):
         # x_global = self.global_context(x)
         x3 = self.attn_3x3(x) 
         x5 = self.attn_5x5(x) 
-        x_cat = torch.cat([x3, x5], dim=1)
+        x7 = self.attn_7x7(x)
+        x_cat = torch.cat([x3, x5, x7], dim=1)
         out = self.fuse(x_cat)
         return out
 
