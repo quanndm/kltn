@@ -1,22 +1,24 @@
 from .unet3d  import UNet3D, UNet3DPretrained
-from .unet3d_cot import UNet3DWCoT, UNet3DWCoTPretrained
 from .unet3d_resnextcot import CoTNeXtUNet, UNet3DWResNeXtCoTPretrained
 from .unet2d_resnextcot import UNet2DWResNeXtCoT
 from .unet3d_resnextcot_mcb import MSC_CoTNeXtUNet
+from .unet2d_resnextcot_mcb import MSC_CoTNeXtUNet2D
 from .unet3d_resnext_ms_cot import MSCoTNeXtUNet
+from .unet2d_resnext_ms_cot import MSCoTNeXtUNet2D
+
 class ModelFactory:
     _model = {
         "unet3d": UNet3D,
-        "unet3d_cot": UNet3DWCoT,
         "unet3d_resnextcot": CoTNeXtUNet,
         "unet2d_resnextcot": UNet2DWResNeXtCoT,
         "unet3d_resnext_ms_cot": MSCoTNeXtUNet,
+        "unet2d_resnext_ms_cot": MSCoTNeXtUNet2D,
         "unet3d_resnextcot_mcb":MSC_CoTNeXtUNet,
+        "unet2d_resnextcot_mcb": MSC_CoTNeXtUNet2D,
     }
 
     _model_pretrained ={
         "unet3d": UNet3DPretrained,
-        "unet3d_cot": UNet3DWCoTPretrained,
         "unet3d_resnextcot": UNet3DWResNeXtCoTPretrained,
     }
     @staticmethod
