@@ -272,7 +272,7 @@ class Stage2Dataset2D(Dataset):
 
         return dict(
             idx=idx,
-            source=_patient["source"],
+            source=_patient["source"] if "source" in _patient else None,
             patient_id=_patient["id"],
             slide=_patient["slide"],
             image=image,
