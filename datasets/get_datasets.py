@@ -166,7 +166,7 @@ def get_datasets_stage_1(source_folder, seed, fold_number=5, normalizations="zsc
     return train_dataset, test_dataset
 
 def get_liver_mask_bbox_v1(source, model_stage_1=None, device=None):
-    dataset = get_full_dataset_lits(source, normalizations="minmax", mode="all", device=device)
+    dataset = get_full_dataset_lits(source, normalizations="zscores", mode="all", device=device)
     liver_masks_bbox = []
     patients_id = []
     sources = []
