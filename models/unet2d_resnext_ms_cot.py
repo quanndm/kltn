@@ -1,13 +1,13 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .layers.layers import DoubleConv, OutConv, ResNeXtCoTBlock, ResNeXt_MS_CoT_Block2D
+from .layers.layers import DoubleConv2D, OutConv2D, ResNeXt_MS_CoT_Block2D
 
 class Down(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.encoder = nn.Sequential(
-            nn.MaxPool3d(kernel_size=2, stride=2),
+            nn.MaxPool2d(kernel_size=2, stride=2),
             ResNeXt_MS_CoT_Block2D(in_channels, out_channels)
         )
 
@@ -15,21 +15,22 @@ class Down(nn.Module):
         return self.encoder(x)
 
 class Up(nn.Module):
-    def __init__(self, in_channels, out_channels, trilinear=True):
+    def __init__(self, in_channels, out_channels, bilinear=True):
         super().__init__()
-        if trilinear:
-            self.up = nn.Upsample(scale_factor=2, mode='trilinear', align_corners=True)
+        if bilinear:
+            self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         else:
-            self.up = nn.ConvTranspose3d(in_channels // 2, in_channels // 2, kernel_size=2, stride=2)
+            self.up = nn.ConvTranspose2d(in_channels // 2, in_channels // 2, kernel_size=2, stride=2)
 
         self.conv = ResNeXt_MS_CoT_Block2D(in_channels, out_channels)
+
     def forward(self, inputs, skips):
         inputs = self.up(inputs)
 
-        diffZ = skips.size()[2] - inputs.size()[2]
-        diffY = skips.size()[3] - inputs.size()[3]
-        diffX = skips.size()[4] - inputs.size()[4]
-        inputs = F.pad(inputs, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2, diffZ // 2, diffZ - diffZ // 2])
+        diffY = skips.size()[2] - inputs.size()[2]
+        diffX = skips.size()[3] - inputs.size()[3]
+        inputs = F.pad(inputs, [diffX // 2, diffX - diffX // 2,
+                                diffY // 2, diffY - diffY // 2])
 
         x = torch.cat([skips, inputs], dim=1)
         return self.conv(x)
@@ -41,7 +42,7 @@ class MSCoTNeXtUNet2D(nn.Module):
         self.n_classes = n_classes
         self.n_channels = n_channels
 
-        self.conv = DoubleConv(in_channels, n_channels)
+        self.conv = DoubleConv2D(in_channels, n_channels)
         self.enc1 = Down(n_channels, 2 * n_channels)
         self.enc2 = Down(2 * n_channels, 4 * n_channels)
         self.enc3 = Down(4 * n_channels, 8 * n_channels)
@@ -51,7 +52,7 @@ class MSCoTNeXtUNet2D(nn.Module):
         self.dec2 = Up(8 * n_channels, 2 * n_channels)
         self.dec3 = Up(4 * n_channels, n_channels)
         self.dec4 = Up(2 * n_channels, n_channels)
-        self.out = OutConv(n_channels, n_classes)
+        self.out = OutConv2D(n_channels, n_classes)
 
     def forward(self, x):
         x1 = self.conv(x)
