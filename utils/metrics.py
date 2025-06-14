@@ -208,28 +208,24 @@ class IoUMetric:
             else: 
                 dims = tuple(range(1, y_pred.ndim))
 
-            true_object_sum = y_true.sum(dim=dims)
-            if true_object_sum == 0:
-                            # Trả về NaN (Not a Number) là cách tốt nhất để bỏ qua mẫu này
-                            # khi tính giá trị trung bình (mean) ở bước sau.
-                            # Hàm torch.mean() hoặc np.nanmean() sẽ tự động bỏ qua các giá trị NaN.
-                            iou = torch.tensor(float('nan'), device=y_pred.device)
-                            
-                            # Trả về một list NaN nếu batch size > 1
-                            if y_pred.ndim > 3 or (y_pred.ndim > 2 and dims[0] != 0): # Check if it's a batch
-                                return [float('nan')] * y_pred.shape[0]
-                            else:
-                                return [float('nan')]
-            
-            else:
-                intersection = (y_pred & y_true).sum(dim = dims).float()
-                union = ((y_pred + y_true) > 0).sum(dim=dims).float()
-                iou = (intersection + self.eps) / (union + self.eps)
-                if iou.numel() == 1:
-                    return [iou.item()]
-                else:
-                    # If there are multiple classes, return the mean IoU
-                    return [iou.mean().item()]
+            true_object_sum = y_true.sum(dim=dims).float()
+            pred_object_sum = y_pred.sum(dim=dims).float()
+
+            intersection = (y_pred & y_true).sum(dim = dims).float()
+
+            valid_mask = (true_object_sum > 0) 
+
+            if not valid_mask.any():
+                # If no valid mask, return NaN
+                return [float('nan')]
+
+            union = true_object_sum + pred_object_sum - intersection
+            iou = (intersection + self.eps) / (union + self.eps)
+
+            valid_iou = iou[valid_mask]
+            mean_iou = valid_iou.mean().item()
+
+            return [mean_iou]
         else:
             # Multi-class segmentation
             y_pred = torch.argmax(y_pred, dim=1)
@@ -276,15 +272,18 @@ class PrecisionMetric:
             tp = (y_pred & y_true).sum(dim=dims).float()
             fp = (y_pred & (~y_true)).sum(dim=dims).float()
 
-            if y_true.sum() == 0:
-                # Trả về NaN để có thể bỏ qua mẫu này khi tính trung bình.
+            pred_object_sum = tp + fp
+            valid_mask = (pred_object_sum > 0)
+
+            if not valid_mask.any():
+                # If no valid mask, return NaN
                 return [float('nan')]
-            precision = (tp + self.eps) / (tp + fp + self.eps)
-            if precision.numel() == 1:
-                return [precision.item()]
-            else:
-                # If there are multiple classes, return the mean precision
-                return [precision.mean().item()]
+
+            precision = (tp + self.eps) / ( pred_object_sum + self.eps)
+            valid_precision = precision[valid_mask]
+
+            mean_precision = valid_precision.mean().item()
+            return [mean_precision]
         else:
             y_pred = torch.argmax(y_pred, dim=1)
             y_true = y_true.squeeze(1)
@@ -331,14 +330,19 @@ class RecallMetric:
             tp = (y_pred & y_true).sum(dim = dims).float()
             fn = ((~y_pred) & y_true).sum(dim = dims).float()
 
-            if y_true.sum() == 0:
+            true_object_sum = tp + fn
+            valid_mask = (true_object_sum > 0)
+
+            if not valid_mask.any():
+                # If no valid mask, return NaN
                 return [float('nan')]
 
-            recall = (tp + self.eps) / (tp + fn + self.eps)
-            if recall.numel() == 1:
-                return [recall.item()]
-            else:
-                return [recall.mean().item()]
+            
+            recall = (tp + self.eps) / (true_object_sum + self.eps)
+
+            valid_recall = recall[valid_mask]
+            mean_recall = valid_recall.mean().item()
+            return [mean_recall]
         else:
             y_pred = torch.argmax(y_pred, dim=1)
             y_true = y_true.squeeze(1)
