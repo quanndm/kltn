@@ -280,7 +280,7 @@ class PrecisionMetric:
                 return [float('nan')]
 
             precision = (tp + self.eps) / ( pred_object_sum + self.eps)
-            valid_precision = precision[valid_mask]
+            # valid_precision = precision[valid_mask]
 
             mean_precision = valid_precision.mean().item()
             return [mean_precision]
