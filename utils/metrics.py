@@ -282,7 +282,7 @@ class PrecisionMetric:
             precision = (tp + self.eps) / ( pred_object_sum + self.eps)
             # valid_precision = precision[valid_mask]
 
-            mean_precision = valid_precision.mean().item()
+            mean_precision = precision.mean().item()
             return [mean_precision]
         else:
             y_pred = torch.argmax(y_pred, dim=1)
