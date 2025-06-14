@@ -332,14 +332,12 @@ class RecallMetric:
             fn = ((~y_pred) & y_true).sum(dim = dims).float()
 
             if y_true.sum() == 0:
-                # Trả về NaN để có thể bỏ qua mẫu này khi tính trung bình.
                 return [float('nan')]
 
             recall = (tp + self.eps) / (tp + fn + self.eps)
             if recall.numel() == 1:
                 return [recall.item()]
             else:
-                # If there are multiple classes, return the mean recall
                 return [recall.mean().item()]
         else:
             y_pred = torch.argmax(y_pred, dim=1)
