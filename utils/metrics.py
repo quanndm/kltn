@@ -207,14 +207,29 @@ class IoUMetric:
                 dims = tuple(range( y_pred.ndim))
             else: 
                 dims = tuple(range(1, y_pred.ndim))
-            intersection = (y_pred & y_true).sum(dim = dims).float()
-            union = ((y_pred + y_true) > 0).sum(dim=dims).float()
-            iou = (intersection + self.eps) / (union + self.eps)
-            if iou.numel() == 1:
-                return [iou.item()]
+
+            true_object_sum = y_true.sum(dim=dims)
+            if true_object_sum == 0:
+                            # Trả về NaN (Not a Number) là cách tốt nhất để bỏ qua mẫu này
+                            # khi tính giá trị trung bình (mean) ở bước sau.
+                            # Hàm torch.mean() hoặc np.nanmean() sẽ tự động bỏ qua các giá trị NaN.
+                            iou = torch.tensor(float('nan'), device=y_pred.device)
+                            
+                            # Trả về một list NaN nếu batch size > 1
+                            if y_pred.ndim > 3 or (y_pred.ndim > 2 and dims[0] != 0): # Check if it's a batch
+                                return [float('nan')] * y_pred.shape[0]
+                            else:
+                                return [float('nan')]
+            
             else:
-                # If there are multiple classes, return the mean IoU
-                return [iou.mean().item()]
+                intersection = (y_pred & y_true).sum(dim = dims).float()
+                union = ((y_pred + y_true) > 0).sum(dim=dims).float()
+                iou = (intersection + self.eps) / (union + self.eps)
+                if iou.numel() == 1:
+                    return [iou.item()]
+                else:
+                    # If there are multiple classes, return the mean IoU
+                    return [iou.mean().item()]
         else:
             # Multi-class segmentation
             y_pred = torch.argmax(y_pred, dim=1)
@@ -261,6 +276,9 @@ class PrecisionMetric:
             tp = (y_pred & y_true).sum(dim=dims).float()
             fp = (y_pred & (~y_true)).sum(dim=dims).float()
 
+            if y_true.sum() == 0:
+                # Trả về NaN để có thể bỏ qua mẫu này khi tính trung bình.
+                return [float('nan')]
             precision = (tp + self.eps) / (tp + fp + self.eps)
             if precision.numel() == 1:
                 return [precision.item()]
@@ -312,6 +330,10 @@ class RecallMetric:
                 dims = tuple(range(1, y_pred.ndim))
             tp = (y_pred & y_true).sum(dim = dims).float()
             fn = ((~y_pred) & y_true).sum(dim = dims).float()
+
+            if y_true.sum() == 0:
+                # Trả về NaN để có thể bỏ qua mẫu này khi tính trung bình.
+                return [float('nan')]
 
             recall = (tp + self.eps) / (tp + fn + self.eps)
             if recall.numel() == 1:
