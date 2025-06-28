@@ -1,7 +1,6 @@
 import torch
 from monai.inferers import sliding_window_inference
 import numpy as np
-from ..datasets.lits import Lits, Stage2Dataset2D
 from ..processing.postprocessing import post_trans_stage1
 from ..processing.preprocessing import resize_image
 
@@ -50,6 +49,8 @@ def inference(input, model):
 #####################################################
 # using function below in case visualizing results
 #####################################################
+from ..datasets.lits import Lits, Stage2Dataset2D
+
 def preprocessing_liver(image_ct, mask_liver):
     image, seg = Lits.preprocessing(image_ct, mask_liver, False, normalizations="zscores")
     seg = (seg > 0).astype(np.uint8)
