@@ -3,6 +3,7 @@ from monai.inferers import sliding_window_inference
 import numpy as np
 from ..processing.postprocessing import post_trans_stage1, post_processing_stage2
 from ..processing.preprocessing import resize_image
+from skimage.transform import resize
 
 # Assuming the variables roi_size, sw_batch_size, and overlap are lists
 roi = (128, 128, 128)
