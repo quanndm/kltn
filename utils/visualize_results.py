@@ -7,6 +7,7 @@ from monai.metrics import DiceMetric
 from monai.inferers import sliding_window_inference
 from ..utils.utils import inference
 from ..processing.postprocessing import post_trans, post_trans_stage1, post_processing_stage2, post_trans_stage2
+from matplotlib.colors import ListedColormap
 import matplotlib.colors as mcolors 
 
 def visualize_results(model, val_loader, weight_path, num_images, device):
@@ -49,7 +50,6 @@ def visualize_results(model, val_loader, weight_path, num_images, device):
             plt.show()
         if stop == num_images:
           break
-
 
 def visualize_results_stage_1(model, val_loader, weight_path, num_images, device):
     model.load_state_dict(torch.load(weight_path, map_location=device))
@@ -142,3 +142,78 @@ def visualize_results_stage_2(model, val_loader, weight_path, num_images, device
 
         if stop == num_images:
             break
+
+################################################################
+def visualize_ct_slice(ct_array=None, mask_array=None, axis=0, slice_index=None,
+                       alpha=0.4, cmap='gray', mask_cmap='tab10', tumor=False, ax=None):
+    """
+    Hiển thị 1 slice từ ảnh CT 3D (và overlay mask nếu có). Hỗ trợ subplot thông qua `ax`.
+
+    Parameters:
+    - ct_array: ndarray từ sitk.GetArrayFromImage (shape: [Z, Y, X])
+    - mask_array: mask nhị phân cùng shape, có thể None
+    - axis: trục cắt (0: axial, 1: coronal, 2: sagittal)
+    - slice_index: chỉ số slice, nếu None sẽ lấy slice giữa
+    - alpha: độ trong suốt của mask overlay
+    - ax: matplotlib axis để vẽ vào subplot
+    """
+    if ct_array is None and mask_array is None:
+        raise ValueError("Cần ít nhất một trong hai: ct_array hoặc mask_array")
+
+    ref_array = ct_array if ct_array is not None else mask_array
+
+    if slice_index is None:
+        slice_index = ref_array.shape[axis] // 2
+
+    # Cắt slice
+    if axis == 0:
+        ct_slice = ct_array[slice_index, :, :] if ct_array is not None else None
+        mask_slice = mask_array[slice_index, :, :] if mask_array is not None else None
+    elif axis == 1:
+        ct_slice = ct_array[:, slice_index, :] if ct_array is not None else None
+        mask_slice = mask_array[:, slice_index, :] if mask_array is not None else None
+    elif axis == 2:
+        ct_slice = ct_array[:, :, slice_index] if ct_array is not None else None
+        mask_slice = mask_array[:, :, slice_index] if mask_array is not None else None
+    else:
+        raise ValueError("Axis phải là 0, 1 hoặc 2.")
+
+    # Nếu không có CT thì tạo nền đen
+    if ct_slice is None:
+        ct_slice = np.zeros_like(mask_slice, dtype=np.uint8)
+
+    # Chọn trục vẽ
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(6, 6))
+
+    ax.imshow(ct_slice, cmap=cmap)
+
+    # Overlay mask nếu có
+    if mask_slice is not None:
+        if np.array_equal(np.unique(mask_slice), [0, 1, 2]):
+            custom_colors = [
+                [0, 0, 0, 0.0],            # label 0
+                [0, 1.0, 127/255, 0.5],    # label 1
+                [1.0, 0, 0, 1.0],          # label 2
+            ]
+        else:
+            if tumor:
+                custom_colors = [
+                    [0, 0, 0, 0.0],        # label 0
+                    [1.0, 0, 0, 1.0],      # label 2
+                ]
+            else:
+                custom_colors = [
+                    [0, 0, 0, 0.0],        # label 0
+                    [0, 1.0, 127/255, 0.5],# label 1
+                ]
+        custom_cmap = ListedColormap(custom_colors)
+        ax.imshow(mask_slice, cmap=custom_cmap, alpha=alpha, interpolation='none')
+    # Tắt toàn bộ khoảng trắng ngoài lề
+    plt.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0, hspace=0)
+
+    # ax.set_title(f"Slice {slice_index} (axis={axis})")
+    ax.axis('off')
+
+    if ax is None:
+        plt.show()

@@ -43,3 +43,47 @@ def inference(input, model):
         return _compute(input)
 
         
+#####################################################
+# using function below in case visualizing results
+#####################################################
+
+def find_best_slice(ct_array, mask_array=None, axis=0, threshold=0.01):
+    """
+    Tìm slice có nội dung nhiều nhất (ít background nhất) theo 1 trục.
+    Nếu có mask: chọn slice có nhiều pixel mask nhất.
+
+    Parameters:
+    - ct_array: ndarray từ sitk.GetArrayFromImage
+    - mask_array: ndarray mask hoặc None
+    - axis: trục (0, 1, 2)
+    - threshold: nếu không có mask, số pixel > ngưỡng coi là foreground
+
+    Returns:
+    - index của slice tốt nhất
+    """
+    if mask_array is not None:
+        num_slices = mask_array.shape[axis]
+        scores = []
+        for i in range(num_slices):
+            if axis == 0:
+                mask = mask_array[i, :, :]
+            elif axis == 1:
+                mask = mask_array[:, i, :]
+            elif axis == 2:
+                mask = mask_array[:, :, i]
+            scores.append(np.sum(mask))
+    else:
+        # Dùng CT để đánh giá slice "có thông tin"
+        num_slices = ct_array.shape[axis]
+        scores = []
+        for i in range(num_slices):
+            if axis == 0:
+                sl = ct_array[i, :, :]
+            elif axis == 1:
+                sl = ct_array[:, i, :]
+            elif axis == 2:
+                sl = ct_array[:, :, i]
+            scores.append(np.mean(np.abs(sl)) > threshold)
+
+    best_index = int(np.argmax(scores))
+    return best_index
