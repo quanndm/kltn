@@ -49,9 +49,9 @@ def inference(input, model):
 #####################################################
 # using function below in case visualizing results
 #####################################################
-from ..datasets.lits import Lits, Stage2Dataset2D
 
 def preprocessing_liver(image_ct, mask_liver):
+    from ..datasets.lits import Lits
     image, seg = Lits.preprocessing(image_ct, mask_liver, False, normalizations="zscores")
     seg = (seg > 0).astype(np.uint8)
 
@@ -61,6 +61,7 @@ def preprocessing_liver(image_ct, mask_liver):
     return image, seg
 
 def preprocessing_tumor(compressed_array_path):
+    from ..datasets.lits import  Stage2Dataset2D
     data = Stage2Dataset2D.load_npz(compressed_array_path)
     _image, _seg, bbox = data["image"], data["seg"], data["bbox"]
     image, seg = Stage2Dataset2D.preprocessing(_image, _seg, False, normalizations="zscores")
