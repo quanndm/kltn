@@ -116,7 +116,7 @@ def find_best_slice(ct_array, mask_array=None, axis=0, threshold=0.01):
 
 def predict_and_resize_mask_stage_1(model, image, mask):
     model.eval()
-    ct_prep, mask_prep = preprocessing_liver(image_1, mask_1)
+    ct_prep, mask_prep = preprocessing_liver(image, mask)
     ct_prep, mask_prep = ct_prep.unsqueeze(0).to(device), mask_prep.unsqueeze(0).to(device)
     with torch.no_grad():
         logits = model(ct_prep)
@@ -125,7 +125,7 @@ def predict_and_resize_mask_stage_1(model, image, mask):
     mask_pred = mask_pred.cpu().numpy()
     ct_prep = ct_prep.squeeze().cpu().numpy()
 
-    image_liver, seg_liver = resize_image(np.expand_dims(ct_prep, axis=0), np.expand_dims(mask_pred, axis=0), target_size=(image_1.shape[0], image_1.shape[1], image_1.shape[2]))
+    image_liver, seg_liver = resize_image(np.expand_dims(ct_prep, axis=0), np.expand_dims(mask_pred, axis=0), target_size=(image.shape[0], image.shape[1], image.shape[2]))
     image_liver, seg_liver  = image_liver.squeeze(), seg_liver.squeeze()
 
     return image_liver, seg_liver
