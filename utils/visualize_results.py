@@ -147,15 +147,17 @@ def visualize_results_stage_2(model, val_loader, weight_path, num_images, device
 def visualize_ct_slice(ct_array=None, mask_array=None, axis=0, slice_index=None,
                        alpha=0.4, cmap='gray', mask_cmap='tab10', tumor=False, ax=None):
     """
-    Hiển thị 1 slice từ ảnh CT 3D (và overlay mask nếu có). Hỗ trợ subplot thông qua `ax`.
-
+    show 1 slice from 3D CT image and overlay mask if provided.
     Parameters:
-    - ct_array: ndarray từ sitk.GetArrayFromImage (shape: [Z, Y, X])
-    - mask_array: mask nhị phân cùng shape, có thể None
-    - axis: trục cắt (0: axial, 1: coronal, 2: sagittal)
-    - slice_index: chỉ số slice, nếu None sẽ lấy slice giữa
-    - alpha: độ trong suốt của mask overlay
-    - ax: matplotlib axis để vẽ vào subplot
+    - ct_array: ndarray, shape (D, H, W))
+    - mask_array: ndarray, shape (D, H, W)
+    - axis:  the axis to slice along (0, 1, or 2)
+    - slice_index: index of slice to visualize
+    - alpha:  the transparency of the mask overlay
+    - ax: matplotlib axis to plot on, if None a new figure will be created
+    - cmap: colormap for the CT image
+    - mask_cmap: colormap for the mask overlay
+    - tumor: if True, use custom colors for tumor visualization
     """
     if ct_array is None and mask_array is None:
         raise ValueError("Cần ít nhất một trong hai: ct_array hoặc mask_array")
@@ -178,17 +180,17 @@ def visualize_ct_slice(ct_array=None, mask_array=None, axis=0, slice_index=None,
     else:
         raise ValueError("Axis phải là 0, 1 hoặc 2.")
 
-    # Nếu không có CT thì tạo nền đen
+    # create empty slice if ct_slice is None
     if ct_slice is None:
         ct_slice = np.zeros_like(mask_slice, dtype=np.uint8)
 
-    # Chọn trục vẽ
+    # choose axis to plot on
     if ax is None:
         fig, ax = plt.subplots(figsize=(6, 6))
 
     ax.imshow(ct_slice, cmap=cmap)
 
-    # Overlay mask nếu có
+    # Overlay mask if provided
     if mask_slice is not None:
         if np.array_equal(np.unique(mask_slice), [0, 1, 2]):
             custom_colors = [
@@ -209,7 +211,7 @@ def visualize_ct_slice(ct_array=None, mask_array=None, axis=0, slice_index=None,
                 ]
         custom_cmap = ListedColormap(custom_colors)
         ax.imshow(mask_slice, cmap=custom_cmap, alpha=alpha, interpolation='none')
-    # Tắt toàn bộ khoảng trắng ngoài lề
+    # cut off margins
     plt.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0, hspace=0)
 
     # ax.set_title(f"Slice {slice_index} (axis={axis})")
