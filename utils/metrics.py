@@ -202,11 +202,19 @@ class IoUMetric:
             y_pred = y_pred.bool().squeeze()
             y_true = y_true.bool().squeeze()
 
-
+            is_3d = False
             if y_pred.shape[0] == y_pred.shape[1] == y_pred.shape[2]: # 3D
                 dims = tuple(range( y_pred.ndim))
+                is_3d = True
             else: 
                 dims = tuple(range(1, y_pred.ndim))
+
+            if is_3d:
+                intersection = (y_pred & y_true).sum(dim=dims).float()
+                union = (y_pred | y_true).sum(dim=dims).float()
+                iou = (intersection + self.eps) / (union + self.eps)
+                mean_iou = iou.mean().item()
+                return [mean_iou]
 
             true_object_sum = y_true.sum(dim=dims).float()
             pred_object_sum = y_pred.sum(dim=dims).float()
