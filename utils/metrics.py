@@ -273,13 +273,20 @@ class PrecisionMetric:
             y_pred = y_pred.bool().squeeze()
             y_true = y_true.bool().squeeze()
 
+            is_3d = False
             if y_pred.shape[0] == y_pred.shape[1] == y_pred.shape[2]: # 3D
                 dims = tuple(range( y_pred.ndim))
+                is_3d = True
             else: # 2D
                 dims = tuple(range(1, y_pred.ndim))
             tp = (y_pred & y_true).sum(dim=dims).float()
             fp = (y_pred & (~y_true)).sum(dim=dims).float()
 
+            if is_3d:
+                precision = (tp + self.eps) / (tp + fp + self.eps)
+                mean_precision = precision.mean().item()
+                return [mean_precision]
+            
             pred_object_sum = tp + fp
             valid_mask = (pred_object_sum > 0)
 
@@ -330,13 +337,19 @@ class RecallMetric:
             y_pred = y_pred.bool().squeeze()
             y_true = y_true.bool().squeeze()
 
+            is_3d = False
             if y_pred.shape[0] == y_pred.shape[1] == y_pred.shape[2]: # 3D
                 dims = tuple(range( y_pred.ndim))
+                is_3d = True
             else: # 2D
                 dims = tuple(range(1, y_pred.ndim))
             tp = (y_pred & y_true).sum(dim = dims).float()
             fn = ((~y_pred) & y_true).sum(dim = dims).float()
 
+            if is_3d:
+                recall = (tp + self.eps) / (tp + fn + self.eps)
+                mean_recall = recall.mean().item()
+                return [mean_recall]
             true_object_sum = tp + fn
             valid_mask = (true_object_sum > 0)
 
