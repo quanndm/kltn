@@ -185,7 +185,7 @@ def visualize_results_stage_1(model, val_loader, weight_path, num_images, device
         stop += 1
         with torch.no_grad():
             val_input = val_data["image"].to(device)
-            val_output = inference(val_input, model)
+            val_output = model(val_input)
             val_output = post_trans_stage1(val_output[0]).squeeze().cpu()  
 
             image = val_input.detach().cpu().numpy()[0, 0] 
