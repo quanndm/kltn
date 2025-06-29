@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 from monai.metrics import DiceMetric
 from monai.inferers import sliding_window_inference
-from ..utils.utils import inference
+from ..utils.utils import inference, find_best_slice
 from ..processing.postprocessing import post_trans, post_trans_stage1, post_processing_stage2, post_trans_stage2
 from matplotlib.colors import ListedColormap
 import matplotlib.colors as mcolors 
@@ -156,7 +156,7 @@ def visualize_ct_slice(ct_array=None, mask_array=None, axis=0, slice_index=None,
     - alpha:  the transparency of the mask overlay
     - ax: matplotlib axis to plot on, if None a new figure will be created
     - cmap: colormap for the CT image
-    - mask_cmap: colormap for the mask overlay
+    - mask_cmap: colormap for the mask overlay -> deprecated
     - tumor: if True, use custom colors for tumor visualization
     """
     if ct_array is None and mask_array is None:
@@ -219,3 +219,32 @@ def visualize_ct_slice(ct_array=None, mask_array=None, axis=0, slice_index=None,
 
     if ax is None:
         plt.show()
+
+
+def visualize_stage_1(model, val_loader, weight_path, num_images, device):
+    model.load_state_dict(torch.load(weight_path, map_location=device))
+    model.eval()
+
+    stop = 0
+    for val_data in val_loader:
+        stop += 1
+        with torch.no_grad():
+            val_input = val_data["image"].to(device)
+            val_output = inference(val_input, model)
+            val_output = post_trans_stage1(val_output[0]).squeeze().cpu()  
+
+            image = val_input.detach().cpu().numpy()[0, 0] 
+            mask =  val_data["label"].detach().cpu().numpy()[0, 0] 
+            best_slide = find_best_slice(val_output, mask)
+
+            fig, axes = plt.subplots(1, 5, figsize=(20, 4))
+            fig.patch.set_visible(False)
+
+            visualize_ct_slice(image, None, slice_index=best_slide,  ax=axes[0])
+            visualize_ct_slice(image, mask, slice_index=best_slide, tumor=False, alpha=0.5,  ax=axes[1])
+            visualize_ct_slice(image, val_output, slice_index=best_slide, tumor=False, alpha=0.5,  ax=axes[2])
+            visualize_ct_slice(None, mask, slice_index=best_slide, tumor=False, alpha=1,  ax=axes[3])
+            visualize_ct_slice(None, val_output, slice_index=best_slide, tumor=False, alpha=1,  ax=axes[4])
+
+        if stop == num_images:
+            break
