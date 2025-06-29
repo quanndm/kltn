@@ -221,7 +221,7 @@ def visualize_ct_slice(ct_array=None, mask_array=None, axis=0, slice_index=None,
         plt.show()
 
 
-def visualize_stage_1(model, val_loader, weight_path, num_images, device):
+def visualize_results_stage_1(model, val_loader, weight_path, num_images, device):
     model.load_state_dict(torch.load(weight_path, map_location=device))
     model.eval()
 
