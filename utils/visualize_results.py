@@ -5,10 +5,12 @@ import matplotlib.pyplot as plt
 
 from monai.metrics import DiceMetric
 from monai.inferers import sliding_window_inference
-from ..utils.utils import inference, find_best_slice
+from ..utils.utils import inference, find_best_slice, paste_mask_to_full
 from ..processing.postprocessing import post_trans, post_trans_stage1, post_processing_stage2, post_trans_stage2
 from matplotlib.colors import ListedColormap
 import matplotlib.colors as mcolors 
+from monai.data import decollate_batch
+
 
 def visualize_results(model, val_loader, weight_path, num_images, device):
     model.load_state_dict(torch.load(weight_path, map_location=device))
@@ -52,51 +54,51 @@ def visualize_results(model, val_loader, weight_path, num_images, device):
           break
 
 
-def visualize_results_stage_2(model, val_loader, weight_path, num_images, device, threshold=0.5):
-    model.load_state_dict(torch.load(weight_path, map_location=device))
-    model.eval()
-    stop = 0
+# def visualize_results_stage_2(model, val_loader, weight_path, num_images, device, threshold=0.5):
+#     model.load_state_dict(torch.load(weight_path, map_location=device))
+#     model.eval()
+#     stop = 0
 
-    cmap = mcolors.ListedColormap(["black", "yellow"])  # 0: background, 1: tumor
+#     cmap = mcolors.ListedColormap(["black", "yellow"])  # 0: background, 1: tumor
 
-    for val_data in val_loader:
-        stop += 1
-        with torch.no_grad():
-            val_input = val_data["image"].to(device)  # input đã crop liver ROI
-            val_output = model(val_input )             # raw logits
+#     for val_data in val_loader:
+#         stop += 1
+#         with torch.no_grad():
+#             val_input = val_data["image"].to(device)  # input đã crop liver ROI
+#             val_output = model(val_input )             # raw logits
 
-            # Apply sigmoid + thresholding + post-processing
-            pred_mask = post_trans_stage2(val_output, threshold=threshold, device=device)  # [1, 1, H, W]
+#             # Apply sigmoid + thresholding + post-processing
+#             pred_mask = post_trans_stage2(val_output, threshold=threshold, device=device)  # [1, 1, H, W]
 
-            # Get data to numpy
-            image_np = val_input.detach().cpu().numpy()[0]            # [C, H, W]
-            label_np = val_data["label"].detach().cpu().numpy()[0, 0]    # [ H, W]
-            pred_np = pred_mask.detach().cpu().numpy()[0, 0]             # [H, W]
+#             # Get data to numpy
+#             image_np = val_input.detach().cpu().numpy()[0]            # [C, H, W]
+#             label_np = val_data["label"].detach().cpu().numpy()[0, 0]    # [ H, W]
+#             pred_np = pred_mask.detach().cpu().numpy()[0, 0]             # [H, W]
 
-            # middle slice
-            mid_slice = image_np.shape[0] // 2
-            image_2d = image_np[mid_slice]  
+#             # middle slice
+#             mid_slice = image_np.shape[0] // 2
+#             image_2d = image_np[mid_slice]  
 
-            # Show GT and prediction
-            fig, ax = plt.subplots(1, 3, figsize=(18, 6))
-            # Show image
-            ax[0].set_title("Input Image (Liver ROI)")
-            ax[0].imshow(image_2d, cmap="gray")
-            ax[0].axis("off")
+#             # Show GT and prediction
+#             fig, ax = plt.subplots(1, 3, figsize=(18, 6))
+#             # Show image
+#             ax[0].set_title("Input Image (Liver ROI)")
+#             ax[0].imshow(image_2d, cmap="gray")
+#             ax[0].axis("off")
 
-            ax[1].imshow(label_np, cmap=cmap, vmin=0, vmax=1)
-            ax[1].set_title("Ground Truth (Tumor)")
-            ax[1].axis("off")
+#             ax[1].imshow(label_np, cmap=cmap, vmin=0, vmax=1)
+#             ax[1].set_title("Ground Truth (Tumor)")
+#             ax[1].axis("off")
 
-            ax[2].imshow(pred_np, cmap=cmap, vmin=0, vmax=1)
-            ax[2].set_title("Prediction (Tumor)")
-            ax[2].axis("off")
+#             ax[2].imshow(pred_np, cmap=cmap, vmin=0, vmax=1)
+#             ax[2].set_title("Prediction (Tumor)")
+#             ax[2].axis("off")
 
-            plt.tight_layout()
-            plt.show()
+#             plt.tight_layout()
+#             plt.show()
 
-        if stop == num_images:
-            break
+#         if stop == num_images:
+#             break
 
 ################################################################
 def visualize_ct_slice(ct_array=None, mask_array=None, axis=0, slice_index=None,
@@ -203,3 +205,53 @@ def visualize_results_stage_1(model, val_loader, weight_path, num_images, device
 
         if stop == num_images:
             break
+
+def visualize_results_stage_2(model, val_loader, weight_path, num_images, device, threshold=0.5):
+    from kltn.init.install_dependencies import  load_config
+    from ...datasets.lits import Lits
+    config = load_config("./kltn/parameters.yaml")
+
+    base_folder  = pathlib.Path(config["source_folder_lits"]).resolve()
+    volumes =  list(base_folder.glob('volume-*.nii')) 
+
+    model.load_state_dict(torch.load(weight_path, map_location=device))
+    model.eval()
+
+    stop = 0
+    for val_data in val_loader:
+        stop += 1
+        with torch.no_grad():
+            val_input = val_data["image"].to(device)  # (b, c, h, w)
+            logits = model(val_input)  # raw logits (b, 1, h, w)
+            
+            patient_ids = val_data["patient_id"]
+            slides = val_data["slide"]
+            bboxes = val_data["bbox"]
+            val_outputs_list = decollate_batch(logits) # list of tensors shape( 1, H, W)
+            val_output_convert = [post_processing_stage2(val_pred_tensor, threshold=threshold).to(device).float().unsqueeze(0) for val_pred_tensor in val_outputs_list] # list of tensors shape(1, H, W)
+
+            for i, val_output in enumerate(val_output_convert):
+                if sum(val_output) <= 0:
+                    continue
+
+                patient_id = patient_ids[i]
+                slide = slides[i]
+                bbox = bboxes[i][2:6] # [y1, y2, x1, x2]
+
+                volume_path = next((vol for vol in volumes if patient_id in vol.name), None)
+                mask_path = base_folder / volume_path.name.replace("volume", "segmentation")
+
+                volume = Lits.load_nii(volume_path) # D, H, W
+                mask = Lits.load_nii(mask_path) # D, H, W
+
+                mask_pred_full = paste_mask_to_full(val_output.cpu().numpy(), bbox, full_shape=volume[slide, :, :].shape)
+
+
+                fig, axes = plt.subplots(1, 5, figsize=(20, 4)) 
+                fig.patch.set_visible(False)
+
+                visualize_ct_slice(volume, None, slice_index=slide,  ax=axes[0])
+                visualize_ct_slice(volume, mask, slice_index=slide, tumor=True, alpha=0.5,  ax=axes[1])
+                visualize_ct_slice(np.expand_dims(volume[slide], axis=0), mask_pred_full, tumor=True, alpha=0.5,  ax=axes[2])
+                visualize_ct_slice(None, mask, slice_index=best_slide, tumor=True, alpha=1,  ax=axes[3])
+                visualize_ct_slice(None, mask_pred_full, slice_index=0, tumor=True, alpha=1,  ax=axes[4])

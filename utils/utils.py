@@ -172,7 +172,7 @@ def predict_and_resize_mask_stage_2(model, compressed_array_path, full_shape):
         logits = model(ct_prep)
 
     mask_pred = post_processing_stage2(logits.squeeze()).cpu().numpy()
-    ct_prep = ct_prep.squeeze().cpu().numpy()
+    # ct_prep = ct_prep.squeeze().cpu().numpy()
     
     mask_full = paste_mask_to_full(mask_pred.squeeze(), bbox[2:6], full_shape=full_shape)
     return mask_full
