@@ -244,6 +244,9 @@ def visualize_results_stage_2(model, val_loader, weight_path, num_images, device
 
                 volume = Lits.load_nii(volume_path) # D, H, W
                 mask = Lits.load_nii(mask_path) # D, H, W
+                
+                volume = np.clip(volume, -200, 250)
+                mask = (mask == 2).astype(np.uint8)
 
                 mask_pred_full = paste_mask_to_full(val_output.squeeze().cpu().numpy(), bbox, full_shape=volume[int(slide)].shape)
 
