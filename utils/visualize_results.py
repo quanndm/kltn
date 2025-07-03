@@ -11,6 +11,7 @@ from matplotlib.colors import ListedColormap
 import matplotlib.colors as mcolors 
 from monai.data import decollate_batch
 
+from ...datasets.lits import Lits
 
 def visualize_results(model, val_loader, weight_path, num_images, device):
     model.load_state_dict(torch.load(weight_path, map_location=device))
@@ -208,7 +209,6 @@ def visualize_results_stage_1(model, val_loader, weight_path, num_images, device
 
 def visualize_results_stage_2(model, val_loader, weight_path, num_images, device, threshold=0.5):
     from kltn.init.install_dependencies import  load_config
-    from ...datasets.lits import Lits
     config = load_config("./kltn/parameters.yaml")
 
     base_folder  = pathlib.Path(config["source_folder_lits"]).resolve()
