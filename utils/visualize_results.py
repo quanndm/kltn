@@ -232,7 +232,7 @@ def visualize_results_stage_2(model, val_loader, weight_path, num_images, device
             val_output_convert = [post_processing_stage2(val_pred_tensor, threshold=threshold).to(device).float().unsqueeze(0) for val_pred_tensor in val_outputs_list] # list of tensors shape(1, H, W)
 
             for i, val_output in enumerate(val_output_convert):
-                if sum(val_output) <= 0:
+                if val_output.sum().item() <= 0:
                     continue
 
                 patient_id = patient_ids[i]
