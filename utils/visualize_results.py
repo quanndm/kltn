@@ -251,8 +251,11 @@ def visualize_results_stage_2(model, val_loader, weight_path, num_images, device
                 fig, axes = plt.subplots(1, 5, figsize=(20, 4)) 
                 fig.patch.set_visible(False)
 
-                visualize_ct_slice(volume, None, slice_index=slide,  ax=axes[0])
-                visualize_ct_slice(volume, mask, slice_index=slide, tumor=True, alpha=0.5,  ax=axes[1])
-                visualize_ct_slice(np.expand_dims(volume[slide], axis=0), mask_pred_full, tumor=True, alpha=0.5,  ax=axes[2])
-                visualize_ct_slice(None, mask, slice_index=best_slide, tumor=True, alpha=1,  ax=axes[3])
-                visualize_ct_slice(None, mask_pred_full, slice_index=0, tumor=True, alpha=1,  ax=axes[4])
+                visualize_ct_slice(volume, None, slice_index=int(slide),  ax=axes[0])
+                visualize_ct_slice(volume, mask, slice_index=int(slide), tumor=True, alpha=0.5,  ax=axes[1])
+                visualize_ct_slice(np.expand_dims(volume[int(slide)], axis=0), mask_pred_full, tumor=True, alpha=0.5,  ax=axes[2])
+                visualize_ct_slice(None, mask, slice_index=int(slide), tumor=True, alpha=1,  ax=axes[3])
+                visualize_ct_slice(None, mask_pred_full, tumor=True, alpha=1,  ax=axes[4])
+
+        if stop == num_images:
+            break
