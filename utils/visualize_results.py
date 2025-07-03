@@ -247,9 +247,13 @@ def visualize_results_stage_2(model, val_loader, weight_path, num_images, device
 
                 volume = np.clip(volume, -200, 250)
                 mask = (mask == 2).astype(np.uint8)
+
                 if volume.shape[0] <= int(slide):
                     continue
 
+                if mask[int(slide)].sum().item() <= 0:
+                    continue
+                    
                 mask_pred_full = paste_mask_to_full(val_output.squeeze().cpu().numpy(), bbox, full_shape=volume[int(slide)].shape)
 
 
