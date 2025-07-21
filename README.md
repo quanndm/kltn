@@ -73,11 +73,11 @@ project/
 
 * Dữ liệu: LiTS17 - https://www.sciencedirect.com/science/article/pii/S1361841522003085
 * Giai đoạn 1: phân đoạn gan
-    * Tiền xử lý:
+    * Tiền xử lý: (chỉnh sửa file processing/preprocessing.py)
         * clip HU (hounsfield unit): -200:250
         * Normalize: zscore
         * resize: 128x128x128
-    * Tăng cường dữ liệu:
+    * Tăng cường dữ liệu: (chỉnh sửa file processing/augmentation.py)
         * random flip
         * random zoom
         * random rotate, scale
@@ -85,11 +85,11 @@ project/
         * random gaussian noise
         * random bias field
 * Giai đoạn 2: phân đoạn u gan
-    * Tiền xử lý:
+    * Tiền xử lý: (chỉnh sửa file processing/preprocessing.py)
         * clip HU (hounsfield unit): 0:200
         * Normalize: zscore
         * resize: 3x256x256
-    * Tăng cường dữ liệu:
+    * Tăng cường dữ liệu: (chỉnh sửa file processing/augmentation.py)
         * random flip
         * random zoom
         * random rotate
@@ -129,12 +129,12 @@ project/
 
 ## 6. Huấn luyện & Đánh giá
 
-* Loss:
+* Loss: (chỉnh sửa file utils/metrics.py)
     * Giai đoạn 1:
         - Dice Loss + BCE, tỉ lệ 7/3
     * Giai đoạn 2:
         - Tversky Loss (alpha: 0.7, beta: 0.3) + BCE, tỉ lệ 7/3
-* Metrics: Dice, IoU, Precision, Recall
+* Metrics: Dice, IoU, Precision, Recall (chỉnh sửa file utils/metrics.py)
 * Learning Rate: 1e-3
 * Optimizer: AdamW; Weight Decay: 1e-5
 * LR Scheduler: CosineAnnealingLR; eta_min: 1e-5
