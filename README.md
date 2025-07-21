@@ -143,7 +143,7 @@ project/
 * Giai đoạn 1:  
     - Có 3 file notebooks: liver, liver_1, liver_2
     - File có chia các section con tương ứng với từng step: 
-        - Khai báo, cài package và tải dataset
+        - Khai báo, cài package và tải dataset (Ở bước này trên Colab sẽ bị lỗi phiên bản của numpy, cần restart session và run lại ở bước import package)
         - load dataset
             ![alt text](./images/stage_1_1.png)
         - Visualize sample (option)
@@ -157,7 +157,7 @@ project/
 * Giai đoạn 2:
     - Có 2 file notebooks: tumor, tumor_1
     - File có chia các section con tương ứng với từng step sau:
-        - Khai báo, cài package và tải dataset
+        - Khai báo, cài package và tải dataset (Ở bước này trên Colab sẽ bị lỗi phiên bản của numpy, cần restart session và run lại ở bước import package)
         - Load model với weight của giai đoạn 1, khai báo model cho giai đoạn 2
             ![alt text](./images/stage_2_1.png)
         - dùng model 1 dự đoán 1 lượt toàn bộ dataset để lấy bounding box vùng gan của từng ảnh CT rồi lưu lại, sử dụng bounding box trên, loop toàn bộ ảnh CT và cắt theo bounding box đó, cuối cùng chuyển ảnh CT3D thành ảnh 2D hoặc 2.5D giả định nhiều lát cắt thành chiều sâu của ảnh => tạo thành dữ liệu 2D mới
