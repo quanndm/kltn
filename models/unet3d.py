@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from .layers.layers import DoubleConv, OutConv
-from monai.networks.nets import resnet50
 
 class Down(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -67,55 +66,4 @@ class UNet3D(nn.Module):
         mask = self.dec3(mask, x2)
         mask = self.dec4(mask, x1)
         mask = self.out(mask)
-        return mask
-
-
-class UNet3DPretrained(nn.Module):
-    def __init__(self, in_channels, n_classes, n_channels):
-        super(UNet3DPretrained, self).__init__()
-        self.pretrained_model =  resnet50(spatial_dims=3, n_input_channels=1, pretrained=True, feed_forward=False , shortcut_type="B", bias_downsample=False)
-
-        # Freeze layers except for layer2, layer3, and layer4
-        for name, param in self.pretrained_model.named_parameters():
-            param.requires_grad = any(layer in name for layer in ['layer2', 'layer3', 'layer4'])
-
-        self.conv1 = nn.Sequential(
-            self.pretrained_model.conv1,
-            self.pretrained_model.bn1,
-            self.pretrained_model.act,
-            self.pretrained_model.maxpool
-        )
-        self.layer1 = self.pretrained_model.layer1
-        self.layer2 = self.pretrained_model.layer2
-        self.layer3 = self.pretrained_model.layer3
-        self.layer4 = self.pretrained_model.layer4
-
-        self.reduce_channel1 = nn.Conv3d(64, n_channels, kernel_size=1, stride=1, padding=0)
-        self.reduce_channel2 = nn.Conv3d(256, 2 * n_channels, kernel_size=1, stride=1, padding=0)
-        self.reduce_channel3 = nn.Conv3d(512, 4 * n_channels, kernel_size=1, stride=1, padding=0)
-        self.reduce_channel4 = nn.Conv3d(1024, 8 * n_channels, kernel_size=1, stride=1, padding=0)
-        self.reduce_channel5 = nn.Conv3d(2048, 8 * n_channels, kernel_size=1, stride=1, padding=0)
-
-        self.unet = UNet3D(in_channels, n_classes, n_channels)
-
-    def forward(self, x):
-        x0 = self.conv1(x)
-        x1 = self.layer1(x0)
-        x2 = self.layer2(x1)
-        x3 = self.layer3(x2)
-        x4 = self.layer4(x3)
-
-        x0_r = self.reduce_channel1(x0)
-        x1_r = self.reduce_channel2(x1)
-        x2_r = self.reduce_channel3(x2)
-        x3_r = self.reduce_channel4(x3)
-        x4_r = self.reduce_channel5(x4)
-
-        mask = self.unet.dec1(x4_r, x3_r)
-        mask = self.unet.dec2(mask, x2_r)
-        mask = self.unet.dec3(mask, x1_r)
-        mask = self.unet.dec4(mask, x0_r)
-        mask = self.unet.out(mask)
-        mask = F.interpolate(mask, size=(128,128,128), mode='trilinear', align_corners=True)
-
         return mask

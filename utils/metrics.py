@@ -203,6 +203,7 @@ class IoUMetric:
             y_true = y_true.bool().squeeze()
 
             is_3d = False
+            # 128x128x128
             if y_pred.shape[0] == y_pred.shape[1] == y_pred.shape[2]: # 3D
                 dims = tuple(range( y_pred.ndim))
                 is_3d = True

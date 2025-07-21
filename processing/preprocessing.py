@@ -4,44 +4,6 @@ from scipy.ndimage import zoom
 import torch
 import torch.nn.functional as F
 
-def get_crop_slice(target_size, dim):
-    if dim > target_size:
-        crop_extent = dim - target_size
-        left = random.randint(0, crop_extent)
-        right = crop_extent - left
-        return slice(left, dim - right)
-    elif dim <= target_size:
-        return slice(0, dim)
-
-def get_left_right_idx_should_pad(target_size, dim):
-    if dim >= target_size:
-        return [False]
-    elif dim < target_size:
-        pad_extent = target_size - dim
-        left = random.randint(0, pad_extent)
-        right = pad_extent - left
-        return True, left, right
-
-def pad_or_crop_image(image, seg=None, target_size=(128, 144, 144)):
-    c, z, y, x = image.shape
-    z_slice, y_slice, x_slice = [get_crop_slice(target, dim) for target, dim in zip(target_size, (z, y, x))]
-    image = image[:, z_slice, y_slice, x_slice]
-    if seg is not None:
-        seg = seg[:, z_slice, y_slice, x_slice]
-    todos = [get_left_right_idx_should_pad(size, dim) for size, dim in zip(target_size, [z, y, x])]
-    padlist = [(0, 0)]  # channel dim
-    for to_pad in todos:
-        if to_pad[0]:
-            padlist.append((to_pad[1], to_pad[2]))
-        else:
-            padlist.append((0, 0))
-    image = np.pad(image, padlist)
-    if seg is not None:
-        seg = np.pad(seg, padlist)
-        return image, seg
-    return image
-
-
 def normalize(image):
     """Basic min max scaler.
     """
@@ -61,14 +23,6 @@ def zscore_normalise(img: np.ndarray):
     img[slices] = (values - mean) / std if std != 0 else 0
     return img
 
-
-
-def irm_min_max_preprocess(image, low_perc=1, high_perc=99):
-    non_zeros = image > 0
-    low, high = np.percentile(image[non_zeros], [low_perc, high_perc])
-    image = np.clip(image, low, high)
-    image = normalize(image)
-    return image
 
 def resize_image(image=None, seg=None, mode=None, target_size=(128, 128, 128), target_size_seg = None):
     def process_tensor(tensor, mode=None, new_size=None):
@@ -122,14 +76,14 @@ def truncate_HU(image, hu_min=-200, hu_max=250):
     
     Notes:
         >1000	        Bone, calcium, metal
-        100 to 600   Iodinated CT contrast
-        30 to 500	  Punctate calcifications
-        60 to 100	  Intracranial hemorrhage
-        35	                Gray matter
-        25	                White matter
-        20 to 40	   Muscle, soft tissue
-        0	                  Water
-        -30 to -70	   Fat
+        100 to 600      Iodinated CT contrast
+        30 to 500	    Punctate calcifications
+        60 to 100	    Intracranial hemorrhage
+        35	            Gray matter
+        25	            White matter
+        20 to 40	    Muscle, soft tissue
+        0	            Water
+        -30 to -70	    Fat
         <-1000	        Air
     """
     return np.clip(image, hu_min, hu_max)
@@ -139,8 +93,6 @@ def get_bbox_liver(liver_mask, margin):
     if len(liver_voxels[0]) == 0:
         return (0, liver_mask.shape[0], 0, liver_mask.shape[1], 0, liver_mask.shape[2])
 
-    # z_min = max(0, np.min(liver_voxels[0]) - margin)
-    # z_max = min(liver_mask.shape[0], np.max(liver_voxels[0]) + margin + 1)
     z_min = 0
     z_max = liver_mask.shape[0]
 
@@ -150,8 +102,6 @@ def get_bbox_liver(liver_mask, margin):
     x_min = max(0, np.min(liver_voxels[2]) - margin)
     x_max = min(liver_mask.shape[2], np.max(liver_voxels[2]) + margin + 1)
 
-    # if z_max <= z_min:
-    #     z_max = z_min + 1
     if y_max <= y_min:
         y_max = y_min + 1
     if x_max <= x_min:
@@ -191,51 +141,3 @@ def extract_liver_mask_binary(logits, threshold=0.5):
     probs = torch.sigmoid(logits)  # shape: (1, 1, D, H, W)
     liver_mask = (probs > threshold).float()
     return liver_mask
-
-def resize_crop_to_bbox_size(tensor_crop, bbox):
-    """
-    Resize tensor crop (e.g., predicted tumor mask) to the size of the liver ROI crop (dz, dy, dx).
-    
-    Args:
-        tensor_crop (tensor): The tensor crop to be resized. shape: (1, D, H, W)
-        bbox (tuple): The bounding box of the liver ROI crop.
-
-    Returns:
-        np.ndarray: (tensor): The resized tensor crop. shape: (1, dz, dy, dx)
-    """
-    # Ensure tensor is float for interpolation
-    tensor_crop = tensor_crop.unsqueeze(0) # shape 1, D, H, W => 1, 1, D, H, W
-    # tarrget size
-    dz, dy, dx = bbox[1] - bbox[0], bbox[3] - bbox[2], bbox[5] - bbox[4]
-    target_size = (dz, dy, dx)
-    resized = F.interpolate(
-        tensor_crop.float(),
-        size=target_size,
-        mode="nearest"  # because it's a binary mask
-    )
-
-    return resized.squeeze(0).to(torch.uint8)
-
-def uncrop_to_full_image(crop_mask, bbox, full_image_shape):
-    """
-    Uncrop the cropped mask to the full image size.
-    
-    Args:
-        crop_mask (tensor): The cropped mask to be uncropped.
-        bbox (tuple): The bounding box of the liver ROI crop.
-        full_image_shape (tuple): The shape of the full image.
-
-    Returns:
-        np.ndarray: (tensor): The uncropped mask.
-    """
-    # Create a tensor of zeros with the same shape as the full image
-    full_mask = torch.zeros(full_image_shape, dtype=torch.uint8, device=crop_mask.device)
-
-    # Get the bounding box coordinates
-    z_min, z_max, y_min, y_max, x_min, x_max = bbox
-
-    crop_mask = crop_mask.squeeze(0)  # shape: (1, dz, dy, dx) -> (dz, dy, dx)
-    # Place the cropped mask in the correct position in the full mask
-    full_mask[z_min:z_max, y_min:y_max, x_min:x_max] = crop_mask
-
-    return full_mask.unsqueeze(0)  # shape: (dz, dy, dx) -> (1, dz, dy, dx)

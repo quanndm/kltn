@@ -17,10 +17,6 @@ class ModelFactory:
         "unet2d_resnextcot_mcb": MSC_CoTNeXtUNet2D,
     }
 
-    _model_pretrained ={
-        "unet3d": UNet3DPretrained,
-        "unet3d_resnextcot": UNet3DWResNeXtCoTPretrained,
-    }
     @staticmethod
     def get_model(model_name, in_channels, n_classes, n_channels, pretrained=False):
         """
@@ -34,7 +30,7 @@ class ModelFactory:
         if model_name not in ModelFactory._model:
             raise ValueError(f"Model {model_name} not found!")
         
-        if pretrained:
-            return ModelFactory._model_pretrained[model_name](in_channels, n_classes, n_channels)
+        # if pretrained:
+        #     return ModelFactory._model_pretrained[model_name](in_channels, n_classes, n_channels)
             
         return ModelFactory._model[model_name](in_channels, n_classes, n_channels)
