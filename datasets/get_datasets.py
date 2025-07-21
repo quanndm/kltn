@@ -45,8 +45,8 @@ def get_datasets_lits(source_folder, seed, fold_number = 5, normalizations = "zs
     train = [patients[i] for i in train_idx]
     test = [patients[i] for i in test_idx]
 
-    train_dataset = Lits(train, training=True, normalizations=normalizations, transformations=True, mode=mode)
-    test_dataset = Lits(test, training=False, benchmarking=True, normalizations=normalizations, mode=mode)
+    train_dataset = Lits(train, training=True, normalizations=normalizations, transformations=True)
+    test_dataset = Lits(test, training=False, benchmarking=True, normalizations=normalizations)
 
     return train_dataset, test_dataset
 
