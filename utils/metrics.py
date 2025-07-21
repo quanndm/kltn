@@ -287,7 +287,7 @@ class PrecisionMetric:
                 precision = (tp + self.eps) / (tp + fp + self.eps)
                 mean_precision = precision.mean().item()
 
-                return [mean_precision if not torch.isnan(mean_precision) else float('nan')]
+                return [mean_precision]
             
             pred_object_sum = tp + fp
             valid_mask = (pred_object_sum > 0)
@@ -351,7 +351,7 @@ class RecallMetric:
             if is_3d:
                 recall = (tp + self.eps) / (tp + fn + self.eps)
                 mean_recall = recall.mean().item()
-                return [mean_recall if not torch.isnan(mean_recall) else float('nan')]
+                return [mean_recall]
             true_object_sum = tp + fn
             valid_mask = (true_object_sum > 0)
 
