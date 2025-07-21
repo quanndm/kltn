@@ -7,7 +7,7 @@ Báo cáo khóa luận này trình bày về việc xây dựng hệ thống t�
 ## Mục lục
 
 - [Ứng dụng Deep Learning cho Phân đoạn Khối u Gan trên Ảnh CT 3D](#ứng-dụng-deep-learning-cho-phân-đoạn-khối-u-gan-trên-ảnh-ct-3d)
-  - [Mục lục](#️mục-lục)
+  - [Mục lục](#mục-lục)
   - [1. Giới thiệu đề tài](#1-giới-thiệu-đề-tài)
   - [2. Hệ thống \& Môi trường](#2-hệ-thống--môi-trường)
   - [3. Cấu trúc thư mục](#3-cấu-trúc-thư-mục)
@@ -29,8 +29,8 @@ Báo cáo khóa luận này trình bày về việc xây dựng hệ thống t�
 
 ## 2. Hệ thống & Môi trường
 
-* Yêu cầu hệ thống tối thiểu: Google Colab / GPU T4
-* Ngôn ngữ : Python 3.10+, PyTorch 2.x
+* Yêu cầu hệ thống tối thiểu: Google Colab Pro (cần nhiều hơn 100gb dung lượng ổ cứng nếu như huấn luyện ở giai đoạn 2 do sử dụng 2 bộ dữ liệu - 3dDvà 2D cắt lát từ 3D)/ GPU T4
+* Ngôn ngữ : Python 3.10+; Framework: PyTorch 2.x
 * Các thư viện liên quan: monai, torchvision, SimpleITK, requests, libtorrent, scikit-learn, medpy, PyYAML, scipy, scikit-image, nibabel
 
 <div style="page-break-before: always;"></div>
@@ -56,6 +56,7 @@ project/
 │   ├— preprocessing.py
 ├— utils/
 │   ├— ...
+├— weights/
 ├— parameters.yaml
 └— requirements.txt
 
@@ -66,6 +67,7 @@ project/
 - <b>Thư mục notebooks</b>: Chứa các file notebooks, dùng để triển khai huấn luyện model, visualize kết quả...
 - <b>Thư mục processing</b>: gồm 3 file, lần lượt là preprocessing - tiền xử lý, augmentation - tăng cường ảnh, postprocessing - hậu xử lý
 - <b>Thư mục utils</b>: chứa các file/hàm chức năng hỗ trợ quá trình huấn luyện model
+- <b>Thư mục weights</b>: chứa các file trọng số đã từ các model đã được huấn luyện từ trước
 - <b>File parameters.yml</b>: chứa các siêu tham số, các path được khai báo mặc định 
 - <b>File requirements.txt</b>: chứa các package cần thiết trong quá trình huấn luyện, được gọi từ file trong thư mục init để cài đặt
 
@@ -97,7 +99,7 @@ project/
         * random gaussian noise
         * random bias field
 * Cân bằng dữ liệu cho giai đoạn 2:
-    * Tổng quan số lượng mẫu ở giai đoạn 2, sau khi cắt ảnh thành 3 slide với bước nhảy 2
+    * Tổng quan số lượng mẫu ở giai đoạn 2, sau khi cắt ảnh thành 3 slice với bước nhảy 2
         ![alt text](./images/table1.png)
         * Từ table trên ta có nhận xét là dữ liệu khối u chỉ chiếm ~13%, điều này dẫn đến việc dữ liệu cần phải được cân bằng trước khi huấn luyện nếu không kết quả sẽ bị lệch
     * Cân bằng dữ liệu (chỉ thực hiện trên tập huấn luyện):
