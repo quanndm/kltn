@@ -1,5 +1,5 @@
-from .unet3d  import UNet3D, UNet3DPretrained
-from .unet3d_resnextcot import CoTNeXtUNet, UNet3DWResNeXtCoTPretrained
+from .unet3d  import UNet3D
+from .unet3d_resnextcot import CoTNeXtUNet
 from .unet2d_resnextcot import UNet2DWResNeXtCoT
 from .unet3d_resnextcot_mcb import MSC_CoTNeXtUNet
 from .unet2d_resnextcot_mcb import MSC_CoTNeXtUNet2D
