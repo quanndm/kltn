@@ -14,7 +14,7 @@ import os
 import torch.nn.functional as F
 
 class Lits(Dataset):
-    def __init__(self, patient_dirs, benchmarking = False, training=True, normalizations="zscores", transformations=False, mode="all"):
+    def __init__(self, patient_dirs, benchmarking = False, training=True, normalizations="zscores", transformations=False, mode="liver"):
         '''
         Args:
             patient_dirs: list of dict, each dict contains id and the paths to the patient's images/ segmentations
