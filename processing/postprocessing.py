@@ -9,7 +9,6 @@ import cv2
 import numpy as np
 import scipy.ndimage as ndi
 from skimage import morphology, measure
-from scipy.ndimage import label
 
 post_trans = Compose(
     [EnsureType(), Activations(softmax=True),AsDiscrete(argmax=True, to_onehot=3)]

@@ -29,7 +29,7 @@ Báo cáo khóa luận này trình bày về việc xây dựng hệ thống t�
 
 ## 2. Hệ thống & Môi trường
 
-* Yêu cầu hệ thống tối thiểu: Google Colab Pro (cần nhiều hơn 100gb dung lượng ổ cứng nếu như huấn luyện ở giai đoạn 2 do sử dụng 2 bộ dữ liệu - 3dDvà 2D cắt lát từ 3D)/ GPU T4
+* Yêu cầu hệ thống tối thiểu: Google Colab Pro (cần nhiều hơn 100gb dung lượng ổ cứng nếu như huấn luyện ở giai đoạn 2 do sử dụng 2 bộ dữ liệu - 3D và 2D cắt lát từ 3D)/ GPU T4
 * Ngôn ngữ : Python 3.10+; Framework: PyTorch 2.x
 * Các thư viện liên quan: monai, torchvision, SimpleITK, requests, libtorrent, scikit-learn, medpy, PyYAML, scipy, scikit-image, nibabel
 
@@ -56,7 +56,9 @@ project/
 │   ├— preprocessing.py
 ├— utils/
 │   ├— ...
-├— weights/
+├— References/
+│   ├— weights/
+│   ├— bbox.json
 ├— parameters.yaml
 └— requirements.txt
 
@@ -67,7 +69,8 @@ project/
 - <b>Thư mục notebooks</b>: Chứa các file notebooks, dùng để triển khai huấn luyện model, visualize kết quả...
 - <b>Thư mục processing</b>: gồm 3 file, lần lượt là preprocessing - tiền xử lý, augmentation - tăng cường ảnh, postprocessing - hậu xử lý
 - <b>Thư mục utils</b>: chứa các file/hàm chức năng hỗ trợ quá trình huấn luyện model
-- <b>Thư mục weights</b>: chứa các file trọng số đã từ các model đã được huấn luyện từ trước
+- <b>Thư mục References/weights</b>: chứa các file trọng số đã từ các model đã được huấn luyện từ trước
+- <b>File References/bbox.json</b>: File tham khảo thêm về kết quả của bounding box sau khi dự đoán từ giai đoạn 1
 - <b>File parameters.yml</b>: chứa các siêu tham số, các path được khai báo mặc định 
 - <b>File requirements.txt</b>: chứa các package cần thiết trong quá trình huấn luyện, được gọi từ file trong thư mục init để cài đặt
 

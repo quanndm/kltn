@@ -208,7 +208,10 @@ class ProgressMeter(object):
         fmt = "{:" + str(num_digits) + "d}"
         return "[" + fmt + "/" + fmt.format(num_batches) + "]"
 
-
+###################################################################
+# Below are the manually customized evaluation metrics
+# can use library to get the most accurate result
+###################################################################
 class IoUMetric:
     def __init__(self, num_classes=1, eps=1e-6, ignore_background=True, threshold=0.5):
         self.num_classes = num_classes

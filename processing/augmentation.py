@@ -16,11 +16,7 @@ from monai.transforms import (
 def train_augmentations():
     """
     Returns a list of augmentations to apply to the training data
-    Augmentations:
-        # RandRotate90d: Randomly rotate the image by 90 degrees
-        RandFlipd: Randomly flip the image along the specified axis
-        RandZoomd: Randomly zoom the image by a specified factor
-        RandShiftIntensityd: Randomly shift the intensity of the image
+    Augmentations: 
     """
     return Compose([
         RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=2),
@@ -41,16 +37,8 @@ def train_augmentations():
 
 def stage2_train_augmentation_2d():
     """
-    image: [1,C, H,W]
-    label: [1, 1, H, W]
     Returns a list of augmentations to apply to the training data for stage 2
     Augmentations:
-        RandFlipd: Randomly flip the image along the specified axis
-        RandAffined: Randomly affine transform the image
-        RandAdjustContrastd: Randomly adjust the contrast of the image
-        RandScaleIntensityd: Randomly scale the intensity of the image
-        RandShiftIntensityd: Randomly shift the intensity of the image
-        RandGaussianNoised: Randomly add Gaussian noise to the image
     """
     return Compose([
         RandFlipd(keys=["image", "label"], prob=0.5, spatial_axis=[1, 2]),

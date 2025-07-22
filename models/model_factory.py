@@ -18,7 +18,7 @@ class ModelFactory:
     }
 
     @staticmethod
-    def get_model(model_name, in_channels, n_classes, n_channels, pretrained=False):
+    def get_model(model_name, in_channels, n_classes, n_channels):
         """
         Get the model class based on the model name.
         :param model_name: Name of the model to retrieve.
@@ -29,8 +29,5 @@ class ModelFactory:
         """
         if model_name not in ModelFactory._model:
             raise ValueError(f"Model {model_name} not found!")
-        
-        # if pretrained:
-        #     return ModelFactory._model_pretrained[model_name](in_channels, n_classes, n_channels)
             
         return ModelFactory._model[model_name](in_channels, n_classes, n_channels)

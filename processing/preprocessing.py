@@ -1,6 +1,5 @@
 import random
 import numpy as np
-from scipy.ndimage import zoom
 import torch
 import torch.nn.functional as F
 
@@ -10,7 +9,7 @@ def normalize(image):
     min_ = np.min(image)
     max_ = np.max(image)
     scale = max_ - min_
-    image = 2 * (image - min_) / scale -1
+    image = 2 * (image - min_) / scale - 1
     return image
 
 def zscore_normalise(img: np.ndarray):
@@ -117,6 +116,7 @@ def get_liver_roi(image, seg, liver_mask_bbox):
     Args:
         image: np.ndarray, the image to get the ROI from, shape (D, H, W)
         seg: np.ndarray, the segmentation to get the ROI from, shape (D, H, W)
+        liver_mask_bbox: bounding box of liver mask
     Returns:
         image: np.ndarray, the image with the liver ROI
         seg: np.ndarray, the segmentation with the liver ROI
